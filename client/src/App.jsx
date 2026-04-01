@@ -1,13 +1,19 @@
 import './App.css'
 import { useEffect, useState } from 'react'
-import Footer from './components/Footer'
 import Navbar from './components/Navbar'
+import SiteFooter from './components/SiteFooter'
 import ContactPage from './pages/ContactPage'
+import EmailUsPage from './pages/EmailUsPage'
+import EnterprisePage from './pages/EnterprisePage'
 import FeaturesPage from './pages/FeaturesPage'
+import HelpCenterPage from './pages/HelpCenterPage'
 import Hero from './pages/Hero'
 import LoginPage from './pages/LoginPage'
+import PlansPage from './pages/PlansPage'
 import PricingPage from './pages/PricingPage'
+import ProductPage from './pages/ProductPage'
 import SolutionsPage from './pages/SolutionsPage'
+import TalkToSalesPage from './pages/TalkToSalesPage'
 
 const routes = {
   '#/': Hero,
@@ -16,6 +22,12 @@ const routes = {
   '#/pricing': PricingPage,
   '#/login': LoginPage,
   '#/contact': ContactPage,
+  '#/enterprise': EnterprisePage,
+  '#/product': ProductPage,
+  '#/plans': PlansPage,
+  '#/help-center': HelpCenterPage,
+  '#/talk-to-sales': TalkToSalesPage,
+  '#/email-us': EmailUsPage,
 }
 
 function getCurrentRoute() {
@@ -57,7 +69,7 @@ function App() {
     <main className="app-shell">
       <Navbar currentRoute={currentRoute} />
       <CurrentPage />
-      <Footer />
+      <SiteFooter />
     </main>
   )
 }

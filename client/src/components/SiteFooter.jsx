@@ -1,6 +1,6 @@
 import { Briefcase, Globe, Mail } from 'lucide-react'
 
-function Footer() {
+function SiteFooter() {
   const year = new Date().getFullYear()
 
   return (
@@ -26,16 +26,16 @@ function Footer() {
           <h3>Company</h3>
           <a href="#/contact">Contact</a>
           <a href="#/login">Login</a>
-          <a href="#/solutions">Enterprise</a>
-          <a href="#/features">Product</a>
+          <a href="#/enterprise">Enterprise</a>
+          <a href="#/product">Product</a>
         </div>
 
         <div className="footer-column">
           <h3>Support</h3>
-          <a href="mailto:contact@intellmeet.ai">Email Us</a>
-          <a href="#/pricing">Plans</a>
-          <a href="#/contact">Help Center</a>
-          <a href="#/contact">Talk to Sales</a>
+          <a href="#/email-us">Email Us</a>
+          <a href="#/plans">Plans</a>
+          <a href="#/help-center">Help Center</a>
+          <a href="#/talk-to-sales">Talk to Sales</a>
         </div>
       </div>
 
@@ -52,7 +52,7 @@ function Footer() {
           </SocialLink>
         </div>
 
-        <p>© {year} IntellMeet. All rights reserved.</p>
+        <p>(c) {year} IntellMeet. All rights reserved.</p>
       </div>
     </footer>
   )
@@ -72,4 +72,4 @@ function SocialLink({ href, label, children }) {
   )
 }
 
-export default Footer
+export default SiteFooter
