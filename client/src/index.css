@@ -1,5 +1,7 @@
-* {
-  box-sizing: border-box;
+@import "tailwindcss";
+
+@theme {
+  --font-sans: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 html {
@@ -8,21 +10,14 @@ html {
 
 body {
   margin: 0;
-  font-family:
-    Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: #06111f;
+  background:
+    radial-gradient(circle at top left, rgba(53, 103, 255, 0.14), transparent 24%),
+    radial-gradient(circle at top right, rgba(40, 212, 190, 0.08), transparent 20%),
+    linear-gradient(160deg, #030507 0%, #05080b 52%, #04070a 100%);
+  font-family: var(--font-sans);
 }
 
-a {
-  color: inherit;
-}
-
-img {
-  display: block;
-  max-width: 100%;
-}
-
-button,
-a {
+a,
+button {
   -webkit-tap-highlight-color: transparent;
 }

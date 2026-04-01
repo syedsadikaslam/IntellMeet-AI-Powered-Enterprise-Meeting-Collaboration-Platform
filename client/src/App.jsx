@@ -1,4 +1,3 @@
-import './App.css'
 import { useEffect, useState } from 'react'
 import Navbar from './components/Navbar'
 import SiteFooter from './components/SiteFooter'
@@ -66,7 +65,7 @@ function App() {
   const CurrentPage = routes[currentRoute] ?? Hero
 
   return (
-    <main className="app-shell">
+    <main className="min-h-screen text-slate-50">
       <Navbar currentRoute={currentRoute} />
       <CurrentPage />
       <SiteFooter />

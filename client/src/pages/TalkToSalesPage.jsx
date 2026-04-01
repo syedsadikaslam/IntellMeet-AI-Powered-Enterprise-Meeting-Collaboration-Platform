@@ -1,31 +1,27 @@
+import { CardGrid, InfoCard, PageHero, PageWrap } from './PagePrimitives'
+
 function TalkToSalesPage() {
   return (
-    <section className="page-shell">
-      <div className="page-hero">
-        <span className="page-kicker">Talk to Sales</span>
-        <h1>Connect with our team for demos, pricing, and rollout planning.</h1>
-        <p>
-          We help you evaluate team fit, estimate adoption, and map the right
-          collaboration workflow for your organization.
-        </p>
-      </div>
+    <PageWrap>
+      <PageHero
+        kicker="Talk to Sales"
+        title="Connect with our team for demos, pricing, and rollout planning."
+        description="We help you evaluate team fit, estimate adoption, and map the right collaboration workflow for your organization."
+      />
 
-      <section className="page-grid contact-layout">
-        <article className="info-card">
-          <h2>Sales email</h2>
+      <CardGrid>
+        <InfoCard title="Sales email">
           <p>sales@intellmeet.ai</p>
           <p>Response within one business day.</p>
-        </article>
-        <article className="info-card">
-          <h2>Demo support</h2>
+        </InfoCard>
+        <InfoCard title="Demo support">
           <p>Book product walkthroughs for founders, managers, and operations teams.</p>
-        </article>
-        <article className="info-card">
-          <h2>Rollout planning</h2>
+        </InfoCard>
+        <InfoCard title="Rollout planning">
           <p>Discuss onboarding timelines, integrations, and workspace setup for launch.</p>
-        </article>
-      </section>
-    </section>
+        </InfoCard>
+      </CardGrid>
+    </PageWrap>
   )
 }
 

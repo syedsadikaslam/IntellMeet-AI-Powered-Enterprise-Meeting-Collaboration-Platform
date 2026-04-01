@@ -4,43 +4,49 @@ function SiteFooter() {
   const year = new Date().getFullYear()
 
   return (
-    <footer className="site-footer">
-      <div className="footer-intro">
-        <h2>IntellMeet</h2>
-        <p>
+    <footer className="mx-auto mt-9 w-full max-w-7xl border-t border-white/12 px-4 py-7 text-white/72 sm:px-6 lg:px-8">
+      <div className="max-w-[540px]">
+        <h2 className="text-[1.05rem] font-black text-white sm:text-[1.3rem]">IntellMeet</h2>
+        <p className="mt-2 text-[0.92rem] leading-7 text-white/68 sm:mt-2.5 sm:text-base sm:leading-7">
           AI-powered meeting collaboration for teams that want clearer discussions,
           faster follow-ups, and better visibility across every project.
         </p>
       </div>
 
-      <div className="footer-grid">
-        <div className="footer-column">
-          <h3>Explore</h3>
-          <a href="#/">Home</a>
-          <a href="#/features">Features</a>
-          <a href="#/solutions">Solutions</a>
-          <a href="#/pricing">Pricing</a>
+      <div className="mt-6 grid grid-cols-3 gap-[18px] sm:mt-[30px] sm:grid-cols-3 sm:gap-7 md:grid-cols-4">
+        <div>
+          <div className="flex flex-col gap-2.5">
+            <h3 className="text-[0.88rem] font-extrabold text-white sm:text-[0.95rem]">Explore</h3>
+            <a className="text-[0.88rem] no-underline transition hover:text-[#7ea6ff] sm:text-base" href="#/">Home</a>
+            <a className="text-[0.88rem] no-underline transition hover:text-[#7ea6ff] sm:text-base" href="#/features">Features</a>
+            <a className="text-[0.88rem] no-underline transition hover:text-[#7ea6ff] sm:text-base" href="#/solutions">Solutions</a>
+            <a className="text-[0.88rem] no-underline transition hover:text-[#7ea6ff] sm:text-base" href="#/pricing">Pricing</a>
+          </div>
         </div>
 
-        <div className="footer-column">
-          <h3>Company</h3>
-          <a href="#/contact">Contact</a>
-          <a href="#/login">Login</a>
-          <a href="#/enterprise">Enterprise</a>
-          <a href="#/product">Product</a>
+        <div>
+          <div className="flex flex-col gap-2.5">
+            <h3 className="text-[0.88rem] font-extrabold text-white sm:text-[0.95rem]">Company</h3>
+            <a className="text-[0.88rem] no-underline transition hover:text-[#7ea6ff] sm:text-base" href="#/contact">Contact</a>
+            <a className="text-[0.88rem] no-underline transition hover:text-[#7ea6ff] sm:text-base" href="#/login">Login</a>
+            <a className="text-[0.88rem] no-underline transition hover:text-[#7ea6ff] sm:text-base" href="#/enterprise">Enterprise</a>
+            <a className="text-[0.88rem] no-underline transition hover:text-[#7ea6ff] sm:text-base" href="#/product">Product</a>
+          </div>
         </div>
 
-        <div className="footer-column">
-          <h3>Support</h3>
-          <a href="#/email-us">Email Us</a>
-          <a href="#/plans">Plans</a>
-          <a href="#/help-center">Help Center</a>
-          <a href="#/talk-to-sales">Talk to Sales</a>
+        <div>
+          <div className="flex flex-col gap-2.5">
+            <h3 className="text-[0.88rem] font-extrabold text-white sm:text-[0.95rem]">Support</h3>
+            <a className="text-[0.88rem] no-underline transition hover:text-[#7ea6ff] sm:text-base" href="#/email-us">Email Us</a>
+            <a className="text-[0.88rem] no-underline transition hover:text-[#7ea6ff] sm:text-base" href="#/plans">Plans</a>
+            <a className="text-[0.88rem] no-underline transition hover:text-[#7ea6ff] sm:text-base" href="#/help-center">Help Center</a>
+            <a className="text-[0.88rem] no-underline transition hover:text-[#7ea6ff] sm:text-base" href="#/talk-to-sales">Talk to Sales</a>
+          </div>
         </div>
       </div>
 
-      <div className="footer-bottom">
-        <div className="footer-socials">
+      <div className="mt-7 flex flex-col items-center gap-3.5 border-t border-white/8 pt-5 text-center sm:flex-row sm:justify-between">
+        <div className="inline-flex items-center gap-3">
           <SocialLink href="https://github.com" label="GitHub">
             <Globe size={18} />
           </SocialLink>
@@ -52,7 +58,9 @@ function SiteFooter() {
           </SocialLink>
         </div>
 
-        <p>(c) {year} IntellMeet. All rights reserved.</p>
+        <p className="text-[0.8rem] text-white/58 sm:text-[0.95rem]">
+          (c) {year} IntellMeet. All rights reserved.
+        </p>
       </div>
     </footer>
   )
@@ -61,7 +69,7 @@ function SiteFooter() {
 function SocialLink({ href, label, children }) {
   return (
     <a
-      className="footer-social-link"
+      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/4 text-white/82 transition hover:border-[#7ea6ff47] hover:bg-[#4f73ff24] hover:text-white"
       href={href}
       target={href.startsWith('http') ? '_blank' : undefined}
       rel={href.startsWith('http') ? 'noreferrer' : undefined}
