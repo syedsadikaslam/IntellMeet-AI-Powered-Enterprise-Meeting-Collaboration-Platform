@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import Navbar from './components/Navbar'
-import SiteFooter from './components/SiteFooter'
+import Footer from './components/Footer'
 import ContactPage from './pages/ContactPage'
 import EmailUsPage from './pages/EmailUsPage'
 import EnterprisePage from './pages/EnterprisePage'
@@ -62,15 +62,20 @@ function App() {
     return () => window.removeEventListener('hashchange', handleHashChange)
   }, [])
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [currentRoute])
+
   const CurrentPage = routes[currentRoute] ?? Hero
 
   return (
     <main className="min-h-screen text-slate-50">
       <Navbar currentRoute={currentRoute} />
       <CurrentPage />
-      <SiteFooter />
+      <Footer />
     </main>
   )
 }
 
 export default App
+
