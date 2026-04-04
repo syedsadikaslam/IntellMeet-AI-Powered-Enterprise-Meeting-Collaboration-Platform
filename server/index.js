@@ -6,8 +6,23 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 
 const authRoutes = require('./routes/authRoutes');
+const meetingRoutes = require('./routes/meetingRoutes');
+
+const http = require('http');
+const { Server } = require('socket.io');
+const initSocket = require('./services/socketService');
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
+
+// Initialize Socket.io service
+initSocket(io);
 
 // Set security HTTP headers
 app.use(helmet());
@@ -29,6 +44,7 @@ app.use(express.json());
 
 // Route Mounts
 app.use('/api/auth', authRoutes);
+app.use('/api/meetings', meetingRoutes);
 
 app.get('/', (req, res) => {
   res.send('IntellMeet API is running...');
@@ -41,7 +57,7 @@ mongoose
   .connect(MONGO_URI)
   .then(() => {
     console.log('MongoDB connection established');
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   })
   .catch((err) => {
     console.error(`MongoDB connection failed: ${err.message}`);

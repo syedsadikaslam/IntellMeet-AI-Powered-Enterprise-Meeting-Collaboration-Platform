@@ -1,11 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { registerUser, loginUser, refreshAccessToken } = require('../controllers/authController');
+const { registerUser, loginUser, refreshAccessToken, logoutUser, updateUserProfile } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
+const upload = require('../utils/multer');
 
 router.post('/register', registerUser);
 router.post('/login', loginUser);
 router.post('/refresh', refreshAccessToken);
+router.post('/logout', protect, logoutUser);
+router.put('/profile', protect, upload.single('avatar'), updateUserProfile);
 
 // Example protected route for profile
 router.get('/me', protect, (req, res) => {

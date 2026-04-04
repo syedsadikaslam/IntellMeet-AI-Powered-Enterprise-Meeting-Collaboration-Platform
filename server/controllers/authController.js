@@ -22,6 +22,11 @@ const registerUser = async (req, res) => {
 
     if (user) {
       const { accessToken, refreshToken } = generateTokens(user._id);
+      
+      // Store refreshToken in database
+      user.refreshTokens.push(refreshToken);
+      await user.save();
+
       res.status(201).json({
         _id: user.id,
         name: user.name,
@@ -51,6 +56,10 @@ const loginUser = async (req, res) => {
     if (user && (await user.matchPassword(password))) {
       const { accessToken, refreshToken } = generateTokens(user._id);
       
+      // Store refreshToken in database
+      user.refreshTokens.push(refreshToken);
+      await user.save();
+
       res.json({
         _id: user.id,
         name: user.name,
@@ -79,15 +88,81 @@ const refreshAccessToken = async (req, res) => {
       return res.status(401).json({ message: 'No refresh token provided' });
     }
 
+    // Check if token exists in any user's refreshTokens array
+    const user = await User.findOne({ refreshTokens: refreshToken });
+    if (!user) {
+      return res.status(403).json({ message: 'Invalid or revoked refresh token' });
+    }
+
     jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, (err, decoded) => {
       if (err) {
-        return res.status(403).json({ message: 'Invalid or expired refresh token' });
+        return res.status(403).json({ message: 'Expired refresh token' });
       }
 
-      // Generate new tokens
-      const tokens = generateTokens(decoded.id);
-      res.json(tokens);
+      // Generate new access token
+      const tokens = generateTokens(user._id);
+      res.json({ accessToken: tokens.accessToken });
     });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// @desc    Logout user & revoke token
+// @route   POST /api/auth/logout
+// @access  Private
+const logoutUser = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    const user = await User.findById(req.user._id);
+    
+    if (user) {
+      user.refreshTokens = user.refreshTokens.filter(t => t !== refreshToken);
+      await user.save();
+      res.json({ message: 'Logged out successfully' });
+    } else {
+      res.status(404).json({ message: 'User not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+const cloudinary = require('../utils/cloudinaryConfig');
+
+// @desc    Update user profile (avatar)
+// @route   PUT /api/auth/profile
+// @access  Private
+const updateUserProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (user) {
+      user.name = req.body.name || user.name;
+      user.email = req.body.email || user.email;
+      
+      if (req.file) {
+        // Upload image to Cloudinary
+        const result = await cloudinary.uploader.upload(req.file.path);
+        user.avatar = result.secure_url;
+      }
+
+      if (req.body.password) {
+        user.password = req.body.password;
+      }
+
+      const updatedUser = await user.save();
+
+      res.json({
+        _id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        role: updatedUser.role,
+        avatar: updatedUser.avatar,
+      });
+    } else {
+      res.status(404).json({ message: 'User not found' });
+    }
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -97,4 +172,6 @@ module.exports = {
   registerUser,
   loginUser,
   refreshAccessToken,
+  logoutUser,
+  updateUserProfile,
 };
