@@ -47,13 +47,13 @@ function SiteFooter() {
 
       <div className="mt-7 flex flex-col items-center gap-3.5 border-t border-white/8 pt-5 text-center sm:flex-row sm:justify-between">
         <div className="inline-flex items-center gap-3">
-          <SocialLink href="https://github.com" label="GitHub">
+          <SocialLink href="https://github.com/syedsadikaslam" label="GitHub">
             <Globe size={18} />
           </SocialLink>
-          <SocialLink href="https://www.linkedin.com" label="LinkedIn">
+          <SocialLink href="https://www.linkedin.com/in/𝐌𝐝-𝐒𝐚𝐝𝐢𝐤-9104a2252" label="LinkedIn">
             <Briefcase size={18} />
           </SocialLink>
-          <SocialLink href="mailto:contact@intellmeet.ai" label="Email">
+          <SocialLink href="mailto:mdsadiksadik464@gmail.com" label="Email">
             <Mail size={18} />
           </SocialLink>
         </div>
