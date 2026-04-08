@@ -38,11 +38,23 @@ const userSchema = new mongoose.Schema(
 );
 
 // Encrypt password before saving
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-  next();
+// Encrypt password before saving
+userSchema.pre('save', function () {
+  const user = this;
+  if (!user.isModified('password')) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve, reject) => {
+    bcrypt.genSalt(10, (err, salt) => {
+      if (err) return reject(err);
+      bcrypt.hash(user.password, salt, (err, hash) => {
+        if (err) return reject(err);
+        user.password = hash;
+        resolve();
+      });
+    });
+  });
 });
 
 // Compare user password

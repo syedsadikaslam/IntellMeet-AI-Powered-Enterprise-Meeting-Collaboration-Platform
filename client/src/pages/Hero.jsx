@@ -1,3 +1,5 @@
+import { useAuthStore } from '../store/useAuthStore'
+
 const liveParticles = [
   { left: '14%', top: '18%', size: 'h-1.5 w-1.5', delay: '0s', color: 'bg-cyan-300/80' },
   { left: '28%', top: '34%', size: 'h-2 w-2', delay: '.4s', color: 'bg-violet-300/70' },
@@ -99,6 +101,8 @@ function FloatingChip({ icon, title, text, className, iconClassName }) {
 }
 
 function HeroModern() {
+  const { user } = useAuthStore()
+
   return (
     <section className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <section className="grid items-center gap-7 py-7 md:grid-cols-[minmax(0,1fr)_minmax(430px,0.96fr)] md:gap-14 md:py-11">
@@ -127,15 +131,15 @@ function HeroModern() {
           <div className="mt-8 flex flex-col gap-4 sm:mt-9 sm:flex-row">
             <a
               className="inline-flex min-h-[54px] items-center justify-center rounded-[14px] bg-gradient-to-br from-[#4f73ff] to-[#7b5cff] px-6 text-base font-bold text-white no-underline shadow-[0_20px_40px_rgba(79,115,255,0.28)] transition hover:-translate-y-px sm:min-w-[172px]"
-              href="#/contact"
+              href={user ? '#/dashboard' : '#/login'}
             >
-              Start for free
+              Host a Meeting
             </a>
             <a
               className="inline-flex min-h-[54px] items-center justify-center rounded-[14px] border border-white/10 bg-white/2 px-6 text-base font-bold text-white no-underline transition hover:-translate-y-px sm:min-w-[172px]"
-              href="#/solutions"
+              href={user ? '#/dashboard' : '#/login'}
             >
-              Request Demo
+              Join with Code
             </a>
           </div>
         </div>

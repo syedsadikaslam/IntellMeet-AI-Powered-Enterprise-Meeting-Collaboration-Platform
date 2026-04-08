@@ -24,9 +24,10 @@ const io = new Server(server, {
 // Initialize Socket.io service
 initSocket(io);
 
-// Set security HTTP headers
+// Security and Utility Middleware (MUST be before routes)
 app.use(helmet());
 app.use(cors());
+app.use(express.json());
 
 // Auth rate limiting specifically to prevent brute force attacks
 const authLimiter = rateLimit({
@@ -37,10 +38,8 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-app.use('/api/auth', authLimiter);
-
-// Parse JSON payload
-app.use(express.json());
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
 
 // Route Mounts
 app.use('/api/auth', authRoutes);
@@ -48,6 +47,15 @@ app.use('/api/meetings', meetingRoutes);
 
 app.get('/', (req, res) => {
   res.send('IntellMeet API is running...');
+});
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+  console.error('SERVER_ERROR:', err.stack);
+  res.status(500).json({
+    message: 'Something went wrong!',
+    error: process.env.NODE_ENV === 'production' ? {} : err.message
+  });
 });
 
 const PORT = process.env.PORT || 5000;
