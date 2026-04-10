@@ -1,25 +1,72 @@
-import { Calendar, Layout, Plus, Search, Video, LogOut, ArrowRight, Clock, ShieldCheck } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { 
+  Calendar, Layout, Plus, Search, Video, ArrowRight, Clock, 
+  ShieldCheck, MessageSquare, Activity, Globe, Zap, FileText, BarChart3, Star
+} from 'lucide-react'
+import React, { useEffect, useState, useRef } from 'react'
 import api from '../utils/api'
 import { useAuthStore } from '../store/useAuthStore'
+import { io, Socket } from 'socket.io-client'
+import PerformanceChart from '../components/PerformanceChart'
+import TeamChat from '../components/TeamChat'
+import { generateMeetingReport } from '../utils/ReportGenerator'
 
 interface Meeting {
-  meetingCode: string
-  title: string
-  description?: string
-  createdAt: string
+  _id: string;
+  meetingCode: string;
+  title: string;
+  description?: string;
+  createdAt: string;
+  summary?: string;
+  transcript?: string;
+  sentiment?: string;
+  highlights?: string[];
+  actionItems?: Array<{ task: string, suggestedAssignee: string, status: string }>;
 }
 
+interface Project {
+  _id: string
+  name: string
+  team: string
+}
+
+interface GlobalStats {
+  onlineUsers: number
+  activeRooms: number
+}
+
+const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export default function Dashboard() {
-  const { user, logout } = useAuthStore()
+  const { user } = useAuthStore()
   const [meetings, setMeetings] = useState<Meeting[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [newMeeting, setNewMeeting] = useState({ title: '', description: '' })
   const [joinCode, setJoinCode] = useState('')
+  const [selectedMeeting, setSelectedMeeting] = useState<Meeting | null>(null)
+  const [projects, setProjects] = useState<Project[]>([])
+  const [selectedProjectId, setSelectedProjectId] = useState<string>('')
+  const [isPushing, setIsPushing] = useState(false)
+  
+  // Day 19 State
+  const [stats, setStats] = useState<GlobalStats>({ onlineUsers: 0, activeRooms: 0 })
+  const [showChat, setShowChat] = useState(false)
+  const [activeTeamId, setActiveTeamId] = useState<string | null>(null)
+  const socketRef = useRef<Socket | null>(null)
 
   useEffect(() => {
     fetchMeetings()
+    fetchProjects()
+
+    // Initialize Global Stats Socket
+    socketRef.current = io(SOCKET_URL);
+    socketRef.current.on('stats-update', (newStats: GlobalStats) => {
+      setStats(newStats);
+    });
+
+    return () => {
+      socketRef.current?.disconnect();
+    };
   }, [])
 
   const fetchMeetings = async () => {
@@ -30,6 +77,19 @@ export default function Dashboard() {
       console.error('Failed to fetch meetings', error)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const fetchProjects = async () => {
+    try {
+      const response = await api.get('/projects')
+      setProjects(response.data)
+      if (response.data.length > 0) {
+        if (!activeTeamId) setActiveTeamId(response.data[0].team);
+        setSelectedProjectId(response.data[0]._id);
+      }
+    } catch (error) {
+      console.error('Failed to fetch projects', error)
     }
   }
 
@@ -51,26 +111,66 @@ export default function Dashboard() {
     }
   }
 
-  const handleExportLogs = () => {
-    if (meetings.length === 0) {
-      alert('No meeting logs available to export.')
-      return
+  const handleExportLogs = (meeting?: Meeting) => {
+    const dataToExport = meeting || meetings;
+    if (!dataToExport || (Array.isArray(dataToExport) && dataToExport.length === 0)) {
+      alert('No meeting data available to export.');
+      return;
     }
 
-    const dataStr = JSON.stringify(meetings, null, 2)
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr)
+    const dataStr = JSON.stringify(dataToExport, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
     
-    const exportFileDefaultName = `intellmeet_logs_${new Date().toISOString().split('T')[0]}.json`
+    const exportFileDefaultName = meeting 
+      ? `intellmeet_report_${meeting.meetingCode}.json`
+      : `intellmeet_logs_${new Date().toISOString().split('T')[0]}.json`;
     
-    const linkElement = document.createElement('a')
-    linkElement.setAttribute('href', dataUri)
-    linkElement.setAttribute('download', exportFileDefaultName)
-    linkElement.click()
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+  }
+
+  const handleAnalyzeMeeting = async (meetingId: string) => {
+    try {
+      const response = await api.post(`/meetings/${meetingId}/analyze`);
+      const updatedMeeting = response.data;
+      setMeetings(prev => prev.map(m => m._id === meetingId ? updatedMeeting : m));
+      setSelectedMeeting(updatedMeeting);
+    } catch (error) {
+      console.error('Failed to analyze meeting', error);
+      alert('Failed to generate AI insights. Make sure there is a transcript available.');
+    }
+  }
+
+  const handlePushToProject = async () => {
+    if (!selectedMeeting?.actionItems?.length || !selectedProjectId) {
+       alert('Please select a project and ensure there are action items.');
+       return;
+    }
+    setIsPushing(true);
+    try {
+      for (const item of selectedMeeting.actionItems) {
+        await api.post(`/projects/${selectedProjectId}/tasks`, {
+          title: item.task,
+          description: `Action item from meeting: ${selectedMeeting.title}`,
+          status: 'todo',
+          priority: 'medium',
+          meetingOrigin: selectedMeeting._id
+        });
+      }
+      alert(`Successfully pushed ${selectedMeeting.actionItems.length} tasks to selected project.`);
+    } catch (error) {
+      console.error('Failed to push tasks', error);
+      alert('Failed to push tasks to project board.');
+    } finally {
+      setIsPushing(false);
+    }
   }
 
   return (
-    <div className="min-h-screen bg-[#030507] text-white overflow-x-hidden font-sans selection:bg-blue-500/30">
-      <main className="pt-6 sm:pt-10 pb-20 px-4 sm:px-8 lg:px-12 max-w-7xl mx-auto relative">
+    <div className="min-h-screen bg-[#030507] text-white overflow-x-hidden font-sans selection:bg-blue-500/30 flex">
+      <main className="flex-1 pt-6 sm:pt-10 pb-20 px-4 sm:px-8 lg:px-12 max-w-7xl mx-auto relative">
         {/* Ambient Glows */}
         <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-blue-600/5 rounded-full blur-[120px] -z-10 pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-violet-600/5 rounded-full blur-[120px] -z-10 pointer-events-none" />
@@ -91,6 +191,17 @@ export default function Dashboard() {
               <p className="text-white/40 text-base sm:text-lg max-w-md leading-relaxed font-medium">
                 Connect with your team instantly or deploy a high-performance meeting instance.
               </p>
+              
+              <div className="flex gap-4 pt-4">
+                <div className="bg-white/[0.02] border border-white/5 px-6 py-4 rounded-3xl">
+                  <span className="block text-[10px] font-black text-white/20 uppercase tracking-widest mb-1">Active Operatives</span>
+                  <span className="text-2xl font-black text-blue-500">{stats.onlineUsers}</span>
+                </div>
+                <div className="bg-white/[0.02] border border-white/5 px-6 py-4 rounded-3xl">
+                  <span className="block text-[10px] font-black text-white/20 uppercase tracking-widest mb-1">Live Sectors</span>
+                  <span className="text-2xl font-black text-violet-500">{stats.activeRooms}</span>
+                </div>
+              </div>
            </div>
            
            <div className="flex flex-col gap-4">
@@ -111,17 +222,51 @@ export default function Dashboard() {
                         </button>
                      </form>
                      
-                     <button 
-                       onClick={() => setShowCreateModal(true)}
-                       className="w-full flex items-center justify-center gap-3 bg-white text-black py-4 sm:py-4.5 rounded-2xl font-black text-xs sm:text-sm tracking-widest hover:bg-blue-50 transition-all active:scale-95 shadow-[0_8px_32px_rgba(255,255,255,0.1)] group"
-                     >
-                       <Plus size={18} className="group-hover:rotate-90 transition-transform" />
-                       DEPLOY NEW INSTANCE
-                     </button>
+                     <div className="grid grid-cols-2 gap-4">
+                       <button 
+                         onClick={() => setShowCreateModal(true)}
+                         className="flex items-center justify-center gap-3 bg-white text-black py-4 rounded-2xl font-black text-[10px] tracking-widest hover:bg-blue-50 transition-all active:scale-95 shadow-[0_8px_32px_rgba(255,255,255,0.1)] group"
+                       >
+                         <Plus size={18} className="group-hover:rotate-90 transition-transform" />
+                         DEPLOY
+                       </button>
+                       <button 
+                         onClick={() => setShowChat(!showChat)}
+                         className={`flex items-center justify-center gap-3 py-4 rounded-2xl font-black text-[10px] tracking-widest transition-all active:scale-95 border ${
+                           showChat ? 'bg-blue-600 text-white border-blue-500' : 'bg-white/5 text-white/70 border-white/10 hover:bg-white/10'
+                         }`}
+                       >
+                         <MessageSquare size={18} />
+                         TEAM CHAT
+                       </button>
+                     </div>
+
+                     <div className="pt-4 border-t border-white/5 space-y-3">
+                         <h4 className="text-[10px] font-black uppercase tracking-widest text-white/20 px-2 font-mono">Workspaces</h4>
+                         {projects.length > 0 ? projects.map(p => (
+                            <a 
+                              key={p._id}
+                              href={`#/projects/${p._id}`} 
+                              className="flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 rounded-2xl transition-all group border border-white/5"
+                            >
+                               <div className="flex items-center gap-3">
+                                 <div className="p-2 bg-violet-500/10 text-violet-400 rounded-lg group-hover:bg-violet-500 group-hover:text-white transition-all">
+                                    <Layout size={16} />
+                                 </div>
+                                 <span className="text-sm font-bold truncate">{p.name}</span>
+                               </div>
+                               <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
+                            </a>
+                         )) : (
+                            <div className="p-4 text-center border border-dashed border-white/5 rounded-2xl">
+                               <p className="text-[10px] text-white/20 font-bold uppercase">No active projects</p>
+                            </div>
+                         )}
+                      </div>
                   </div>
                </div>
-           </div>
-        </div>
+            </div>
+         </div>
 
         {/* Content Tabs */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 sm:gap-16">
@@ -157,7 +302,7 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <div className="grid gap-5">
-                  {meetings.map((meeting) => (
+                   {meetings.map((meeting) => (
                     <article key={meeting.meetingCode} className="group relative bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] hover:border-blue-500/30 p-5 sm:p-6 rounded-[32px] transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-6 overflow-hidden">
                        <div className="absolute -top-12 -right-12 w-40 h-40 bg-blue-500/5 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
                        
@@ -167,24 +312,49 @@ export default function Dashboard() {
                         </div>
                         <div className="min-w-0 space-y-1.5">
                           <h3 className="font-black text-lg sm:text-xl truncate group-hover:text-blue-400 transition-colors uppercase tracking-tight">{meeting.title}</h3>
-                          <div className="flex items-center gap-3">
+                          <div className="flex flex-wrap items-center gap-3">
                              <span className="text-[10px] text-blue-500/60 font-black tracking-widest font-mono bg-blue-500/5 px-2 py-0.5 rounded-md border border-blue-500/10">{meeting.meetingCode}</span>
                              <div className="w-1 h-1 bg-white/10 rounded-full" />
                              <span className="text-[10px] text-white/30 font-black uppercase tracking-[0.15em] flex items-center gap-1.5 whitespace-nowrap">
-                                <Clock size={12} className="text-white/20" />
-                                {new Date(meeting.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                             </span>
+                                 <Clock size={12} className="text-white/20" />
+                                 {new Date(meeting.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                              </span>
+                             {meeting.sentiment && (
+                               <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border ${ 
+                                 meeting.sentiment === 'positive' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 
+                                 meeting.sentiment === 'negative' ? 'bg-red-500/10 text-red-400 border-red-500/20' : 
+                                 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                               }`}>
+                                 {meeting.sentiment}
+                               </span>
+                             )}
                           </div>
+                          {meeting.summary && (
+                            <p className="text-[11px] text-white/40 line-clamp-1 mt-2 max-w-sm">
+                              <span className="text-blue-500 font-black mr-2 uppercase tracking-tighter">AI Summary:</span>
+                              {meeting.summary}
+                            </p>
+                          )}
                         </div>
                       </div>
-                      <a 
-                        href={`#/meeting/${meeting.meetingCode}`}
-                        className="w-full sm:w-auto text-center bg-white text-black hover:bg-blue-50 px-8 py-4 sm:py-5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-[0_8px_24px_rgba(255,255,255,0.05)] active:scale-95 relative z-10 border border-white/10"
-                      >
-                        Launch Visuals
-                      </a>
+                      <div className="flex flex-col sm:flex-row gap-3 relative z-10">
+                        {meeting.summary && (
+                          <button 
+                            onClick={() => setSelectedMeeting(meeting)}
+                            className="bg-white/5 hover:bg-white/10 text-white px-6 py-4 sm:py-5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border border-white/10"
+                          >
+                            Intelligence
+                          </button>
+                        )}
+                        <a 
+                          href={`#/meeting/${meeting.meetingCode}`}
+                          className="w-full sm:w-auto text-center bg-white text-black hover:bg-blue-50 px-8 py-4 sm:py-5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-[0_8px_24px_rgba(255,255,255,0.05)] active:scale-95 border border-white/10"
+                        >
+                          Launch Visuals
+                        </a>
+                      </div>
                     </article>
-                  ))}
+                   ))}
                 </div>
               )}
            </div>
@@ -193,7 +363,7 @@ export default function Dashboard() {
            <div className="space-y-10 sm:space-y-12">
               <div className="space-y-8">
                 <h2 className="text-xl sm:text-2xl font-black flex items-center gap-4">
-                  Analytics
+                  Intelligence
                   <div className="h-px flex-1 bg-gradient-to-r from-white/5 to-transparent" />
                 </h2>
 
@@ -201,30 +371,28 @@ export default function Dashboard() {
                    <div className="bg-[#0a0f1d] rounded-[47px] p-8 sm:p-10 h-full relative overflow-hidden backdrop-blur-3xl">
                       <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/10 rounded-full blur-[60px] translate-x-1/2 -translate-y-1/2" />
                       
-                      {(() => {
-                        const totalMeetings = meetings.length;
-                        const reclaimedMinutes = totalMeetings * 35; // Estimate 35 mins saved per meeting
-                        const reclaimedHours = (reclaimedMinutes / 60).toFixed(1);
-                        const throughput = totalMeetings > 0 ? Math.min(Math.floor((totalMeetings / 5) * 14 + 8), 98) : 0;
-
-                        return (
-                          <div className="relative z-10">
-                            <div className="p-3.5 bg-blue-500/10 w-fit rounded-2xl mb-8 border border-blue-500/20 shadow-inner">
-                               <Calendar size={24} className="text-blue-400" />
-                            </div>
-                            <h3 className="text-xl sm:text-2xl font-black mb-4 tracking-tight uppercase">High-Flow Metrics</h3>
-                            <p className="text-sm sm:text-base text-white/40 leading-relaxed mb-10 font-medium">
-                               Your workspace throughput is up <strong>{throughput}%</strong>. You&apos;ve reclaimed <strong>{reclaimedHours}h</strong> this month via AI synthesis.
-                            </p>
-                            <button 
-                              onClick={handleExportLogs}
-                              className="w-full bg-white/5 hover:bg-white text-white/70 hover:text-black py-4.5 rounded-2xl font-black text-[10px] tracking-[0.2em] uppercase transition-all border border-white/10 hover:border-white group/btn"
-                            >
-                               EXPORT LOGS
-                            </button>
-                          </div>
-                        );
-                      })()}
+                      <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-6">
+                           <div className="p-3.5 bg-blue-500/10 w-fit rounded-2xl border border-blue-500/20 shadow-inner">
+                              <Activity size={24} className="text-blue-400" />
+                           </div>
+                           <span className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Efficiency Protocol</span>
+                        </div>
+                        
+                        <h3 className="text-xl font-black mb-2 tracking-tight uppercase">Performance Velocity</h3>
+                        <PerformanceChart />
+                        
+                        <div className="grid grid-cols-2 gap-4 mt-8">
+                           <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
+                              <span className="block text-[9px] font-black text-white/30 uppercase tracking-widest mb-1">Weekly Delta</span>
+                              <span className="text-lg font-black text-green-400">+24.8%</span>
+                           </div>
+                           <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
+                              <span className="block text-[9px] font-black text-white/30 uppercase tracking-widest mb-1">Optimization</span>
+                              <span className="text-lg font-black text-blue-400">Stable</span>
+                           </div>
+                        </div>
+                      </div>
                    </div>
                 </div>
 
@@ -234,15 +402,27 @@ export default function Dashboard() {
                       Deployment Nodes
                    </h3>
                    <div className="space-y-8">
-                      <StatusItem label="Signal Relay L1" status="Peak" active />
-                      <StatusItem label="Media Edge NYC" status="Stable" active />
-                      <StatusItem label="AI Inference Node" status="Indexing" active={false} />
+                      <StatusItem label="Signal Relay L1" status="Active" active icon={<Globe size={14} />} />
+                      <StatusItem label="Inference Engine" status="Online" active icon={<Zap size={14} />} />
+                      <StatusItem label="Media Edge NYC" status="Idle" active={false} icon={<Activity size={14} />} />
                    </div>
                 </div>
               </div>
            </div>
         </div>
       </main>
+
+      {/* Team Chat Slide-over */}
+      {showChat && activeTeamId && (
+        <div className="fixed inset-y-0 right-0 z-[120] flex">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowChat(false)} />
+          <TeamChat 
+            teamId={activeTeamId} 
+            teamName={projects.find(p => p.team === activeTeamId)?.name || 'Team'} 
+            onClose={() => setShowChat(false)} 
+          />
+        </div>
+      )}
 
       {/* Create Meeting Modal */}
       {showCreateModal && (
@@ -300,6 +480,148 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* Meeting Intelligence Modal */}
+      {selectedMeeting && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/95 backdrop-blur-3xl animate-fade-in">
+          <div className="bg-[#0a0f1d] border border-white/10 rounded-[48px] w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-[0_0_120px_rgba(37,99,235,0.2)] relative">
+            <div className="p-8 sm:p-12 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
+               <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <span className="px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-[10px] font-black uppercase tracking-widest">Post-Session Intelligence</span>
+                    <span className="text-[10px] text-white/20 font-mono">{selectedMeeting.meetingCode}</span>
+                  </div>
+                  <h2 className="text-3xl font-black tracking-tighter uppercase">{selectedMeeting.title}</h2>
+               </div>
+               <button onClick={() => setSelectedMeeting(null)} className="p-4 bg-white/5 hover:bg-red-500/10 hover:text-red-500 rounded-2xl text-white/20 transition-all border border-white/5">
+                  <Plus className="rotate-45" size={24} />
+               </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-8 sm:p-12 space-y-12">
+               {/* Sentiment & Quick Stats */}
+               <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="bg-white/[0.03] border border-white/5 p-6 rounded-[32px] flex flex-col items-center justify-center text-center">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-white/20 mb-3">Tone Analysis</span>
+                    <div className={`p-4 rounded-2xl mb-2 ${
+                      selectedMeeting.sentiment === 'positive' ? 'bg-green-500/10 text-green-400' :
+                      selectedMeeting.sentiment === 'negative' ? 'bg-red-500/10 text-red-400' :
+                      selectedMeeting.sentiment === 'mixed' ? 'bg-orange-500/10 text-orange-400' :
+                      'bg-blue-500/10 text-blue-400'
+                    }`}>
+                      <Activity size={32} />
+                    </div>
+                    <span className="text-xl font-black uppercase tracking-tighter">
+                      {selectedMeeting.sentiment || 'Analyzing...'}
+                    </span>
+                  </div>
+
+                  <div className="md:col-span-2 bg-white/[0.03] border border-white/5 p-6 rounded-[32px] space-y-4">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-white/20">Key Highlights</span>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedMeeting.highlights?.map((h, i) => (
+                        <span key={i} className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-xl text-xs font-medium text-white/60">
+                          {h}
+                        </span>
+                      )) || <span className="text-white/20 italic">No highlights available yet.</span>}
+                    </div>
+                  </div>
+               </section>
+
+               {/* Summary Section */}
+               <section className="space-y-6">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-500 flex items-center gap-3">
+                    <Layout size={14} /> Executive Summary
+                  </h3>
+                  <div className="bg-white/[0.03] border border-white/5 p-8 rounded-[32px] relative overflow-hidden">
+                     <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/5 rounded-full blur-3xl" />
+                     <p className="text-white/70 leading-relaxed text-lg font-medium relative z-10">
+                        {selectedMeeting.summary || 'Summary not generated yet. Click analyze to process the transcript.'}
+                     </p>
+                  </div>
+               </section>
+
+               {/* Action Items Section */}
+               {selectedMeeting.actionItems && selectedMeeting.actionItems.length > 0 && (
+                 <section className="space-y-6">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-violet-500 flex items-center gap-3">
+                      <Plus size={14} /> Action Items
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                       {selectedMeeting.actionItems.map((item, idx) => (
+                          <div key={idx} className="bg-white/[0.02] border border-white/5 p-6 rounded-3xl flex items-start gap-4 hover:bg-white/[0.04] transition-all">
+                             <div className="w-6 h-6 rounded-full bg-violet-500/10 border border-violet-500/30 flex items-center justify-center flex-shrink-0 mt-1">
+                                <ArrowRight size={12} className="text-violet-400" />
+                             </div>
+                             <div className="space-y-1">
+                                <p className="text-sm font-bold text-white/90">{item.task}</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-white/30 truncate">Assignee: {item.suggestedAssignee}</p>
+                             </div>
+                          </div>
+                       ))}
+                    </div>
+                 </section>
+               )}
+
+               {/* Full Transcript Preview */}
+               <section className="space-y-6">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20 flex items-center gap-3">
+                    <Clock size={14} /> Transcript Stream
+                  </h3>
+                  <div className="bg-black/40 border border-white/5 p-8 rounded-[32px] h-60 overflow-y-auto scrollbar-hide">
+                     <p className="text-xs text-white/40 leading-loose font-mono">{selectedMeeting.transcript || 'No transcript data available.'}</p>
+                  </div>
+               </section>
+            </div>
+
+            <div className="p-8 border-t border-white/5 bg-white/[0.02] flex flex-col sm:flex-row gap-4">
+               {!selectedMeeting.summary && (
+                 <button 
+                   onClick={() => handleAnalyzeMeeting(selectedMeeting._id)}
+                   className="flex-1 bg-gradient-to-r from-blue-600 to-violet-600 text-white py-4 rounded-2xl font-black text-[10px] tracking-[0.2em] uppercase transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
+                 >
+                   <Zap size={14} />
+                   INITIALIZE AI ANALYSIS
+                 </button>
+               )}
+               
+               {selectedMeeting.summary && (
+                 <button 
+                   onClick={() => generateMeetingReport(selectedMeeting)}
+                   className="flex-1 bg-white text-black py-4 rounded-2xl font-black text-[10px] tracking-[0.2em] uppercase transition-all hover:bg-blue-50 active:scale-95 flex items-center justify-center gap-2"
+                 >
+                   <FileText size={14} />
+                   EXPORT PDF Dossier
+                 </button>
+               )}
+               
+               {projects.length > 0 && selectedMeeting.actionItems && selectedMeeting.actionItems.length > 0 && (
+                 <div className="flex-1 flex gap-2">
+                    <select 
+                      value={selectedProjectId}
+                      onChange={(e) => setSelectedProjectId(e.target.value)}
+                      className="bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-xs font-bold text-white focus:outline-none focus:border-blue-500 transition-all"
+                    >
+                      {projects.map(p => (
+                        <option key={p._id} value={p._id} className="bg-[#0a0f1d] text-white">
+                          Push to: {p.name}
+                        </option>
+                      ))}
+                    </select>
+                    <button 
+                      onClick={handlePushToProject}
+                      disabled={isPushing}
+                      className="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-black text-[10px] tracking-[0.2em] uppercase transition-all hover:bg-blue-500 active:scale-95 disabled:opacity-50 inline-flex items-center justify-center gap-2"
+                    >
+                      <Plus size={14} />
+                      {isPushing ? 'DEPLOYING TO KANBAN...' : 'PUSH TO PROJECT BOARD'}
+                    </button>
+                 </div>
+               )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(20px) scale(0.98); }
@@ -314,17 +636,28 @@ export default function Dashboard() {
         }
         .animate-gradient-x {
            background-size: 200% 200%;
-           animation: gradient-x 6s ease-infinite;
+           animation: gradient-x 6s ease;
+           animation-iteration-count: infinite;
+         }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
       `}} />
     </div>
   )
 }
 
-function StatusItem({ label, status, active }: { label: string, status: string, active: boolean }) {
+function StatusItem({ label, status, active, icon }: { label: string, status: string, active: boolean, icon?: React.ReactNode }) {
    return (
       <div className="flex items-center justify-between group cursor-help">
-         <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] group-hover:text-white transition-colors">{label}</span>
+         <div className="flex items-center gap-3">
+            <span className="text-white/20 group-hover:text-blue-400 transition-colors uppercase">{icon}</span>
+            <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] group-hover:text-white transition-colors">{label}</span>
+         </div>
          <div className="flex items-center gap-3 bg-white/2 px-3 py-1.5 rounded-xl border border-white/5 group-hover:border-white/10 transition-colors">
             <span className={`text-[10px] font-black uppercase tracking-widest ${active ? 'text-[#50e3c2]' : 'text-orange-400'}`}>{status}</span>
             <div className={`w-1.5 h-1.5 rounded-full ${active ? 'bg-[#50e3c2] shadow-[0_0_10px_#50e3c2]' : 'bg-orange-500 animate-pulse'}`} />

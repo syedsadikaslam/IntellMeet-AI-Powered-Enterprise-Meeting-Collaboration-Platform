@@ -11,6 +11,7 @@ import AuthPage from './pages/AuthPage'
 import MeetingRoom from './pages/MeetingRoom'
 import MeetingLobby from './pages/MeetingLobby'
 import Dashboard from './pages/Dashboard'
+import ProjectBoard from './pages/ProjectBoard'
 import ProtectedRoute from './components/ProtectedRoute'
 import PlansPage from './pages/PlansPage'
 import PricingPage from './pages/PricingPage'
@@ -63,6 +64,15 @@ function resolveRoute(hash: string) {
     return { 
       Component: () => <ProtectedRoute><MeetingLobby meetingCode={code} /></ProtectedRoute>, 
       params: { code } 
+    }
+  }
+
+  // Handle dynamic project board: #/projects/ID
+  if (hash.startsWith('#/projects/')) {
+    const id = hash.split('#/projects/')[1]
+    return { 
+      Component: () => <ProtectedRoute><ProjectBoard projectId={id} /></ProtectedRoute>, 
+      params: { id } 
     }
   }
 

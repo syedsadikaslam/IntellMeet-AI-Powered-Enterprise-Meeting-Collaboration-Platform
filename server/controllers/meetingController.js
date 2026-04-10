@@ -100,10 +100,62 @@ const deleteMeeting = async (req, res) => {
   }
 };
 
+// @desc    Analyze meeting transcript with AI
+// @route   POST /api/meetings/:id/analyze
+// @access  Private
+const analyzeMeeting = async (req, res) => {
+  try {
+    const meeting = await Meeting.findById(req.params.id);
+
+    if (!meeting) {
+      return res.status(404).json({ message: 'Meeting not found' });
+    }
+
+    if (meeting.host.toString() !== req.user._id.toString()) {
+      return res.status(401).json({ message: 'Not authorized' });
+    }
+
+    if (!meeting.transcript) {
+      return res.status(400).json({ message: 'No transcript available to analyze' });
+    }
+
+    // MOCK AI PROCESSING
+    // In a real app, you would integrate with an AI service like Gemini/OpenAI
+    
+    const mockSummary = "The session focused on synchronized real-time communication and system performance metrics. The team reviewed the integration of Socket.io and Recharts for live dashboard updates. Key priorities for the next cycle include enhancing UI responsiveness and implementing automated reporting features.";
+    
+    const mockActionItems = [
+      { task: "Optimize chart rendering performance", suggestedAssignee: "Frontend Team", status: "pending" },
+      { task: "Implement PDF export functionality", suggestedAssignee: "Backend Team", status: "pending" },
+      { task: "Conduct user testing on chat interface", suggestedAssignee: "QA Team", status: "pending" }
+    ];
+
+    const mockHighlights = [
+      "Successful integration of real-time socket events",
+      "Drafted plan for automated intelligence reports",
+      "Confirmed dashboard layout for mobile devices"
+    ];
+
+    const mockSentiment = 'positive';
+
+    meeting.summary = mockSummary;
+    meeting.actionItems = mockActionItems;
+    meeting.highlights = mockHighlights;
+    meeting.sentiment = mockSentiment;
+
+    await meeting.save();
+
+    res.json(meeting);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 module.exports = {
   createMeeting,
   getMeetings,
   getMeetingByCode,
   updateMeeting,
   deleteMeeting,
+  analyzeMeeting,
 };

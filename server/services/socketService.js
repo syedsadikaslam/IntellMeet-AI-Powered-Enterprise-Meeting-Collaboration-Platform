@@ -1,11 +1,38 @@
 const redis = require('../utils/redisClient');
+const { transcribeAudio, generateMeetingIntelligence } = require('./aiService');
+const Meeting = require('../models/Meeting');
+const Message = require('../models/Message');
+
+// Tracking active metrics
+let activeConnections = new Set();
+let activeMeetingRooms = new Set();
 
 const initSocket = (io) => {
+  const broadcastStats = () => {
+    io.emit('stats-update', {
+      onlineUsers: activeConnections.size,
+      activeRooms: activeMeetingRooms.size,
+      timestamp: new Date().toISOString()
+    });
+  };
+
   io.on('connection', (socket) => {
+    activeConnections.add(socket.id);
+    broadcastStats();
+
     console.log('User connected:', socket.id);
+
+    // Join Team Room for Chat
+    socket.on('join-team', (teamId) => {
+      socket.join(`team:${teamId}`);
+      console.log(`User ${socket.id} joined team room: ${teamId}`);
+    });
 
     socket.on('join-meeting', async ({ meetingId, userId, userName }) => {
       socket.join(meetingId);
+      activeMeetingRooms.add(meetingId);
+      broadcastStats();
+
       console.log(`${userName} joined meeting: ${meetingId}`);
 
       // Store participant in Redis for fast access
@@ -42,6 +69,12 @@ const initSocket = (io) => {
         await redis.srem(`meeting:${meetingId}:participants`, participantToRemove);
       }
 
+      const remaining = await redis.smembers(`meeting:${meetingId}:participants`);
+      if (remaining.length === 0) {
+        activeMeetingRooms.delete(meetingId);
+        broadcastStats();
+      }
+
       socket.to(meetingId).emit('user-left', { userId });
       
       // Broadcast system notification
@@ -51,7 +84,7 @@ const initSocket = (io) => {
       });
     });
 
-    // Chat functionality (Day 6)
+    // Chat functionality (Meeting-specific)
     socket.on('send-message', ({ meetingId, message, senderId, senderName }) => {
       const chatMessage = {
         id: Date.now().toString(),
@@ -60,10 +93,14 @@ const initSocket = (io) => {
         senderName,
         timestamp: new Date().toISOString()
       };
-      
-      // Broadcast to everyone in the room (including sender if needed, or just others)
-      // Usually broadcast to all so sender sees their message confirmed
       io.to(meetingId).emit('receive-message', chatMessage);
+    });
+
+    // Team Chat functionality (Day 19)
+    socket.on('send-team-message', async (data) => {
+      const { teamId, message } = data;
+      // The message is expected to be saved via HTTP, but we broadcast via Socket
+      io.to(`team:${teamId}`).emit('receive-team-message', message);
     });
 
     socket.on('typing', ({ meetingId, userId, userName }) => {
@@ -114,13 +151,78 @@ const initSocket = (io) => {
       }
     });
 
-    socket.on('end-meeting', ({ meetingId }) => {
-      io.to(meetingId).emit('meeting-ended');
+    socket.on('end-meeting', async ({ meetingId }) => {
+      console.log(`Meeting ${meetingId} ended by host.`);
+      
+      try {
+        const fullTranscript = await redis.get(`meeting:${meetingId}:transcript`);
+        
+        if (fullTranscript) {
+          const intelligence = await generateMeetingIntelligence(fullTranscript);
+          
+          if (intelligence) {
+            await Meeting.findOneAndUpdate(
+              { meetingCode: meetingId },
+              { 
+                transcript: fullTranscript,
+                summary: intelligence.summary,
+                actionItems: intelligence.actionItems,
+                endTime: new Date(),
+                isLive: false
+              }
+            );
+          }
+        }
+        
+        io.to(meetingId).emit('meeting-ended');
+        activeMeetingRooms.delete(meetingId);
+        broadcastStats();
+        await redis.del(`meeting:${meetingId}:transcript`);
+        await redis.del(`meeting:${meetingId}:participants`);
+
+      } catch (error) {
+        console.error('[SOCKET_SERVICE] End meeting error:', error.message);
+      }
+    });
+    
+    socket.on('raise-hand', ({ meetingId, userId }) => {
+      io.to(meetingId).emit('user-raised-hand', { userId });
+    });
+
+    socket.on('ask-ai', async ({ meetingId, query }) => {
+      try {
+        const transcript = await redis.get(`meeting:${meetingId}:transcript`);
+        const { getAIResponse } = require('./aiService');
+        const response = await getAIResponse(query, transcript);
+        socket.emit('ai-answer', { text: response, timestamp: new Date().toISOString() });
+      } catch (error) {
+        console.error('[SOCKET_SERVICE] AI Chat error:', error.message);
+        socket.emit('ai-answer', { text: "Error fetching AI response.", timestamp: new Date().toISOString() });
+      }
+    });
+
+    socket.on('audio-stream', async ({ meetingId, audioBlob }) => {
+
+      const buffer = Buffer.from(audioBlob);
+      const text = await transcribeAudio(buffer, meetingId);
+      
+      if (text && text.trim()) {
+        const transcriptChunk = {
+          userId: socket.id,
+          userName: socket.userName || 'Someone',
+          text: text.trim(),
+          timestamp: new Date().toISOString()
+        };
+        
+        io.to(meetingId).emit('transcript-update', transcriptChunk);
+        await redis.append(`meeting:${meetingId}:transcript`, ` ${text.trim()}`);
+      }
     });
 
     socket.on('disconnect', () => {
       console.log('User disconnected:', socket.id);
-      // Logic to handle unexpected disconnects (cleanup Redis) can be added here
+      activeConnections.delete(socket.id);
+      broadcastStats();
     });
   });
 };

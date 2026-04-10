@@ -67,6 +67,35 @@ export default function Navbar({ currentRoute }: NavbarProps) {
           </nav>
 
           <div className="inline-flex items-center gap-3.5">
+            {user && (
+              <div className="hidden lg:flex items-center gap-2 mr-2">
+                <div className="relative group/join">
+                  <input 
+                    type="text"
+                    placeholder="Enter code"
+                    id="navbar-join-input"
+                    className="w-32 bg-white/5 border border-white/10 rounded-xl py-2 pl-3 pr-10 text-[11px] font-bold focus:outline-none focus:border-blue-500/50 focus:w-48 transition-all"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        const val = (e.target as HTMLInputElement).value;
+                        if (val.trim()) window.location.hash = `#/meeting/${val.trim()}`;
+                      }
+                    }}
+                  />
+                  <button 
+                    onClick={() => {
+                      const input = document.getElementById('navbar-join-input') as HTMLInputElement;
+                      if (input.value.trim()) window.location.hash = `#/meeting/${input.value.trim()}`;
+                    }}
+                    className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 text-white/20 hover:text-blue-400 font-black text-[10px] uppercase transition-colors"
+                  >
+                    Join
+                  </button>
+                </div>
+                <div className="w-px h-6 bg-white/10 mx-1" />
+              </div>
+            )}
+            
             {user ? (
               <div className="hidden md:flex items-center gap-4">
                  <a

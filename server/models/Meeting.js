@@ -36,6 +36,31 @@ const meetingSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    transcript: {
+      type: String,
+      default: '',
+    },
+    summary: {
+      type: String,
+      default: '',
+    },
+    actionItems: [
+      {
+        task: String,
+        suggestedAssignee: String,
+        status: {
+          type: String,
+          enum: ['pending', 'completed'],
+          default: 'pending',
+        },
+      },
+    ],
+    sentiment: {
+      type: String,
+      enum: ['positive', 'neutral', 'negative', 'mixed'],
+      default: 'neutral',
+    },
+    highlights: [String],
   },
   { timestamps: true }
 );

@@ -11,6 +11,7 @@ interface MeetingDetails {
 export default function MeetingLobby({ meetingCode }: { meetingCode: string }) {
   const [meeting, setMeeting] = useState<MeetingDetails | null>(null)
   const [error, setError] = useState('')
+  const [hardwareWarning, setHardwareWarning] = useState('')
   const [showSettings, setShowSettings] = useState(false)
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([])
   const [selectedVideo, setSelectedVideo] = useState('')
@@ -83,9 +84,12 @@ export default function MeetingLobby({ meetingCode }: { meetingCode: string }) {
       // Refresh devices list after permission is granted to get labels
       const allDevices = await navigator.mediaDevices.enumerateDevices()
       setDevices(allDevices)
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error accessing devices:', err)
-      setError('Could not access camera/microphone. Please check permissions.')
+      // Don't block the whole join flow, just warn about hardware conflict
+      setHardwareWarning('Camera or Microphone is currently in use by another application or blocked. You can still join the meeting.')
+      if (isVideoOn) toggleVideo()
+      if (isMicOn) toggleMic()
     }
   }
 
@@ -110,12 +114,19 @@ export default function MeetingLobby({ meetingCode }: { meetingCode: string }) {
         {/* Left Side: Preview */}
         <div className="space-y-6">
           <div className="relative aspect-video rounded-[40px] bg-white/5 border border-white/10 overflow-hidden shadow-2xl group transition-all duration-500 hover:border-blue-500/30">
-             {!isVideoOn && (
-               <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm z-10 transition-all">
+             {(!isVideoOn || hardwareWarning) && (
+               <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm z-10 transition-all px-8 text-center">
                   <div className="p-6 bg-white/5 rounded-full border border-white/10 mb-4 animate-scale-in">
-                    <VideoOff size={48} className="text-white/20" />
+                    <VideoOff size={48} className={hardwareWarning ? 'text-red-400/60' : 'text-white/20'} />
                   </div>
-                  <p className="text-white/40 text-sm font-bold tracking-widest uppercase">Video is Off</p>
+                  <p className="text-white/40 text-[10px] font-black tracking-widest uppercase mb-2">
+                    {hardwareWarning ? 'Hardware in Use' : 'Video is Off'}
+                  </p>
+                  {hardwareWarning && (
+                    <p className="text-red-400/60 text-xs font-medium leading-relaxed max-w-[280px]">
+                      {hardwareWarning}
+                    </p>
+                  )}
                </div>
              )}
              
@@ -124,7 +135,7 @@ export default function MeetingLobby({ meetingCode }: { meetingCode: string }) {
                autoPlay 
                muted 
                playsInline
-               className={`w-full h-full object-cover transition-opacity duration-500 ${isVideoOn ? 'opacity-100' : 'opacity-0'}`}
+               className={`w-full h-full object-cover transition-opacity duration-500 ${(isVideoOn && !hardwareWarning) ? 'opacity-100' : 'opacity-0'}`}
              />
 
              {/* Bottom Controls */}

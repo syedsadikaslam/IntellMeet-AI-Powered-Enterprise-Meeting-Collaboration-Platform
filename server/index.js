@@ -7,6 +7,9 @@ const rateLimit = require('express-rate-limit');
 
 const authRoutes = require('./routes/authRoutes');
 const meetingRoutes = require('./routes/meetingRoutes');
+const projectRoutes = require('./routes/projectRoutes');
+const teamRoutes = require('./routes/teamRoutes');
+const messageRoutes = require('./routes/messageRoutes');
 
 const http = require('http');
 const { Server } = require('socket.io');
@@ -44,6 +47,9 @@ app.use('/api/auth/register', authLimiter);
 // Route Mounts
 app.use('/api/auth', authRoutes);
 app.use('/api/meetings', meetingRoutes);
+app.use('/api/projects', projectRoutes);
+app.use('/api/teams', teamRoutes);
+app.use('/api/messages', messageRoutes);
 
 app.get('/', (req, res) => {
   res.send('IntellMeet API is running...');

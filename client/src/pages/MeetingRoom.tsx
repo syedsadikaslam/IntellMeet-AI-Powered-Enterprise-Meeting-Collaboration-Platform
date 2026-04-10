@@ -1,8 +1,9 @@
-import { MessageSquare, Mic, MicOff, PhoneOff, Users, Video, VideoOff, MonitorUp, Square, Circle, Trash2 } from 'lucide-react'
+import { Mic, MicOff, Video, VideoOff, PhoneOff, Users, MessageSquare, Info, Layout, Plus, Hand, Circle, Square, MonitorUp, Bot, Sparkles, Trash2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import Peer from 'simple-peer'
 import ChatSidebar from '../components/ChatSidebar'
 import ParticipantSidebar from '../components/ParticipantSidebar'
+import AIChat from '../components/AIChat'
 import { useAuthStore } from '../store/useAuthStore'
 import { useMeetingStore } from '../store/useMeetingStore'
 import { connectSocket, disconnectSocket, socket } from '../utils/socket'
@@ -41,6 +42,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
   const [notifications, setNotifications] = useState<any[]>([])
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [isParticipantsOpen, setIsParticipantsOpen] = useState(false)
+  const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false)
   const [typingUsers, setTypingUsers] = useState<{ userId: string, userName: string }[]>([])
   const [participantStates, setParticipantStates] = useState<Record<string, { isMicOn: boolean, isVideoOn: boolean }>>({})
   const [meetingData, setMeetingData] = useState<any>(null)
@@ -49,10 +51,20 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
   const [isSharingScreen, setIsSharingScreen] = useState(false)
   const screenStreamRef = useRef<MediaStream | null>(null)
 
+  // Raise Hand State
+  const [showDetails, setShowDetails] = useState(false)
+  const [raisedHands, setRaisedHands] = useState<Record<string, boolean>>({})
+
   // Recording State
   const [isRecording, setIsRecording] = useState(false)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const recordedChunksRef = useRef<Blob[]>([])
+
+  // Transcription State
+  const [isTranscribing, setIsTranscribing] = useState(false)
+  const [transcripts, setTranscripts] = useState<any[]>([])
+  const [isTranscriptOpen, setIsTranscriptOpen] = useState(false)
+  const transcribeRecorderRef = useRef<MediaRecorder | null>(null)
 
   const peersRef = useRef<Record<string, Peer.Instance>>({})
 
@@ -170,6 +182,17 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
       window.location.hash = '#/dashboard'
     })
 
+    socket.on('user-raised-hand', ({ userId }) => {
+      setRaisedHands(prev => ({ ...prev, [userId]: true }))
+      setTimeout(() => {
+        setRaisedHands(prev => ({ ...prev, [userId]: false }))
+      }, 5000) // Lower hand after 5s
+    })
+
+    socket.on('transcript-update', (chunk) => {
+      setTranscripts(prev => [...prev, chunk])
+    })
+
     return () => {
       socket.emit('leave-meeting', { meetingId: meetingCode, userId: user?.id })
       Object.values(peersRef.current).forEach(peer => peer.destroy())
@@ -183,6 +206,8 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
       socket.off('user-toggle-audio')
       socket.off('user-toggle-video')
       socket.off('notification')
+      socket.off('transcript-update')
+      if (transcribeRecorderRef.current) transcribeRecorderRef.current.stop()
       disconnectSocket()
     }
   }, [meetingCode, localStream])
@@ -249,6 +274,19 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
       meetingId: meetingCode,
       userId: user?.id
     })
+  }
+
+  const handleRaiseHand = () => {
+    socket.emit('raise-hand', { meetingId: meetingCode, userId: user?.id })
+    const nId = Date.now()
+    setNotifications(prev => [...prev, { message: 'You raised your hand', id: nId }])
+    setTimeout(() => setNotifications(prev => prev.filter(x => x.id !== nId)), 3000)
+  }
+
+  const copyJoiningInfo = () => {
+    const url = window.location.href.split('/room')[0]
+    navigator.clipboard.writeText(`Meeting Title: ${meetingData?.title}\nJoin Link: ${url}\nMeeting Code: ${meetingCode}`)
+    alert('Joining info copied to clipboard!')
   }
 
   const handleMuteParticipant = (targetUserId: string) => {
@@ -361,6 +399,43 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
     }
   }
 
+  // AI Transcription Logic
+  const toggleTranscription = () => {
+    if (!isTranscribing) {
+      startTranscription()
+    } else {
+      stopTranscription()
+    }
+  }
+
+  const startTranscription = () => {
+    if (!localStream) return
+    
+    // Use the local audio stream to record chunks every 5s
+    const recorder = new MediaRecorder(localStream, { mimeType: 'audio/webm' })
+    
+    recorder.ondataavailable = async (event) => {
+      if (event.data.size > 0) {
+        const audioBlob = event.data
+        // Send to server via socket
+        socket.emit('audio-stream', { meetingId: meetingCode, audioBlob })
+      }
+    }
+
+    recorder.start(5000) // Send a chunk every 5 seconds
+    transcribeRecorderRef.current = recorder
+    setIsTranscribing(true)
+    setIsTranscriptOpen(true)
+  }
+
+  const stopTranscription = () => {
+    if (transcribeRecorderRef.current) {
+      transcribeRecorderRef.current.stop()
+      transcribeRecorderRef.current = null
+      setIsTranscribing(false)
+    }
+  }
+
   return (
     <div className="flex h-screen bg-[#030507] text-white overflow-hidden font-sans">
       {/* Notifications Layer */}
@@ -396,15 +471,31 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
         {/* Video Grid */}
         <div className="flex-1 p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr overflow-y-auto scrollbar-hide">
           {/* Local Feed */}
-          <VideoCard stream={localStream!} label={`${user?.name} (You)`} isMuted isOff={!isVideoOn} />
+          <VideoCard 
+            stream={localStream!} 
+            label={`${user?.name} (You)`} 
+            isMuted 
+            isOff={!isVideoOn} 
+            isHandRaised={raisedHands[user?.id || '']} 
+          />
 
           {/* Remote Feeds */}
-          {peers.map(p => (
-            <VideoCard key={p.peerId} stream={p.stream} label={p.userName} isOff={!p.stream} />
-          ))}
+          {peers.map(p => {
+             const participant = participants.find(part => part.socketId === p.peerId);
+             const uId = participant?.userId || '';
+             return (
+               <VideoCard 
+                 key={p.peerId} 
+                 stream={p.stream} 
+                 label={p.userName} 
+                 isOff={!p.stream} 
+                 isHandRaised={raisedHands[uId]} 
+               />
+             )
+          })}
 
           {participants.length < 2 && (
-             <div className="relative rounded-3xl bg-dashed border-2 border-white/5 flex flex-col items-center justify-center border-dashed gap-4">
+             <div className="relative rounded-3xl bg-white/2 border-2 border-dashed border-white/5 flex flex-col items-center justify-center gap-4">
                 <div className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center animate-pulse">
                    <Users size={20} className="text-white/20" />
                 </div>
@@ -414,11 +505,31 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
         </div>
 
         {/* Bottom Bar */}
-        <div className="h-24 bg-white/2 backdrop-blur-xl border-t border-white/5 flex items-center justify-center px-6">
+        <div className="h-24 bg-white/2 backdrop-blur-xl border-t border-white/5 flex items-center justify-between px-8 relative">
+           {/* Left Info: GMeet style */}
            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => setShowDetails(!showDetails)}
+                className={`flex items-center gap-3 px-5 py-3 rounded-2xl transition-all ${showDetails ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' : 'hover:bg-white/5 text-white/50 hover:text-white'}`}
+              >
+                <Info size={20} className={showDetails ? 'animate-pulse' : ''} />
+                <span className="text-[11px] font-black uppercase tracking-wider hidden sm:block">Meeting Details</span>
+              </button>
+           </div>
+
+           {/* Center Controls */}
+           <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-4">
               <ControlBtn active={isMicOn} onClick={toggleMic} onIcon={<Mic size={22} />} offIcon={<MicOff size={22} />} />
               <ControlBtn active={isVideoOn} onClick={toggleVideo} onIcon={<Video size={22} />} offIcon={<VideoOff size={22} />} />
               
+              <button 
+                onClick={handleRaiseHand}
+                className={`p-5 rounded-3xl transition-all ${raisedHands[user?.id || ''] ? 'bg-yellow-400 text-black shadow-xl shadow-yellow-400/20 animate-bounce' : 'bg-white/5 hover:bg-white/10 text-white'}`}
+                title="Raise Hand"
+              >
+                <Hand size={22} />
+              </button>
+
               <button 
                 onClick={() => window.location.hash = '#/dashboard'}
                 className="p-5 bg-red-600 hover:bg-red-500 rounded-3xl text-white transition-all shadow-2xl shadow-red-600/20 transform hover:scale-105 active:scale-95"
@@ -436,58 +547,131 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
                   <Trash2 size={24} />
                 </button>
               )}
+           </div>
+
+           {/* Right Side Tools */}
+           <div className="flex items-center gap-3">
+              <button 
+                onClick={toggleScreenShare}
+                title="Share Screen"
+                className={`p-5 rounded-3xl transition-all ${isSharingScreen ? 'bg-green-600 text-white shadow-xl shadow-green-600/20' : 'bg-white/5 hover:bg-white/10 text-white'}`}
+              >
+                <MonitorUp size={22} />
+              </button>
+
+              <button 
+                onClick={handleToggleRecording}
+                title={isRecording ? 'Stop Recording' : 'Start Recording'}
+                className={`p-5 rounded-3xl transition-all relative ${isRecording ? 'bg-red-600 text-white shadow-xl shadow-red-600/20' : 'bg-white/5 hover:bg-white/10 text-white'}`}
+              >
+                {isRecording ? <Square size={22} /> : <Circle size={22} />}
+                {isRecording && <span className="absolute top-2 right-2 w-2 h-2 bg-white rounded-full animate-ping" />}
+              </button>
 
               <div className="w-px h-8 bg-white/10 mx-2" />
 
-            <button 
-              onClick={() => {
-                setIsChatOpen(!isChatOpen)
-                setIsParticipantsOpen(false)
-              }}
-              className={`p-5 rounded-3xl transition-all relative ${isChatOpen ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'bg-white/5 hover:bg-white/10 text-white'}`}
-            >
-              <MessageSquare size={22} />
-              {messages.length > 0 && !isChatOpen && (
-                <span className="absolute -top-1 -right-1 w-6 h-6 bg-blue-500 rounded-full text-[10px] flex items-center justify-center border-2 border-[#030507] font-black">
-                  {messages.length}
-                </span>
-              )}
-            </button>
+              <button 
+                onClick={() => { setIsChatOpen(!isChatOpen); setIsParticipantsOpen(false); setIsTranscriptOpen(false); setIsAIAssistantOpen(false); }}
+                className={`p-5 rounded-3xl transition-all relative ${isChatOpen ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'bg-white/5 hover:bg-white/10 text-white'}`}
+              >
+                <MessageSquare size={22} />
+                {messages.length > 0 && !isChatOpen && (
+                  <span className="absolute -top-1 -right-1 w-6 h-6 bg-blue-500 rounded-full text-[10px] flex items-center justify-center border-2 border-[#030507] font-black">{messages.length}</span>
+                )}
+              </button>
 
-            <button 
-              onClick={() => {
-                setIsParticipantsOpen(!isParticipantsOpen)
-                setIsChatOpen(false)
-              }}
-              className={`p-5 rounded-3xl transition-all relative ${isParticipantsOpen ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'bg-white/5 hover:bg-white/10 text-white'}`}
-            >
-              <Users size={22} />
-            </button>
+              <button 
+                onClick={() => { setIsTranscriptOpen(!isTranscriptOpen); setIsChatOpen(false); setIsParticipantsOpen(false); setIsAIAssistantOpen(false); }}
+                className={`p-5 rounded-3xl transition-all relative ${isTranscriptOpen ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'bg-white/5 hover:bg-white/10 text-white'}`}
+                title="Live Transcription"
+              >
+                <Layout size={22} />
+                {isTranscribing && <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />}
+              </button>
 
-            <div className="w-px h-8 bg-white/10 mx-2" />
+              <button 
+                onClick={() => { setIsParticipantsOpen(!isParticipantsOpen); setIsChatOpen(false); setIsTranscriptOpen(false); setIsAIAssistantOpen(false); }}
+                className={`p-5 rounded-3xl transition-all relative ${isParticipantsOpen ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'bg-white/5 hover:bg-white/10 text-white'}`}
+              >
+                <Users size={22} />
+              </button>
 
-            {/* Screen Share & Record */}
-            <button 
-              onClick={toggleScreenShare}
-              title="Share Screen"
-              className={`p-5 rounded-3xl transition-all ${isSharingScreen ? 'bg-green-600 text-white shadow-xl shadow-green-600/20' : 'bg-white/5 hover:bg-white/10 text-white'}`}
-            >
-              <MonitorUp size={22} />
-            </button>
-
-            <button 
-              onClick={handleToggleRecording}
-              title={isRecording ? 'Stop Recording' : 'Start Recording'}
-              className={`p-5 rounded-3xl transition-all relative ${isRecording ? 'bg-red-600 text-white shadow-xl shadow-red-600/20' : 'bg-white/5 hover:bg-white/10 text-white'}`}
-            >
-              {isRecording ? <Square size={22} /> : <Circle size={22} />}
-              {isRecording && (
-                 <span className="absolute top-2 right-2 w-2 h-2 bg-white rounded-full animate-ping" />
-              )}
-            </button>
+              <button 
+                onClick={() => { setIsAIAssistantOpen(!isAIAssistantOpen); setIsChatOpen(false); setIsTranscriptOpen(false); setIsParticipantsOpen(false); }}
+                className={`p-5 rounded-3xl transition-all relative ${isAIAssistantOpen ? 'bg-purple-600 text-white shadow-xl shadow-purple-600/20' : 'bg-white/5 hover:bg-white/10 text-white'}`}
+                title="AI Assistant"
+              >
+                <Bot size={22} />
+              </button>
            </div>
         </div>
+
+        {/* Meeting Details Modal: GMeet style */}
+        {showDetails && (
+          <div className="absolute bottom-28 left-8 w-80 bg-[#0d1425] border border-white/10 rounded-[32px] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.6)] animate-slide-in-up z-50 overflow-hidden">
+             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/10 rounded-full blur-[60px] translate-x-1/2 -translate-y-1/2" />
+             
+             <div className="relative z-10 space-y-5">
+                <div>
+                   <h3 className="text-sm font-black uppercase tracking-widest text-white/30 mb-1">Joining Info</h3>
+                   <p className="text-lg font-black text-white truncate">{meetingData?.title}</p>
+                </div>
+
+                <div className="space-y-3">
+                   <div className="bg-black/40 border border-white/5 p-4 rounded-2xl">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-2">Meeting Link</p>
+                      <p className="text-xs text-white/60 truncate mb-4">{window.location.href.split('/room')[0]}</p>
+                      <button 
+                        onClick={copyJoiningInfo}
+                        className="w-full py-3 bg-white/5 hover:bg-white text-white/50 hover:text-black rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border border-white/10 hover:border-white"
+                      >
+                         Copy Joining Info
+                      </button>
+                   </div>
+                   <div className="flex items-center justify-between px-4">
+                      <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">Dial-in Node</span>
+                      <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">{meetingCode}</span>
+                   </div>
+                </div>
+             </div>
+          </div>
+        )}
       </div>
+
+      {isTranscriptOpen && (
+        <aside className="w-80 h-full bg-[#0a0f1d] border-l border-white/10 p-6 flex flex-col gap-6 animate-slide-in-right overflow-hidden">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-black uppercase tracking-widest text-white/50 flex items-center gap-2">
+              <Layout size={16} /> Live Transcript
+            </h3>
+            <button onClick={() => setIsTranscriptOpen(false)} className="p-2 hover:bg-white/5 rounded-lg text-white/20 hover:text-white transition-all">
+              <Plus size={18} className="rotate-45" />
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto space-y-4 scrollbar-hide pr-2">
+            {transcripts.map((t, i) => (
+              <div key={i} className="animate-fade-in">
+                <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-1">{t.userName}</p>
+                <p className="text-xs text-white/70 leading-relaxed bg-white/5 p-3 rounded-2xl border border-white/5">{t.text}</p>
+              </div>
+            ))}
+            {transcripts.length === 0 && (
+              <div className="h-full flex flex-col items-center justify-center text-center opacity-20">
+                <Layout size={40} className="mb-4" />
+                <p className="text-[10px] font-black uppercase tracking-widest">No Transcripts yet</p>
+              </div>
+            )}
+          </div>
+
+          <button 
+            onClick={toggleTranscription}
+            className={`w-full py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${isTranscribing ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-blue-600 text-white border border-blue-500/20 shadow-lg shadow-blue-600/20'}`}
+          >
+            {isTranscribing ? 'Stop Intelligence' : 'Start Live Analysis'}
+          </button>
+        </aside>
+      )}
 
       {isChatOpen && (
         <aside className="animate-slide-in-right">
@@ -516,6 +700,13 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
          </aside>
       )}
 
+      <AIChat 
+        socket={socket}
+        meetingCode={meetingCode}
+        isOpen={isAIAssistantOpen}
+        onClose={() => setIsAIAssistantOpen(false)} 
+      />
+
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes slideInRight {
           from { transform: translateX(100%); opacity: 0; }
@@ -529,7 +720,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
   )
 }
 
-function VideoCard({ stream, label, isMuted = false, isOff = false }: { stream?: MediaStream, label: string, isMuted?: boolean, isOff?: boolean }) {
+function VideoCard({ stream, label, isMuted = false, isOff = false, isHandRaised = false }: { stream?: MediaStream, label: string, isMuted?: boolean, isOff?: boolean, isHandRaised?: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
@@ -539,11 +730,11 @@ function VideoCard({ stream, label, isMuted = false, isOff = false }: { stream?:
   }, [stream])
 
   return (
-    <div className="relative group rounded-[32px] bg-white/5 border border-white/5 overflow-hidden shadow-2xl transition-all hover:border-blue-500/30">
+    <div className={`relative group rounded-[32px] bg-white/5 border transition-all duration-500 overflow-hidden shadow-2xl ${isHandRaised ? 'border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.2)] scale-[1.02]' : 'border-white/5 hover:border-blue-500/30'}`}>
       {(!stream || isOff) ? (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0f1d] z-10">
-           <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
-              <p className="text-2xl font-black text-white/20">{label.charAt(0)}</p>
+           <div className={`w-20 h-20 rounded-full flex items-center justify-center border transition-all ${isHandRaised ? 'border-yellow-400/30 bg-yellow-400/5' : 'bg-white/5 border-white/10'}`}>
+              <p className={`text-2xl font-black transition-colors ${isHandRaised ? 'text-yellow-400' : 'text-white/20'}`}>{label.charAt(0)}</p>
            </div>
         </div>
       ) : (
@@ -555,8 +746,16 @@ function VideoCard({ stream, label, isMuted = false, isOff = false }: { stream?:
           className="w-full h-full object-cover scale-x-[-1]"
         />
       )}
+      
+      {isHandRaised && (
+         <div className="absolute top-4 left-4 z-30 bg-yellow-400 text-black px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2 animate-bounce">
+            <Hand size={12} fill="currentColor" />
+            Hand Raised
+         </div>
+      )}
+
       <div className="absolute bottom-4 left-4 z-20">
-        <span className="px-4 py-2 bg-black/40 backdrop-blur-md rounded-2xl text-[11px] font-black uppercase tracking-widest border border-white/10">
+        <span className={`px-4 py-2 backdrop-blur-md rounded-2xl text-[11px] font-black uppercase tracking-widest border transition-all ${isHandRaised ? 'bg-yellow-400/20 border-yellow-400/50 text-yellow-400' : 'bg-black/40 border-white/10 text-white'}`}>
           {label}
         </span>
       </div>
