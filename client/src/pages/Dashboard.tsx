@@ -9,6 +9,7 @@ import { io, Socket } from 'socket.io-client'
 import PerformanceChart from '../components/PerformanceChart'
 import TeamChat from '../components/TeamChat'
 import { generateMeetingReport } from '../utils/ReportGenerator'
+import { SOCKET_URL } from '../utils/socket'
 
 interface Meeting {
   _id: string;
@@ -34,7 +35,7 @@ interface GlobalStats {
   activeRooms: number
 }
 
-const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 
 export default function Dashboard() {
   const { user } = useAuthStore()

@@ -3,7 +3,22 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
+const compression = require('compression');
+const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+
+// Validate critical environment variables
+const requiredEnvVars = ['MONGO_URI', 'JWT_SECRET'];
+if (process.env.NODE_ENV === 'production') {
+  requiredEnvVars.push('CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET');
+}
+
+requiredEnvVars.forEach((varName) => {
+  if (!process.env[varName]) {
+    console.error(`ERROR: Missing required environment variable: ${varName}`);
+    process.exit(1);
+  }
+});
 
 const authRoutes = require('./routes/authRoutes');
 const meetingRoutes = require('./routes/meetingRoutes');
@@ -17,19 +32,30 @@ const initSocket = require('./services/socketService');
 
 const app = express();
 const server = http.createServer(app);
+
+const allowedOrigins = process.env.FRONTEND_URL 
+  ? process.env.FRONTEND_URL.split(',') 
+  : ['http://localhost:5173', 'http://localhost:3000'];
+
 const io = new Server(server, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
+    origin: allowedOrigins,
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 
 // Initialize Socket.io service
 initSocket(io);
 
-// Security and Utility Middleware (MUST be before routes)
+// Security and Utility Middleware
 app.use(helmet());
-app.use(cors());
+app.use(compression()); // Gzip compression
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev')); // Request logging
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
 app.use(express.json());
 
 // Auth rate limiting specifically to prevent brute force attacks
@@ -50,6 +76,14 @@ app.use('/api/meetings', meetingRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/messages', messageRoutes);
+
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'UP',
+    timestamp: new Date().toISOString(),
+    mongodb: mongoose.connection.readyState === 1 ? 'CONNECTED' : 'DISCONNECTED'
+  });
+});
 
 app.get('/', (req, res) => {
   res.send('IntellMeet API is running...');

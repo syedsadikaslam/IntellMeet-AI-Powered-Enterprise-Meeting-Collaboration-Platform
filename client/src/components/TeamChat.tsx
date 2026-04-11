@@ -3,6 +3,7 @@ import { Send, X, MessageSquare, User, AtSign } from 'lucide-react';
 import api from '../utils/api';
 import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from '../store/useAuthStore';
+import { SOCKET_URL } from '../utils/socket'
 
 interface Message {
   _id: string;
@@ -21,7 +22,7 @@ interface TeamChatProps {
   onClose: () => void;
 }
 
-const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 
 export default function TeamChat({ teamId, teamName, onClose }: TeamChatProps) {
   const { user } = useAuthStore();

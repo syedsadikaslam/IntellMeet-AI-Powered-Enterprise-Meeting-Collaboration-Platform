@@ -64,3 +64,34 @@ IntellMeet is a modern, high-performance MERN stack application designed for sea
 - [x] Day 5: Redis & Socket.io Infrastructure
 - [x] Day 6: Real-time Chat & Notifications
 - [x] Day 7: Central Dashboard & Checkpoint
+
+---
+
+## 🚀 Deployment Guide
+
+Follow these steps to deploy IntellMeet to production platforms (e.g., Vercel, Railway, Render).
+
+### 1. Backend (e.g., Railway, Render)
+1. Set the following environment variables in your cloud provider:
+   - `NODE_ENV=production`
+   - `MONGO_URI`: Your MongoDB Connection String.
+   - `JWT_SECRET`: A long random string.
+   - `FRONTEND_URL`: Your deployed frontend URL (e.g., `https://intellmeet.vercel.app`).
+   - `CLOUDINARY_*`: Your Cloudinary credentials.
+2. Build Command: `npm install`
+3. Start Command: `node index.js`
+
+### 2. Frontend (e.g., Vercel, Netlify)
+1. Set the following environment variables:
+   - `VITE_API_URL`: Your deployed backend URL + `/api` (e.g., `https://api.intellmeet.com/api`).
+   - `VITE_SOCKET_URL`: Your deployed backend URL (e.g., `https://api.intellmeet.com`).
+2. Build Command: `npm run build`
+3. Output Directory: `dist`
+
+### 🛡️ Production Hardening Applied
+- ✅ **Gzip Compression**: Optimized payload delivery.
+- ✅ **Request Logging**: Standardized `morgan` logging for monitoring.
+- ✅ **Origin Restriction**: CORS and Socket.io restricted to trusted domains.
+- ✅ **Startup Validation**: Prevents server launch if critical secrets are missing.
+- ✅ **Security Headers**: Granular `helmet` configuration.
+
