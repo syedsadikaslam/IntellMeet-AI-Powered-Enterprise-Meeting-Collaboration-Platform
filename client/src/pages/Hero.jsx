@@ -16,38 +16,38 @@ const insightBars = [
 ]
 
 const stats = [
-  { label: 'Meetings summarized', value: '5k+' },
-  { label: 'Follow-ups captured', value: '87%' },
-  { label: 'Teams onboarded', value: '340+' },
+  { label: 'Uptime SLA', value: '99.95%' },
+  { label: 'AI Accuracy', value: '98.4%' },
+  { label: 'Max Concurrency', value: '50+' },
 ]
 
 const workflow = [
   {
-    title: 'Capture everything',
-    text: 'Record decisions, highlights, and blockers while the meeting is still live.',
+    title: 'High-Concurrency Video',
+    text: 'Host up to 50+ participants with ultra-low latency WebRTC and crystal clear 4K video quality.',
   },
   {
-    title: 'Automate follow-up',
-    text: 'Turn spoken discussion into owners, due dates, and next steps without manual work.',
+    title: 'AI Intelligence Hub',
+    text: 'Automated transcription and GPT-powered summaries delivered instantly after every session.',
   },
   {
-    title: 'Keep everyone aligned',
-    text: 'Give teams one place to revisit context, action items, and progress after every sync.',
+    title: 'Integrated Team Hub',
+    text: 'Sync meeting action items directly into Kanban boards to move from discussion to execution.',
   },
 ]
 
 const showcases = [
   {
-    title: 'Board-ready summaries',
-    text: 'Generate clean recaps for leadership reviews with sentiment, decisions, and risks.',
+    title: 'Intelligent Recaps',
+    text: 'Generate structured summaries for leadership reviews with sentiment, decisions, and risks included.',
   },
   {
-    title: 'Cross-team visibility',
-    text: 'See which discussions are blocked, who owns the follow-up, and what changed this week.',
+    title: 'Enterprise Governance',
+    text: 'Maintain full visibility with SOC2 security, JWT auth, and role-based access for all stakeholders.',
   },
   {
-    title: 'Faster team execution',
-    text: 'Move from meeting to execution with less back-and-forth and fewer missed commitments.',
+    title: 'Velocity Dashboard',
+    text: 'Track meeting ROI and team engagement metrics to optimize your organization\'s communication.',
   },
 ]
 
@@ -258,24 +258,21 @@ function HeroModern() {
 
       <section className="mt-2 grid gap-[18px] md:grid-cols-3" id="features">
         <article className="rounded-[24px] border border-white/12 bg-white/6 p-[22px] shadow-[0_24px_80px_rgba(0,0,0,0.2)] backdrop-blur-xl">
-          <h3 className="mb-2.5 text-[1.1rem] font-bold text-white">Shared context</h3>
+          <h3 className="mb-2.5 text-[1.1rem] font-bold text-white">AI Intelligence</h3>
           <p className="text-white/72">
-            Keep agendas, notes, and recordings connected to the same meeting
-            timeline.
+            Proprietary AI engine for real-time transcription, translation, and automated summarizing.
           </p>
         </article>
         <article className="rounded-[24px] border border-white/12 bg-white/6 p-[22px] shadow-[0_24px_80px_rgba(0,0,0,0.2)] backdrop-blur-xl">
-          <h3 className="mb-2.5 text-[1.1rem] font-bold text-white">Action tracking</h3>
+          <h3 className="mb-2.5 text-[1.1rem] font-bold text-white">Unified Workspace</h3>
           <p className="text-white/72">
-            Turn decisions into follow-ups with owners, due dates, and status
-            updates.
+            Integrated project boards and team chat to keep all meeting outcomes in one searchable hub.
           </p>
         </article>
         <article className="rounded-[24px] border border-white/12 bg-white/6 p-[22px] shadow-[0_24px_80px_rgba(0,0,0,0.2)] backdrop-blur-xl">
-          <h3 className="mb-2.5 text-[1.1rem] font-bold text-white">Team visibility</h3>
+          <h3 className="mb-2.5 text-[1.1rem] font-bold text-white">Bank-Grade Tech</h3>
           <p className="text-white/72">
-            Give every stakeholder a quick view of what changed, what is next,
-            and who is responsible.
+            Scalable WebRTC infrastructure with Redis-powered real-time sync and E2E encryption.
           </p>
         </article>
       </section>
@@ -298,14 +295,13 @@ function HeroModern() {
         <article className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.2)] backdrop-blur-xl sm:p-8">
           <div className="max-w-2xl">
             <span className="inline-flex rounded-full border border-cyan-400/20 bg-cyan-400/8 px-3 py-1 text-[11px] font-extrabold tracking-[0.22em] text-cyan-200 uppercase">
-              Workflow
+              Production Stack
             </span>
             <h2 className="mt-4 text-3xl font-black tracking-[-0.05em] text-white sm:text-4xl">
-              A home page that actually shows how the product moves work forward.
+              Engineered for consistency and maximum performance.
             </h2>
             <p className="mt-4 max-w-2xl text-base leading-8 text-white/68">
-              IntellMeet keeps your teams aligned before, during, and after the meeting.
-              Every section below reflects that same product story.
+              From real-time signaling to AI inference, every layer of IntellMeet is built to support mission-critical enterprise communication.
             </p>
           </div>
 
