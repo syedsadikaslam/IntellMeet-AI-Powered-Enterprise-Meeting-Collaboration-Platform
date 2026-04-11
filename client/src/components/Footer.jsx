@@ -20,7 +20,6 @@ function SiteFooter() {
             <a className="text-[0.88rem] no-underline transition hover:text-[#7ea6ff] sm:text-base" href="#/">Home</a>
             <a className="text-[0.88rem] no-underline transition hover:text-[#7ea6ff] sm:text-base" href="#/features">Features</a>
             <a className="text-[0.88rem] no-underline transition hover:text-[#7ea6ff] sm:text-base" href="#/solutions">Solutions</a>
-            <a className="text-[0.88rem] no-underline transition hover:text-[#7ea6ff] sm:text-base" href="#/pricing">Pricing</a>
           </div>
         </div>
 

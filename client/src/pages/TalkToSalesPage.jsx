@@ -5,7 +5,7 @@ function TalkToSalesPage() {
     <PageWrap>
       <PageHero
         kicker="Talk to Sales"
-        title="Connect with our team for demos, pricing, and rollout planning."
+        title="Connect with our team for demos and rollout planning."
         description="We help you evaluate team fit, estimate adoption, and map the right collaboration workflow for your organization."
       />
 

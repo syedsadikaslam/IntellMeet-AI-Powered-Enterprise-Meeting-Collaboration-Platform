@@ -5,7 +5,6 @@ import { useAuthStore } from '../store/useAuthStore'
 const navItems = [
   { href: '#/features', label: 'Features' },
   { href: '#/solutions', label: 'Solutions' },
-  { href: '#/pricing', label: 'Pricing' },
   { href: '#/contact', label: 'Contact' },
 ]
 

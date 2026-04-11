@@ -14,7 +14,6 @@ import Dashboard from './pages/Dashboard'
 import ProjectBoard from './pages/ProjectBoard'
 import ProtectedRoute from './components/ProtectedRoute'
 import PlansPage from './pages/PlansPage'
-import PricingPage from './pages/PricingPage'
 import ProductPage from './pages/ProductPage'
 import SolutionsPage from './pages/SolutionsPage'
 import TalkToSalesPage from './pages/TalkToSalesPage'
@@ -23,7 +22,6 @@ const routes: Record<string, any> = {
   '#/': Hero,
   '#/features': FeaturesPage,
   '#/solutions': SolutionsPage,
-  '#/pricing': PricingPage,
   '#/login': AuthPage,
   '#/dashboard': Dashboard,
   '#/contact': ContactPage,
