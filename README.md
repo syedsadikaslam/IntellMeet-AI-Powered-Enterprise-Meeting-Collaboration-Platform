@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://img.shields.io/badge/version-2.0--Industry_Edition-blueviolet?style=flat-square" />
+<img src="https://img.shields.io/badge/version-1.0--Industry_Edition-blueviolet?style=flat-square" />
 <img src="https://img.shields.io/badge/stack-MERN-61DAFB?style=flat-square&logo=react" />
 <img src="https://img.shields.io/badge/real--time-WebRTC_%2B_Socket.io-010101?style=flat-square" />
 <img src="https://img.shields.io/badge/AI-OpenAI_Whisper_%2B_GPT-412991?style=flat-square&logo=openai" />
