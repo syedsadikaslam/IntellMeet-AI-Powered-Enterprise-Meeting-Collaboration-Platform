@@ -308,7 +308,6 @@ VITE_API_URL=http://localhost:5000/api
 VITE_SOCKET_URL=http://localhost:5000
 ```
 
-> ⚠️ **Never commit `.env` files.** The `.gitignore` already excludes them.
 
 ---
 
