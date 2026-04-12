@@ -522,7 +522,7 @@ Please follow the existing code style (ESLint + Prettier configured) and write t
 **Sadik**
 
 Prepared for: **Zidio Development — Web Development (MERN) Domain**
-Project version: **2.0 — Industry Edition**
+Project version: **1.0 — Industry Edition**
 Date: **March 2026**
 
 ---
