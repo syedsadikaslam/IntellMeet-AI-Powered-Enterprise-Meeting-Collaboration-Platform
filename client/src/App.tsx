@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { SpeedInsights } from '@vercel/speed-insights/react'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import ContactPage from './pages/ContactPage'
@@ -105,6 +106,7 @@ function App() {
       {Component !== MeetingRoom && <Navbar currentRoute={window.location.hash} />}
       <Component meetingCode={params.code} />
       {Component !== MeetingRoom && <Footer />}
+      <SpeedInsights />
     </main>
   )
 }
