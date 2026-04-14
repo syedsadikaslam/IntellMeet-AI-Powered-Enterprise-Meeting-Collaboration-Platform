@@ -48,6 +48,26 @@ const io = new Server(server, {
 // Initialize Socket.io service
 initSocket(io);
 
+const Sentry = require("@sentry/node");
+
+// Initialize Sentry
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV || "development",
+    integrations: [
+      new Sentry.Integrations.Http({ tracing: true }),
+      new Sentry.Integrations.Express({ app }),
+    ],
+    tracesSampleRate: 1.0,
+  });
+
+  // The request handler must be the first middleware on the app
+  app.use(Sentry.Handlers.requestHandler());
+  // TracingHandler creates a trace for every incoming request
+  app.use(Sentry.Handlers.tracingHandler());
+}
+
 // Security and Utility Middleware
 app.use(helmet());
 app.use(compression()); // Gzip compression
@@ -88,6 +108,11 @@ app.get('/health', (req, res) => {
 app.get('/', (req, res) => {
   res.send('IntellMeet API is running...');
 });
+
+// The error handler must be before any other error middleware and after all controllers
+if (process.env.SENTRY_DSN) {
+  app.use(Sentry.Handlers.errorHandler());
+}
 
 // Global Error Handler
 app.use((err, req, res, next) => {

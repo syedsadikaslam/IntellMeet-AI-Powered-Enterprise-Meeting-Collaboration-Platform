@@ -55,43 +55,43 @@ IntellMeet is a modern, high-performance MERN stack application designed for sea
 
 ---
 
-## 📅 Roadmap (Week 1 Completed)
+## 📅 Complete Roadmap Progress
 
-- [x] Day 1: Project setup & MERN Foundation
-- [x] Day 2: Authentication (Signup/Login/JWT)
-- [x] Day 3: Profile Management & Rate Limiting
-- [x] Day 4: Meeting CRUD & Signaling Setup
-- [x] Day 5: Redis & Socket.io Infrastructure
-- [x] Day 6: Real-time Chat & Notifications
-- [x] Day 7: Central Dashboard & Checkpoint
+### Phase 1: Foundation (Completed)
+- [x] Day 1-7: Core MERN & Real-time setup.
+- [x] Day 8-14: Advanced Workspace & AI Summarization.
+- [x] Day 15-21: Recording & Interactive Features.
+
+### Phase 2: Production Readiness (Completed)
+- [x] **Day 22**: Docker multi-stage builds & Orchestration.
+- [x] **Day 23**: Kubernetes manifests & Helm charts for scalability.
+- [x] **Day 24**: GitHub Actions CI/CD (Lint, Build, Deploy).
+- [x] **Day 25**: Cloud Deployment (Vercel + Render + AWS).
+- [x] **Day 26**: Prometheus + Grafana monitoring & Sentry error tracking.
+- [x] **Day 27**: Load testing (JMeter) & Security review (OWASP ZAP).
+- [x] **Day 28**: Final QA, edge case testing, and PDF Export optimization.
 
 ---
 
-## 🚀 Deployment Guide
+## 🏗️ Production Architecture
 
-Follow these steps to deploy IntellMeet to production platforms (e.g., Vercel, Railway, Render).
+### Containerization
+- **Backend**: Optimized Node environment with `node` user security.
+- **Frontend**: Multi-stage Nginx build for high-performance static serving.
+- **Orchestration**: Docker Compose for local dev-parity and Kubernetes for production.
 
-### 1. Backend (e.g., Railway, Render)
-1. Set the following environment variables in your cloud provider:
-   - `NODE_ENV=production`
-   - `MONGO_URI`: Your MongoDB Connection String.
-   - `JWT_SECRET`: A long random string.
-   - `FRONTEND_URL`: Your deployed frontend URL (e.g., `https://intellmeet.vercel.app`).
-   - `CLOUDINARY_*`: Your Cloudinary credentials.
-2. Build Command: `npm install`
-3. Start Command: `node index.js`
+### Monitoring & Reliability
+- **Sentry**: Real-time error tracking and session replays.
+- **Health Checks**: Specialized `/health` endpoint for K8s liveness/readiness probes.
+- **CI/CD**: Fully automated pipeline from linting to containerized builds.
 
-### 2. Frontend (e.g., Vercel, Netlify)
-1. Set the following environment variables:
-   - `VITE_API_URL`: Your deployed backend URL + `/api` (e.g., `https://api.intellmeet.com/api`).
-   - `VITE_SOCKET_URL`: Your deployed backend URL (e.g., `https://api.intellmeet.com`).
-2. Build Command: `npm run build`
-3. Output Directory: `dist`
+---
 
-### 🛡️ Production Hardening Applied
-- ✅ **Gzip Compression**: Optimized payload delivery.
-- ✅ **Request Logging**: Standardized `morgan` logging for monitoring.
-- ✅ **Origin Restriction**: CORS and Socket.io restricted to trusted domains.
-- ✅ **Startup Validation**: Prevents server launch if critical secrets are missing.
-- ✅ **Security Headers**: Granular `helmet` configuration.
+## 🚀 Advanced Deployment
+
+Refer to [DEPLOYMENT.md](./DEPLOYMENT.md) for environment variables and cloud provider instructions.
+
+### Monitoring Setup
+- **Sentry**: Add `SENTRY_DSN` and `VITE_SENTRY_DSN` to your env variables.
+- **Prometheus**: Scrape the `/health` endpoint for basic uptime metrics.
 
