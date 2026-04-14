@@ -35,7 +35,11 @@ const server = http.createServer(app);
 
 const allowedOrigins = process.env.FRONTEND_URL 
   ? process.env.FRONTEND_URL.split(',') 
-  : ['http://localhost:5173', 'http://localhost:3000'];
+  : [
+      'https://intellmeets.vercel.app',
+      'http://localhost:5173', 
+      'http://localhost:3000'
+    ];
 
 const io = new Server(server, {
   cors: {
@@ -73,7 +77,23 @@ app.use(helmet());
 app.use(compression()); // Gzip compression
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev')); // Request logging
 app.use(cors({
-  origin: allowedOrigins,
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Check if the origin is in our allowed list (handling trailing slashes)
+    const formattedOrigin = origin.endsWith('/') ? origin.slice(0, -1) : origin;
+    const isAllowed = allowedOrigins.some(ao => {
+      const formattedAO = ao.endsWith('/') ? ao.slice(0, -1) : ao;
+      return formattedAO === formattedOrigin;
+    });
+
+    if (isAllowed || process.env.NODE_ENV !== 'production') {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 app.use(express.json());
