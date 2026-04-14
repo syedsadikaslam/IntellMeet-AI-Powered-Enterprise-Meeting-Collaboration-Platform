@@ -17,19 +17,27 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: './client/package-lock.json'
+          cache-dependency-path: 'client/package-lock.json'
+
+      - name: Install Client Dependencies
+        run: |
+          cd client
+          npm ci
 
       - name: Lint Client
         run: |
           cd client
-          npm install
           npm run lint
 
-      - name: Lint Server
+      - name: Install Server Dependencies
         run: |
           cd server
-          npm install
-          # npm test (Add tests if available)
+          npm install # Using install here as server might not have lockfile if updated manually
+
+      - name: Lint Server (Optional)
+        run: |
+          cd server
+          # npm run lint # Add if server linting is set up
 
   build-docker:
     needs: lint-and-test
