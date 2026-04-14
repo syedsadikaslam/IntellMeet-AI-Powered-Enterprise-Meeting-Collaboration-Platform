@@ -1,5 +1,5 @@
 import { Menu, X, LogOut, Layout } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useAuthStore } from '../store/useAuthStore'
 
 const navItems = [
@@ -16,10 +16,45 @@ export default function Navbar({ currentRoute }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false)
   const { user, logout } = useAuthStore()
 
+  const [isVisible, setIsVisible] = useState(true)
+  const lastScrollY = useRef(0)
+
   useEffect(() => {
     document.body.style.overflow = isOpen ? 'hidden' : 'unset'
+    
+    // Logic for hiding/showing navbar on scroll (Mobile Only)
+    const handleScroll = () => {
+      // Check if not mobile
+      if (window.innerWidth >= 768) {
+        setIsVisible(true)
+        return
+      }
+
+      const currentScrollY = window.scrollY
+      if (currentScrollY > lastScrollY.current && currentScrollY > 60) {
+        setIsVisible(false) // Scrolling down
+      } else {
+        setIsVisible(true) // Scrolling up
+      }
+      lastScrollY.current = currentScrollY
+    }
+
+    // Logic for showing navbar on click (Mobile Only)
+    const handleDocumentClick = () => {
+      if (window.innerWidth < 768) {
+        setIsVisible(true)
+      }
+    }
+
+    if (!isOpen) {
+      window.addEventListener('scroll', handleScroll, { passive: true })
+      window.addEventListener('click', handleDocumentClick)
+    }
+
     return () => {
       document.body.style.overflow = 'unset'
+      window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('click', handleDocumentClick)
     }
   }, [isOpen])
 
@@ -35,7 +70,11 @@ export default function Navbar({ currentRoute }: NavbarProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-50 border-b border-white/5 bg-[rgba(4,6,8,0.96)] px-4 backdrop-blur-[14px] sm:px-6 lg:px-8">
+      <header 
+        className={`sticky top-0 z-50 border-b border-white/5 bg-[rgba(4,6,8,0.96)] px-4 backdrop-blur-[14px] sm:px-6 lg:px-8 transition-transform duration-300 md:translate-y-0 ${
+          isVisible ? 'translate-y-0' : '-translate-y-full'
+        }`}
+      >
         <div className="mx-auto flex min-h-[60px] w-full max-w-7xl items-center justify-between gap-3 md:min-h-[78px] md:gap-6">
           <a className="inline-flex items-end gap-px no-underline" href="#/" onClick={closeAll}>
             <span className="inline-flex flex-none items-end justify-center">
