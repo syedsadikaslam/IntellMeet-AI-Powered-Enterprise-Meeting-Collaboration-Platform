@@ -505,7 +505,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
         </div>
 
         {/* Bottom Bar */}
-        <div className="h-20 md:h-24 bg-[rgba(3,5,7,0.92)] backdrop-blur-xl border-t border-white/5 flex items-center px-1.5 md:px-8 relative justify-between">
+        <div className="h-20 md:h-24 bg-[rgba(3,5,7,0.92)] backdrop-blur-xl border-t border-white/5 flex items-center px-1 md:px-8 relative justify-between overflow-hidden">
             <div className="flex items-center gap-2 md:gap-4 flex-none">
                <button 
                  onClick={() => setShowDetails(!showDetails)}
@@ -517,9 +517,9 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
             </div>
 
            {/* Tools & Controls Container */}
-           <div className="flex-1 flex items-center justify-between md:justify-center gap-1 md:gap-4 max-w-full px-1">
+           <div className="flex-1 flex items-center justify-start md:justify-center gap-1 md:gap-4 overflow-x-auto no-scrollbar whitespace-nowrap py-1 px-1">
               {/* Main Meeting Controls */}
-              <div className="flex items-center gap-1 md:gap-4">
+              <div className="flex flex-none items-center gap-1 md:gap-4">
                 <ControlBtn active={isMicOn} onClick={toggleMic} onIcon={<Mic className="w-5 h-5 md:w-[22px] md:h-[22px]" />} offIcon={<MicOff className="w-5 h-5 md:w-[22px] md:h-[22px]" />} />
                 <ControlBtn active={isVideoOn} onClick={toggleVideo} onIcon={<Video className="w-5 h-5 md:w-[22px] md:h-[22px]" />} offIcon={<VideoOff className="w-5 h-5 md:w-[22px] md:h-[22px]" />} />
                 
@@ -551,7 +551,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
               </div>
 
               {/* Side Tools (Integrated for mobile) */}
-              <div className="flex items-center gap-1 md:gap-3 md:absolute md:right-8">
+              <div className="flex flex-none items-center gap-1 md:gap-3 md:absolute md:right-8">
                 <button 
                   onClick={() => { setIsChatOpen(!isChatOpen); setIsParticipantsOpen(false); setIsTranscriptOpen(false); setIsAIAssistantOpen(false); }}
                   className={`p-2.5 md:p-5 rounded-2xl md:rounded-3xl transition-all relative ${isChatOpen ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'bg-white/5 text-white/50 hover:text-white'}`}
