@@ -59,9 +59,6 @@ export default function AuthPage() {
       <div className="w-full max-w-md">
         {/* Simplified Header */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/5 border border-white/10 mb-6">
-            <img src="/logo.png" alt="IntellMeet" className="w-10 h-10 object-contain" />
-          </div>
           <h1 className="text-3xl font-black tracking-tight text-white mb-2">
             {mode === 'login' ? 'Welcome back' : 'Create account'}
           </h1>
