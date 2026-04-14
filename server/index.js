@@ -35,7 +35,7 @@ const server = http.createServer(app);
 
 const allowedOrigins = process.env.FRONTEND_URL 
   ? process.env.FRONTEND_URL.split(',') 
-  : ['http://localhost:5173', 'http://localhost:3000'];
+  : ['https://intellmeets.vercel.app/#/', 'http://localhost:3000'];
 
 const io = new Server(server, {
   cors: {
