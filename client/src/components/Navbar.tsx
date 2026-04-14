@@ -22,14 +22,8 @@ export default function Navbar({ currentRoute }: NavbarProps) {
   useEffect(() => {
     document.body.style.overflow = isOpen ? 'hidden' : 'unset'
     
-    // Logic for hiding/showing navbar on scroll (Mobile Only)
+    // Logic for hiding/showing navbar on scroll
     const handleScroll = () => {
-      // Check if not mobile
-      if (window.innerWidth >= 768) {
-        setIsVisible(true)
-        return
-      }
-
       const currentScrollY = window.scrollY
       if (currentScrollY > lastScrollY.current && currentScrollY > 60) {
         setIsVisible(false) // Scrolling down
@@ -39,11 +33,9 @@ export default function Navbar({ currentRoute }: NavbarProps) {
       lastScrollY.current = currentScrollY
     }
 
-    // Logic for showing navbar on click (Mobile Only)
+    // Logic for showing navbar on click
     const handleDocumentClick = () => {
-      if (window.innerWidth < 768) {
-        setIsVisible(true)
-      }
+      setIsVisible(true)
     }
 
     if (!isOpen) {
@@ -71,20 +63,20 @@ export default function Navbar({ currentRoute }: NavbarProps) {
   return (
     <>
       <header 
-        className={`sticky top-0 z-50 border-b border-white/5 bg-[rgba(4,6,8,0.96)] px-4 backdrop-blur-[14px] sm:px-6 lg:px-8 transition-transform duration-300 md:translate-y-0 ${
+        className={`sticky top-0 z-50 border-b border-white/5 bg-[rgba(4,6,8,0.96)] px-4 backdrop-blur-[14px] sm:px-6 lg:px-8 transition-transform duration-300 ${
           isVisible ? 'translate-y-0' : '-translate-y-full'
         }`}
       >
-        <div className="mx-auto flex min-h-[60px] w-full max-w-7xl items-center justify-between gap-3 md:min-h-[78px] md:gap-6">
+        <div className="mx-auto flex min-h-[74px] w-full max-w-7xl items-center justify-between gap-3 md:min-h-[78px] md:gap-6">
           <a className="inline-flex items-end gap-px no-underline" href="#/" onClick={closeAll}>
             <span className="inline-flex flex-none items-end justify-center">
               <img
-                className="block h-auto w-10 object-contain sm:w-[54px]"
+                className="block h-auto w-12 object-contain sm:w-[54px]"
                 src="/logo.png"
                 alt="IntellMeet logo"
               />
             </span>
-            <span className="whitespace-nowrap text-[1.28rem] leading-[0.9] font-black tracking-[-0.05em] text-white sm:text-[1.9rem]">
+            <span className="whitespace-nowrap text-[1.6rem] leading-[0.9] font-black tracking-[-0.05em] text-white sm:text-[1.9rem]">
               tellMeet
             </span>
           </a>
@@ -168,7 +160,7 @@ export default function Navbar({ currentRoute }: NavbarProps) {
 
             <button
               type="button"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/5 bg-white/5 text-white md:hidden hover:bg-white/10 transition-all"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-white/5 bg-white/5 text-white md:hidden hover:bg-white/10 transition-all"
               onClick={() => setIsOpen((open) => !open)}
             >
               {isOpen ? <X size={22} /> : <Menu size={22} />}
