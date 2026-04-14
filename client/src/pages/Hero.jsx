@@ -104,8 +104,8 @@ function HeroModern() {
   const { user } = useAuthStore()
 
   return (
-    <section className="mx-auto w-full max-w-7xl px-4 pt-4 pb-8 sm:px-6 lg:px-8">
-      <section className="grid items-center gap-7 pt-2 pb-7 md:grid-cols-[minmax(0,1fr)_minmax(430px,0.96fr)] md:gap-14 md:pb-11">
+    <section className="mx-auto w-full max-w-7xl px-4 pt-1 pb-8 sm:px-6 sm:pt-4 lg:px-8">
+      <section className="grid items-center gap-7 pt-0 pb-7 md:grid-cols-[minmax(0,1fr)_minmax(430px,0.96fr)] md:gap-14 md:pt-2 md:pb-11">
         <div className="max-w-[620px]">
           <span className="inline-flex min-h-[34px] items-center rounded-full border border-[#4f74ff3d] bg-[#23489d42] px-3.5 text-[0.78rem] font-bold text-[#78a8ff] sm:min-h-10 sm:px-4 sm:text-[0.98rem]">
             <span className="mr-2.5 h-2 w-2 rounded-full bg-[#4f7fff] shadow-[0_0_12px_rgba(79,127,255,0.8)]" />

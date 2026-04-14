@@ -67,7 +67,7 @@ export default function Navbar({ currentRoute }: NavbarProps) {
           isVisible ? 'translate-y-0' : '-translate-y-full'
         }`}
       >
-        <div className="mx-auto flex min-h-[74px] w-full max-w-7xl items-center justify-between gap-3 md:min-h-[78px] md:gap-6">
+        <div className="mx-auto flex min-h-[64px] w-full max-w-7xl items-center justify-between gap-3 md:min-h-[78px] md:gap-6">
           <a className="inline-flex items-end gap-px no-underline" href="#/" onClick={closeAll}>
             <span className="inline-flex flex-none items-end justify-center">
               <img
