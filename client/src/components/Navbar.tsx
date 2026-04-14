@@ -63,7 +63,7 @@ export default function Navbar({ currentRoute }: NavbarProps) {
   return (
     <>
       <header 
-        className={`sticky top-0 z-50 border-b border-white/5 bg-[rgba(4,6,8,0.96)] px-4 backdrop-blur-[14px] sm:px-6 lg:px-8 transition-transform duration-300 ${
+        className={`sticky top-0 z-50 border-b border-white/5 bg-[#0a0f1d]/80 px-4 backdrop-blur-xl sm:px-6 lg:px-8 transition-transform duration-300 ${
           isVisible ? 'translate-y-0' : '-translate-y-full'
         }`}
       >
