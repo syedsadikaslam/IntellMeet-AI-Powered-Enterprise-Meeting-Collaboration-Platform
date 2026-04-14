@@ -82,7 +82,7 @@ const AIChat: React.FC<AIChatProps> = ({ socket, meetingCode, isOpen, onClose })
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="fixed right-4 top-24 bottom-24 w-96 z-50 flex flex-col bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl shadow-2xl overflow-hidden"
+          className="fixed right-0 md:right-4 top-0 md:top-24 bottom-0 md:bottom-24 w-full md:w-96 z-[70] flex flex-col bg-[#070b14] md:bg-white/10 backdrop-blur-2xl border-l md:border border-white/20 md:rounded-3xl shadow-2xl overflow-hidden"
         >
           {/* Header */}
           <div className="p-4 border-b border-white/10 flex items-center justify-between bg-white/5">

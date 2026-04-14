@@ -54,7 +54,7 @@ export default function ChatSidebar({
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#0a0f1d] border-l border-white/10 w-80 shadow-2xl transition-all duration-300">
+    <div className="flex flex-col h-full bg-[#0a0f1d] border-l border-white/10 w-full sm:w-80 shadow-2xl transition-all duration-300">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-white/10 bg-[#0d1425]">
         <h2 className="text-lg font-bold text-white flex items-center gap-2">

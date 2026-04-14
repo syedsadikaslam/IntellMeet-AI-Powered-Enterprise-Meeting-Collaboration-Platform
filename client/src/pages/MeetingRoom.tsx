@@ -469,7 +469,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
         </div>
 
         {/* Video Grid */}
-        <div className="flex-1 p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr overflow-y-auto scrollbar-hide">
+        <div className="flex-1 p-3 md:p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 auto-rows-fr overflow-y-auto scrollbar-hide">
           {/* Local Feed */}
           <VideoCard 
             stream={localStream!} 
@@ -505,103 +505,102 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
         </div>
 
         {/* Bottom Bar */}
-        <div className="h-24 bg-white/2 backdrop-blur-xl border-t border-white/5 flex items-center justify-between px-8 relative">
-           {/* Left Info: GMeet style */}
-           <div className="flex items-center gap-4">
-              <button 
-                onClick={() => setShowDetails(!showDetails)}
-                className={`flex items-center gap-3 px-5 py-3 rounded-2xl transition-all ${showDetails ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' : 'hover:bg-white/5 text-white/50 hover:text-white'}`}
-              >
-                <Info size={20} className={showDetails ? 'animate-pulse' : ''} />
-                <span className="text-[11px] font-black uppercase tracking-wider hidden sm:block">Meeting Details</span>
-              </button>
-           </div>
+        <div className="h-20 md:h-24 bg-white/2 backdrop-blur-xl border-t border-white/5 flex items-center justify-between px-4 md:px-8 relative">
+            <div className="flex items-center gap-2 md:gap-4">
+               <button 
+                 onClick={() => setShowDetails(!showDetails)}
+                 className={`flex items-center gap-2 md:gap-3 px-3 md:px-5 py-2 md:py-3 rounded-xl md:rounded-2xl transition-all ${showDetails ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' : 'hover:bg-white/5 text-white/50 hover:text-white'}`}
+               >
+                 <Info size={18} className={`md:w-5 md:h-5 ${showDetails ? 'animate-pulse' : ''}`} />
+                 <span className="text-[10px] md:text-[11px] font-black uppercase tracking-wider hidden lg:block">Details</span>
+               </button>
+            </div>
 
            {/* Center Controls */}
-           <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-4">
-              <ControlBtn active={isMicOn} onClick={toggleMic} onIcon={<Mic size={22} />} offIcon={<MicOff size={22} />} />
-              <ControlBtn active={isVideoOn} onClick={toggleVideo} onIcon={<Video size={22} />} offIcon={<VideoOff size={22} />} />
+           <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 md:gap-4 max-w-[90vw] overflow-x-auto no-scrollbar py-1">
+              <ControlBtn active={isMicOn} onClick={toggleMic} onIcon={<Mic className="w-5 h-5 md:w-[22px] md:h-[22px]" />} offIcon={<MicOff className="w-5 h-5 md:w-[22px] md:h-[22px]" />} />
+              <ControlBtn active={isVideoOn} onClick={toggleVideo} onIcon={<Video className="w-5 h-5 md:w-[22px] md:h-[22px]" />} offIcon={<VideoOff className="w-5 h-5 md:w-[22px] md:h-[22px]" />} />
               
               <button 
                 onClick={handleRaiseHand}
-                className={`p-5 rounded-3xl transition-all ${raisedHands[user?.id || ''] ? 'bg-yellow-400 text-black shadow-xl shadow-yellow-400/20 animate-bounce' : 'bg-white/5 hover:bg-white/10 text-white'}`}
+                className={`p-3 md:p-5 rounded-2xl md:rounded-3xl transition-all ${raisedHands[user?.id || ''] ? 'bg-yellow-400 text-black shadow-xl shadow-yellow-400/20 animate-bounce' : 'bg-white/5 hover:bg-white/10 text-white'}`}
                 title="Raise Hand"
               >
-                <Hand size={22} />
+                <Hand className="w-5 h-5 md:w-[22px] md:h-[22px]" />
               </button>
-
+[merge_bottom_bar]
               <button 
                 onClick={() => window.location.hash = '#/dashboard'}
-                className="p-5 bg-red-600 hover:bg-red-500 rounded-3xl text-white transition-all shadow-2xl shadow-red-600/20 transform hover:scale-105 active:scale-95"
+                className="p-3 md:p-5 bg-red-600 hover:bg-red-500 rounded-2xl md:rounded-3xl text-white transition-all shadow-2xl shadow-red-600/20 transform hover:scale-105 active:scale-95"
                 title="Leave Meeting"
               >
-                <PhoneOff size={24} />
+                <PhoneOff className="w-5 h-5 md:w-6 md:h-6" />
               </button>
 
               {user?.id === (meetingData?.host?._id || meetingData?.host) && (
                 <button 
                   onClick={handleDeleteMeeting}
-                  className="p-5 bg-red-900 hover:bg-red-800 rounded-3xl text-white transition-all shadow-2xl shadow-red-900/20 transform hover:scale-105 active:scale-95"
+                  className="p-3 md:p-5 bg-red-900 hover:bg-red-800 rounded-2xl md:rounded-3xl text-white transition-all shadow-2xl shadow-red-900/20 transform hover:scale-105 active:scale-95"
                   title="End & Delete Meeting"
                 >
-                  <Trash2 size={24} />
+                  <Trash2 className="w-5 h-5 md:w-6 md:h-6" />
                 </button>
               )}
            </div>
 
            {/* Right Side Tools */}
-           <div className="flex items-center gap-3">
+           <div className="flex items-center gap-1.5 md:gap-3">
               <button 
                 onClick={toggleScreenShare}
                 title="Share Screen"
-                className={`p-5 rounded-3xl transition-all ${isSharingScreen ? 'bg-green-600 text-white shadow-xl shadow-green-600/20' : 'bg-white/5 hover:bg-white/10 text-white'}`}
+                className={`p-3 md:p-5 rounded-2xl md:rounded-3xl transition-all ${isSharingScreen ? 'bg-green-600 text-white shadow-xl shadow-green-600/20' : 'bg-white/5 hover:bg-white/10 text-white'} hidden sm:flex`}
               >
-                <MonitorUp size={22} />
+                <MonitorUp className="w-5 h-5 md:w-[22px] md:h-[22px]" />
               </button>
 
               <button 
                 onClick={handleToggleRecording}
                 title={isRecording ? 'Stop Recording' : 'Start Recording'}
-                className={`p-5 rounded-3xl transition-all relative ${isRecording ? 'bg-red-600 text-white shadow-xl shadow-red-600/20' : 'bg-white/5 hover:bg-white/10 text-white'}`}
+                className={`p-3 md:p-5 rounded-2xl md:rounded-3xl transition-all relative ${isRecording ? 'bg-red-600 text-white shadow-xl shadow-red-600/20' : 'bg-white/5 hover:bg-white/10 text-white'} hidden sm:flex`}
               >
-                {isRecording ? <Square size={22} /> : <Circle size={22} />}
+                {isRecording ? <Square className="w-5 h-5 md:w-[22px] md:h-[22px]" /> : <Circle className="w-5 h-5 md:w-[22px] md:h-[22px]" />}
                 {isRecording && <span className="absolute top-2 right-2 w-2 h-2 bg-white rounded-full animate-ping" />}
               </button>
 
-              <div className="w-px h-8 bg-white/10 mx-2" />
+              <div className="w-px h-6 md:h-8 bg-white/10 mx-1 md:mx-2 hidden sm:block" />
 
               <button 
                 onClick={() => { setIsChatOpen(!isChatOpen); setIsParticipantsOpen(false); setIsTranscriptOpen(false); setIsAIAssistantOpen(false); }}
-                className={`p-5 rounded-3xl transition-all relative ${isChatOpen ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'bg-white/5 hover:bg-white/10 text-white'}`}
+                className={`p-3 md:p-5 rounded-2xl md:rounded-3xl transition-all relative ${isChatOpen ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'bg-white/5 hover:bg-white/10 text-white'}`}
               >
-                <MessageSquare size={22} />
+                <MessageSquare className="w-5 h-5 md:w-[22px] md:h-[22px]" />
                 {messages.length > 0 && !isChatOpen && (
-                  <span className="absolute -top-1 -right-1 w-6 h-6 bg-blue-500 rounded-full text-[10px] flex items-center justify-center border-2 border-[#030507] font-black">{messages.length}</span>
+                  <span className="absolute -top-1 -right-1 w-5 h-5 md:w-6 md:h-6 bg-blue-500 rounded-full text-[9px] md:text-[10px] flex items-center justify-center border-2 border-[#030507] font-black">{messages.length}</span>
                 )}
               </button>
 
               <button 
                 onClick={() => { setIsTranscriptOpen(!isTranscriptOpen); setIsChatOpen(false); setIsParticipantsOpen(false); setIsAIAssistantOpen(false); }}
-                className={`p-5 rounded-3xl transition-all relative ${isTranscriptOpen ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'bg-white/5 hover:bg-white/10 text-white'}`}
+                className={`p-3 md:p-5 rounded-2xl md:rounded-3xl transition-all relative ${isTranscriptOpen ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'bg-white/5 hover:bg-white/10 text-white'}`}
                 title="Live Transcription"
               >
-                <Layout size={22} />
+                <Layout className="w-5 h-5 md:w-[22px] md:h-[22px]" />
                 {isTranscribing && <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />}
               </button>
 
               <button 
                 onClick={() => { setIsParticipantsOpen(!isParticipantsOpen); setIsChatOpen(false); setIsTranscriptOpen(false); setIsAIAssistantOpen(false); }}
-                className={`p-5 rounded-3xl transition-all relative ${isParticipantsOpen ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'bg-white/5 hover:bg-white/10 text-white'}`}
+                className={`p-3 md:p-5 rounded-2xl md:rounded-3xl transition-all relative ${isParticipantsOpen ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'bg-white/5 hover:bg-white/10 text-white'}`}
               >
-                <Users size={22} />
+                <Users className="w-5 h-5 md:w-[22px] md:h-[22px]" />
               </button>
 
               <button 
                 onClick={() => { setIsAIAssistantOpen(!isAIAssistantOpen); setIsChatOpen(false); setIsTranscriptOpen(false); setIsParticipantsOpen(false); }}
-                className={`p-5 rounded-3xl transition-all relative ${isAIAssistantOpen ? 'bg-purple-600 text-white shadow-xl shadow-purple-600/20' : 'bg-white/5 hover:bg-white/10 text-white'}`}
+                className={`p-3 md:p-5 rounded-2xl md:rounded-3xl transition-all relative ${isAIAssistantOpen ? 'bg-purple-600 text-white shadow-xl shadow-purple-600/20' : 'bg-white/5 hover:bg-white/10 text-white'}`}
                 title="AI Assistant"
               >
-                <Bot size={22} />
+                <Bot className="w-5 h-5 md:w-[22px] md:h-[22px]" />
               </button>
            </div>
         </div>
@@ -639,7 +638,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
       </div>
 
       {isTranscriptOpen && (
-        <aside className="w-80 h-full bg-[#0a0f1d] border-l border-white/10 p-6 flex flex-col gap-6 animate-slide-in-right overflow-hidden">
+        <aside className="fixed md:relative top-0 right-0 z-[60] w-full sm:w-80 h-full bg-[#0a0f1d] border-l border-white/10 p-6 flex flex-col gap-6 animate-slide-in-right overflow-hidden">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-black uppercase tracking-widest text-white/50 flex items-center gap-2">
               <Layout size={16} /> Live Transcript
@@ -674,7 +673,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
       )}
 
       {isChatOpen && (
-        <aside className="animate-slide-in-right">
+        <aside className="fixed md:relative top-0 right-0 z-[60] w-full sm:w-80 animate-slide-in-right">
           <ChatSidebar 
             messages={messages} 
             onSendMessage={handleSendMessage} 
@@ -687,7 +686,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
       )}
 
       {isParticipantsOpen && (
-         <aside className="animate-slide-in-right">
+         <aside className="fixed md:relative top-0 right-0 z-[60] w-full sm:w-80 animate-slide-in-right">
             <ParticipantSidebar 
               participants={participants}
               participantStates={participantStates}
@@ -730,7 +729,7 @@ function VideoCard({ stream, label, isMuted = false, isOff = false, isHandRaised
   }, [stream])
 
   return (
-    <div className={`relative group rounded-[32px] bg-white/5 border transition-all duration-500 overflow-hidden shadow-2xl ${isHandRaised ? 'border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.2)] scale-[1.02]' : 'border-white/5 hover:border-blue-500/30'}`}>
+    <div className={`relative group rounded-2xl md:rounded-[32px] bg-white/5 border transition-all duration-500 overflow-hidden shadow-2xl ${isHandRaised ? 'border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.2)] scale-[1.02]' : 'border-white/5 hover:border-blue-500/30'}`}>
       {(!stream || isOff) ? (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0f1d] z-10">
            <div className={`w-20 h-20 rounded-full flex items-center justify-center border transition-all ${isHandRaised ? 'border-yellow-400/30 bg-yellow-400/5' : 'bg-white/5 border-white/10'}`}>
@@ -754,8 +753,8 @@ function VideoCard({ stream, label, isMuted = false, isOff = false, isHandRaised
          </div>
       )}
 
-      <div className="absolute bottom-4 left-4 z-20">
-        <span className={`px-4 py-2 backdrop-blur-md rounded-2xl text-[11px] font-black uppercase tracking-widest border transition-all ${isHandRaised ? 'bg-yellow-400/20 border-yellow-400/50 text-yellow-400' : 'bg-black/40 border-white/10 text-white'}`}>
+      <div className="absolute bottom-2 md:bottom-4 left-2 md:left-4 z-20">
+        <span className={`px-3 md:px-4 py-1.5 md:py-2 backdrop-blur-md rounded-xl md:rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest border transition-all ${isHandRaised ? 'bg-yellow-400/20 border-yellow-400/50 text-yellow-400' : 'bg-black/40 border-white/10 text-white'}`}>
           {label}
         </span>
       </div>
@@ -767,7 +766,7 @@ function ControlBtn({ active, onClick, onIcon, offIcon }: { active: boolean, onC
   return (
     <button 
       onClick={onClick}
-      className={`p-5 rounded-3xl transition-all shadow-xl ${active ? 'bg-white/5 hover:bg-white/10 text-white' : 'bg-red-500/20 text-red-500 border border-red-500/20'}`}
+      className={`p-3.5 md:p-5 rounded-2xl md:rounded-3xl transition-all shadow-xl ${active ? 'bg-white/5 hover:bg-white/10 text-white' : 'bg-red-500/20 text-red-500 border border-red-500/20'}`}
     >
       {active ? onIcon : offIcon}
     </button>
