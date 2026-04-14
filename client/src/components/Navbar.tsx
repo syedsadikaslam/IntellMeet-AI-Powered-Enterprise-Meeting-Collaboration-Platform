@@ -181,39 +181,38 @@ export default function Navbar({ currentRoute }: NavbarProps) {
                 </a>
               ))}
               
-              {user && (
-                <a
-                  href="#/dashboard"
-                  onClick={closeAll}
-                  className={`flex items-center h-14 rounded-2xl px-5 text-sm font-bold no-underline transition-all mt-2 ${
-                    currentRoute === '#/dashboard'
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
-                      : 'bg-white/2 text-white/40 hover:bg-white/5'
-                  }`}
-                >
-                  <Layout size={18} className="mr-3" />
-                  Dashboard
-                </a>
-              )}
-            </div>
-
-            <div className="p-6 border-t border-white/5">
               {user ? (
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex h-14 items-center justify-center gap-3 rounded-2xl bg-red-500/10 border border-red-500/20 text-sm font-black text-red-500 uppercase tracking-widest hover:bg-red-500/20 transition-all"
-                >
-                  <LogOut size={18} />
-                  Logout Session
-                </button>
+                <div className="pt-4 space-y-4">
+                  <a
+                    href="#/dashboard"
+                    onClick={closeAll}
+                    className={`flex items-center h-14 rounded-2xl px-5 text-sm font-bold no-underline transition-all ${
+                      currentRoute === '#/dashboard'
+                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
+                        : 'bg-white/2 text-white/40 hover:bg-white/5'
+                    }`}
+                  >
+                    <Layout size={18} className="mr-3" />
+                    Dashboard
+                  </a>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex h-14 items-center justify-center gap-3 rounded-2xl bg-red-500/10 border border-red-500/20 text-sm font-black text-red-500 uppercase tracking-widest hover:bg-red-500/20 transition-all"
+                  >
+                    <LogOut size={18} />
+                    Logout Session
+                  </button>
+                </div>
               ) : (
-                <a
-                  href="#/login"
-                  onClick={closeAll}
-                  className="w-full flex h-14 items-center justify-center rounded-2xl bg-white text-sm font-black text-black uppercase tracking-widest hover:bg-blue-50 transition-all"
-                >
-                  Login Portal
-                </a>
+                <div className="pt-8">
+                  <a
+                    href="#/login"
+                    onClick={closeAll}
+                    className="w-full flex h-14 items-center justify-center rounded-2xl bg-white text-sm font-black text-black uppercase tracking-widest hover:bg-blue-50 transition-all font-bold"
+                  >
+                    Login Portal
+                  </a>
+                </div>
               )}
             </div>
           </aside>
