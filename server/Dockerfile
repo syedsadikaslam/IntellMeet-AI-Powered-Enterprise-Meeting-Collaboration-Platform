@@ -20,10 +20,5 @@ RUN npm install --omit=dev
 # Copy application code
 COPY --chown=nodeuser:nodegroup . .
 
-# Environment variables
-ENV NODE_ENV=production
-ENV PORT=5000
-
-EXPOSE 5000
-
-CMD ["npm", "start"]
+# CMD directly to handle signals correctly (SIGTERM)
+CMD ["node", "index.js"]
