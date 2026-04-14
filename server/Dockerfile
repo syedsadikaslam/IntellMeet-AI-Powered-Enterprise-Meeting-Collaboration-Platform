@@ -5,21 +5,25 @@ RUN apk add --no-cache python3 make g++
 
 WORKDIR /app
 
-COPY package*.json ./
+# Install build dependencies
+RUN apk add --no-cache python3 make g++
 
-# Install production dependencies only
+# Use a non-root group/user
+RUN addgroup -S nodegroup && adduser -S nodeuser -G nodegroup
+
+# Copy package files with correct ownership
+COPY --chown=nodeuser:nodegroup package*.json ./
+
+# Install packages as the non-root user
+USER nodeuser
 RUN npm install --omit=dev
 
-COPY . .
+# Copy application code with correct ownership
+COPY --chown=nodeuser:nodegroup . .
 
-# Environment variables (placeholders, should be provided at runtime)
 ENV NODE_ENV=production
 ENV PORT=5000
 
 EXPOSE 5000
-
-# Use a non-root user for security
-RUN addgroup -S nodegroup && adduser -S nodeuser -G nodegroup
-USER nodeuser
 
 CMD ["npm", "start"]
