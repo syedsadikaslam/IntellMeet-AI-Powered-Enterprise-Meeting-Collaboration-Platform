@@ -505,7 +505,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
         </div>
 
         {/* Bottom Bar */}
-        <div className="h-20 md:h-24 bg-[rgba(3,5,7,0.9)] backdrop-blur-xl border-t border-white/5 flex items-center justify-between px-3 md:px-8 relative gap-2">
+        <div className="h-20 md:h-24 bg-[rgba(3,5,7,0.92)] backdrop-blur-xl border-t border-white/5 flex items-center px-1.5 md:px-8 relative justify-between">
             <div className="flex items-center gap-2 md:gap-4 flex-none">
                <button 
                  onClick={() => setShowDetails(!showDetails)}
@@ -516,74 +516,79 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
                </button>
             </div>
 
-           {/* Center Controls */}
-           <div className="flex-1 md:absolute md:left-1/2 md:-translate-x-1/2 flex items-center justify-center gap-1 md:gap-4">
-              <ControlBtn active={isMicOn} onClick={toggleMic} onIcon={<Mic className="w-5 h-5 md:w-[22px] md:h-[22px]" />} offIcon={<MicOff className="w-5 h-5 md:w-[22px] md:h-[22px]" />} />
-              <ControlBtn active={isVideoOn} onClick={toggleVideo} onIcon={<Video className="w-5 h-5 md:w-[22px] md:h-[22px]" />} offIcon={<VideoOff className="w-5 h-5 md:w-[22px] md:h-[22px]" />} />
-              
-              <button 
-                onClick={handleRaiseHand}
-                className={`p-3 md:p-5 rounded-2xl md:rounded-3xl transition-all ${raisedHands[user?.id || ''] ? 'bg-yellow-400 text-black shadow-xl shadow-yellow-400/20 animate-bounce' : 'bg-white/5 hover:bg-white/10 text-white'}`}
-                title="Raise Hand"
-              >
-                <Hand className="w-5 h-5 md:w-[22px] md:h-[22px]" />
-              </button>
-
-              <button 
-                onClick={() => window.location.hash = '#/dashboard'}
-                className="p-3 md:p-5 bg-red-600 hover:bg-red-500 rounded-2xl md:rounded-3xl text-white transition-all shadow-2xl shadow-red-600/20 transform hover:scale-105 active:scale-95"
-                title="Leave Meeting"
-              >
-                <PhoneOff className="w-5 h-5 md:w-6 md:h-6" />
-              </button>
-
-              {user?.id === (meetingData?.host?._id || meetingData?.host) && (
+           {/* Tools & Controls Container */}
+           <div className="flex-1 flex items-center justify-between md:justify-center gap-1 md:gap-4 max-w-full px-1">
+              {/* Main Meeting Controls */}
+              <div className="flex items-center gap-1 md:gap-4">
+                <ControlBtn active={isMicOn} onClick={toggleMic} onIcon={<Mic className="w-5 h-5 md:w-[22px] md:h-[22px]" />} offIcon={<MicOff className="w-5 h-5 md:w-[22px] md:h-[22px]" />} />
+                <ControlBtn active={isVideoOn} onClick={toggleVideo} onIcon={<Video className="w-5 h-5 md:w-[22px] md:h-[22px]" />} offIcon={<VideoOff className="w-5 h-5 md:w-[22px] md:h-[22px]" />} />
+                
                 <button 
-                  onClick={handleDeleteMeeting}
-                  className="p-3 md:p-5 bg-red-900 hover:bg-red-800 rounded-2xl md:rounded-3xl text-white transition-all shadow-2xl shadow-red-900/20 transform hover:scale-105 active:scale-95 hidden sm:flex"
-                  title="End & Delete Meeting"
+                  onClick={handleRaiseHand}
+                  className={`p-2.5 md:p-5 rounded-2xl md:rounded-3xl transition-all ${raisedHands[user?.id || ''] ? 'bg-yellow-400 text-black shadow-xl shadow-yellow-400/20 animate-bounce' : 'bg-white/5 hover:bg-white/10 text-white'}`}
+                  title="Raise Hand"
                 >
-                  <Trash2 className="w-5 h-5 md:w-6 md:h-6" />
+                  <Hand className="w-5 h-5 md:w-[22px] md:h-[22px]" />
                 </button>
-              )}
-           </div>
 
-           {/* Right Side Tools */}
-           <div className="flex items-center gap-1 md:gap-3 flex-none">
-              <button 
-                onClick={() => { setIsChatOpen(!isChatOpen); setIsParticipantsOpen(false); setIsTranscriptOpen(false); setIsAIAssistantOpen(false); }}
-                className={`p-3 md:p-5 rounded-2xl md:rounded-3xl transition-all relative ${isChatOpen ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'bg-white/5 text-white/50 hover:text-white'}`}
-              >
-                <MessageSquare className="w-5 h-5 md:w-[22px] md:h-[22px]" />
-                {messages.length > 0 && !isChatOpen && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 md:w-6 md:h-6 bg-blue-500 rounded-full text-[9px] md:text-[10px] flex items-center justify-center border-2 border-[#030507] font-black">{messages.length}</span>
+                <button 
+                  onClick={() => window.location.hash = '#/dashboard'}
+                  className="p-2.5 md:p-5 bg-red-600 hover:bg-red-500 rounded-2xl md:rounded-3xl text-white transition-all shadow-2xl shadow-red-600/20 transform hover:scale-105 active:scale-95"
+                  title="Leave Meeting"
+                >
+                  <PhoneOff className="w-5 h-5 md:w-6 md:h-6" />
+                </button>
+
+                {user?.id === (meetingData?.host?._id || meetingData?.host) && (
+                  <button 
+                    onClick={handleDeleteMeeting}
+                    className="p-3 md:p-5 bg-red-900 hover:bg-red-800 rounded-2xl md:rounded-3xl text-white transition-all shadow-2xl shadow-red-900/20 transform hover:scale-105 active:scale-95 hidden sm:flex"
+                    title="End & Delete Meeting"
+                  >
+                    <Trash2 className="w-5 h-5 md:w-6 md:h-6" />
+                  </button>
                 )}
-              </button>
+              </div>
 
-              <button 
-                onClick={() => { setIsTranscriptOpen(!isTranscriptOpen); setIsChatOpen(false); setIsParticipantsOpen(false); setIsAIAssistantOpen(false); }}
-                className={`p-3 md:p-5 rounded-2xl md:rounded-3xl transition-all relative ${isTranscriptOpen ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'bg-white/5 text-white/50 hover:text-white'}`}
-                title="Live Transcription"
-              >
-                <Layout className="w-5 h-5 md:w-[22px] md:h-[22px]" />
-                {isTranscribing && <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />}
-              </button>
+              {/* Side Tools (Integrated for mobile) */}
+              <div className="flex items-center gap-1 md:gap-3 md:absolute md:right-8">
+                <button 
+                  onClick={() => { setIsChatOpen(!isChatOpen); setIsParticipantsOpen(false); setIsTranscriptOpen(false); setIsAIAssistantOpen(false); }}
+                  className={`p-2.5 md:p-5 rounded-2xl md:rounded-3xl transition-all relative ${isChatOpen ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'bg-white/5 text-white/50 hover:text-white'}`}
+                >
+                  <MessageSquare className="w-5 h-5 md:w-[22px] md:h-[22px]" />
+                  {messages.length > 0 && !isChatOpen && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 md:w-6 md:h-6 bg-blue-500 rounded-full text-[9px] md:text-[10px] flex items-center justify-center border-2 border-[#030507] font-black">{messages.length}</span>
+                  )}
+                </button>
 
-              <button 
-                onClick={() => { setIsParticipantsOpen(!isParticipantsOpen); setIsChatOpen(false); setIsTranscriptOpen(false); setIsAIAssistantOpen(false); }}
-                className={`p-3 md:p-5 rounded-2xl md:rounded-3xl transition-all relative ${isParticipantsOpen ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'bg-white/5 text-white/50 hover:text-white'}`}
-              >
-                <Users className="w-5 h-5 md:w-[22px] md:h-[22px]" />
-              </button>
+                <button 
+                  onClick={() => { setIsTranscriptOpen(!isTranscriptOpen); setIsChatOpen(false); setIsParticipantsOpen(false); setIsAIAssistantOpen(false); }}
+                  className={`p-2.5 md:p-5 rounded-2xl md:rounded-3xl transition-all relative ${isTranscriptOpen ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'bg-white/5 text-white/50 hover:text-white'}`}
+                  title="Live Transcription"
+                >
+                  <Layout className="w-5 h-5 md:w-[22px] md:h-[22px]" />
+                  {isTranscribing && <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />}
+                </button>
 
-              <button 
-                onClick={() => { setIsAIAssistantOpen(!isAIAssistantOpen); setIsChatOpen(false); setIsTranscriptOpen(false); setIsParticipantsOpen(false); }}
-                className={`p-3 md:p-5 rounded-2xl md:rounded-3xl transition-all relative ${isAIAssistantOpen ? 'bg-purple-600 text-white shadow-xl shadow-purple-600/20' : 'bg-white/5 text-white/50 hover:text-white'}`}
-                title="AI Assistant"
-              >
-                <Bot className="w-5 h-5 md:w-[22px] md:h-[22px]" />
-              </button>
+                <button 
+                  onClick={() => { setIsParticipantsOpen(!isParticipantsOpen); setIsChatOpen(false); setIsTranscriptOpen(false); setIsAIAssistantOpen(false); }}
+                  className={`p-2.5 md:p-5 rounded-2xl md:rounded-3xl transition-all relative ${isParticipantsOpen ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'bg-white/5 text-white/50 hover:text-white'}`}
+                >
+                  <Users className="w-5 h-5 md:w-[22px] md:h-[22px]" />
+                </button>
+
+                <button 
+                  onClick={() => { setIsAIAssistantOpen(!isAIAssistantOpen); setIsChatOpen(false); setIsTranscriptOpen(false); setIsParticipantsOpen(false); }}
+                  className={`p-2.5 md:p-5 rounded-2xl md:rounded-3xl transition-all relative ${isAIAssistantOpen ? 'bg-purple-600 text-white shadow-xl shadow-purple-600/20' : 'bg-white/5 text-white/50 hover:text-white'}`}
+                  title="AI Assistant"
+                >
+                  <Bot className="w-5 h-5 md:w-[22px] md:h-[22px]" />
+                </button>
+              </div>
            </div>
+
+
         </div>
 
         {/* Meeting Details Modal: GMeet style */}
