@@ -11,6 +11,9 @@ interface ParticipantStates {
   [userId: string]: {
     isMicOn: boolean
     isVideoOn: boolean
+    micAllowed?: boolean
+    videoAllowed?: boolean
+    chatAllowed?: boolean
   }
 }
 

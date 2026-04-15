@@ -337,6 +337,14 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
     alert('Joining info copied to clipboard!')
   }
 
+  const handleMuteParticipant = (targetUserId: string) => {
+    socket.emit('mute-participant', { meetingId: meetingCode, targetUserId })
+  }
+
+  const handleRemoveParticipant = (targetUserId: string) => {
+    socket.emit('remove-participant', { meetingId: meetingCode, targetUserId })
+  }
+
   const handleUpdateParticipantPermission = (targetUserId: string, pms: any) => {
     socket.emit('update-permissions', { 
       meetingId: meetingCode, 
