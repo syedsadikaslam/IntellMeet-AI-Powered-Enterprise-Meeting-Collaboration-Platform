@@ -10,6 +10,7 @@
   --color-card-foreground: var(--card-foreground);
   --color-border: var(--border);
   --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
 }
 
@@ -20,7 +21,8 @@
   --card: #ffffff;
   --card-foreground: #0f172a;
   --border: #e2e8f0;
-  --muted: #64748b80;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
   --accent: #3b82f6;
 
   --nav-bg: rgba(255, 255, 255, 0.8);
@@ -36,7 +38,8 @@
   --card: #0a0f1d;
   --card-foreground: #f8fafc;
   --border: rgba(255, 255, 255, 0.05);
-  --muted: rgba(255, 255, 255, 0.4);
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
   --accent: #3b82f6;
 
   --nav-bg: rgba(10, 15, 29, 0.8);

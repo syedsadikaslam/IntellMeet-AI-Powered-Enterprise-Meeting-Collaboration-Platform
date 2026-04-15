@@ -20,7 +20,7 @@ export function PageHero({ kicker, title, description, centered = false }) {
       <motion.span 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mb-4 sm:mb-6 inline-flex rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1 sm:px-4 sm:py-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-sky-400 shadow-sm backdrop-blur-md"
+        className="mb-4 sm:mb-6 inline-flex rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1 sm:px-4 sm:py-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-sky-600 dark:text-sky-400 shadow-sm backdrop-blur-md"
       >
         {kicker}
       </motion.span>
@@ -28,7 +28,7 @@ export function PageHero({ kicker, title, description, centered = false }) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="text-3xl font-black tracking-tight text-white sm:text-6xl lg:text-7xl lg:leading-[1.1]"
+        className="text-3xl font-black tracking-tight text-foreground sm:text-6xl lg:text-7xl lg:leading-[1.1]"
       >
         {title}
       </motion.h1>
@@ -36,7 +36,7 @@ export function PageHero({ kicker, title, description, centered = false }) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="mt-4 sm:mt-6 text-base leading-relaxed text-slate-400 sm:text-xl"
+        className="mt-4 sm:mt-6 text-base leading-relaxed text-muted-foreground sm:text-xl"
       >
         {description}
       </motion.p>
@@ -66,18 +66,18 @@ export function InfoCard({ title, children, icon: Icon, delay = 0 }) {
       whileInView={{ opacity: 1, scale: 1 }}
       viewport={{ once: true }}
       transition={{ delay }}
-      className="group relative rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-8 shadow-2xl transition-all hover:border-sky-500/30 hover:bg-white/[0.07]"
+      className="group relative rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-2xl transition-all hover:border-sky-500/30 hover:bg-muted/30"
     >
       <div className="absolute -inset-px rounded-3xl bg-gradient-to-br from-sky-500/10 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
       
       {Icon && (
-        <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-400 ring-1 ring-sky-500/20">
+        <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-600 dark:text-sky-400 ring-1 ring-sky-500/20">
           <Icon size={24} />
         </div>
       )}
       
-      <h2 className="relative mb-4 text-2xl font-bold text-white group-hover:text-sky-300 transition-colors">{title}</h2>
-      <div className="relative space-y-4 text-base leading-relaxed text-slate-400">{children}</div>
+      <h2 className="relative mb-4 text-2xl font-bold text-foreground group-hover:text-sky-600 dark:group-hover:text-sky-300 transition-colors">{title}</h2>
+      <div className="relative space-y-4 text-base leading-relaxed text-muted-foreground">{children}</div>
     </motion.article>
   )
 }
@@ -86,11 +86,11 @@ export function Checklist({ items }) {
   return (
     <ul className="space-y-4">
       {items.map((item, i) => (
-        <li key={i} className="flex items-start gap-3 text-slate-300">
-          <div className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20">
+        <li key={i} className="flex items-start gap-3 text-muted-foreground">
+          <div className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 ring-1 ring-emerald-500/20">
             <Check size={12} strokeWidth={3} />
           </div>
-          <span className="text-sm leading-tight">{item}</span>
+          <span className="text-sm leading-tight font-medium">{item}</span>
         </li>
       ))}
     </ul>
@@ -106,8 +106,8 @@ export function PriceCard({ tier, price, description, features, highlighted = fa
       transition={{ delay }}
       className={`relative flex flex-col rounded-3xl p-6 sm:p-8 transition-all ${
         highlighted 
-          ? 'bg-white/10 ring-2 ring-sky-500 shadow-[0_0_50px_-12px_rgba(14,165,233,0.3)]' 
-          : 'bg-white/5 border border-white/10 hover:border-white/20'
+          ? 'bg-card ring-2 ring-sky-500 shadow-[0_0_50px_-12px_rgba(14,165,233,0.3)]' 
+          : 'bg-card border border-border hover:border-muted-foreground/20'
       }`}
     >
       {highlighted && (
@@ -117,13 +117,13 @@ export function PriceCard({ tier, price, description, features, highlighted = fa
       )}
       
       <div className="mb-8">
-        <h3 className="text-xl font-bold text-white">{tier}</h3>
-        <p className="mt-2 text-sm text-slate-400">{description}</p>
+        <h3 className="text-xl font-bold text-foreground">{tier}</h3>
+        <p className="mt-2 text-sm text-muted-foreground">{description}</p>
       </div>
       
       <div className="mb-8 flex items-baseline gap-1">
-        <span className="text-4xl font-black text-white">{price}</span>
-        {price !== 'Custom' && <span className="text-slate-400">/mo</span>}
+        <span className="text-4xl font-black text-foreground">{price}</span>
+        {price !== 'Custom' && <span className="text-muted-foreground">/mo</span>}
       </div>
       
       <div className="mb-10 flex-1">
@@ -133,7 +133,7 @@ export function PriceCard({ tier, price, description, features, highlighted = fa
       <button className={`w-full rounded-2xl py-4 text-sm font-bold transition-all ${
         highlighted 
           ? 'bg-sky-500 text-white hover:bg-sky-400 hover:scale-[1.02] shadow-lg shadow-sky-500/20' 
-          : 'bg-white/10 text-white hover:bg-white/15'
+          : 'bg-muted text-foreground hover:bg-muted/80'
       }`}>
         {cta}
       </button>
@@ -147,22 +147,22 @@ export function FeatureRow({ title, description, image, reversed = false, featur
       <div className="flex-1 lg:order-last">
         <motion.div 
           whileHover={{ scale: 1.02 }}
-          className="relative aspect-video overflow-hidden rounded-2xl sm:rounded-3xl border border-white/10 bg-white/5 shadow-2xl"
+          className="relative aspect-video overflow-hidden rounded-2xl sm:rounded-3xl border border-border bg-card shadow-2xl"
         >
           <div className="absolute inset-0 bg-gradient-to-tr from-sky-500/20 to-transparent mix-blend-overlay" />
           {image ? (
             <img src={image} alt={title} className="h-full w-full object-cover" />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-slate-900/50 backdrop-blur-sm">
-               <span className="text-slate-500 font-mono text-xs uppercase tracking-widest text-center px-4">Platform Interface Preview</span>
+            <div className="flex h-full w-full items-center justify-center bg-muted/30 backdrop-blur-sm">
+               <span className="text-muted-foreground font-mono text-xs uppercase tracking-widest text-center px-4">Platform Interface Preview</span>
             </div>
           )}
         </motion.div>
       </div>
 
       <div className="flex-1 lg:order-first">
-        <h2 className="mb-4 text-2xl font-black text-white sm:text-4xl lg:text-5xl leading-tight">{title}</h2>
-        <p className="mb-6 text-base text-slate-400 leading-relaxed sm:text-lg">{description}</p>
+        <h2 className="mb-4 text-2xl font-black text-foreground sm:text-4xl lg:text-5xl leading-tight">{title}</h2>
+        <p className="mb-6 text-base text-muted-foreground leading-relaxed sm:text-lg">{description}</p>
         {features.length > 0 && <Checklist items={features} />}
       </div>
     </div>
@@ -173,15 +173,15 @@ export function FAQItem({ question, answer }) {
   const [isOpen, setIsOpen] = useState(false)
   
   return (
-    <div className="border-b border-white/10 py-6">
+    <div className="border-b border-border py-6">
       <button 
         onClick={() => setIsOpen(!isOpen)}
         className="flex w-full items-center justify-between text-left group"
       >
-        <span className="text-lg font-bold text-white group-hover:text-sky-400 transition-colors">{question}</span>
+        <span className="text-lg font-bold text-foreground group-hover:text-sky-500 transition-colors">{question}</span>
         <motion.div
             animate={{ rotate: isOpen ? 180 : 0 }}
-            className="text-slate-500"
+            className="text-muted-foreground"
         >
             <ChevronDown size={20} />
         </motion.div>
@@ -191,7 +191,7 @@ export function FAQItem({ question, answer }) {
         animate={{ height: isOpen ? 'auto' : 0, opacity: isOpen ? 1 : 0 }}
         className="overflow-hidden"
       >
-        <p className="mt-4 text-slate-400 leading-relaxed">{answer}</p>
+        <p className="mt-4 text-muted-foreground leading-relaxed">{answer}</p>
       </motion.div>
     </div>
   )

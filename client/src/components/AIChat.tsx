@@ -113,7 +113,7 @@ const AIChat: React.FC<AIChatProps> = ({ socket, meetingCode, isOpen, onClose })
           >
             {messages.length === 0 && (
               <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-6">
-                <div className="w-16 h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-600/50 dark:text-blue-400/50">
+                <div className="w-16 h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400/50">
                   <MessageSquare size={32} />
                 </div>
                 <div>
@@ -125,7 +125,7 @@ const AIChat: React.FC<AIChatProps> = ({ socket, meetingCode, isOpen, onClose })
                     <button
                       key={prompt.id}
                       onClick={() => handleSend(prompt.text)}
-                      className="w-full p-3 rounded-xl bg-muted/50 border border-border hover:bg-muted hover:border-blue-500/30 transition-all text-left text-xs text-foreground flex items-center gap-3 group"
+                      className="w-full p-3 rounded-xl bg-muted border border-border hover:bg-muted/80 hover:border-blue-500/30 transition-all text-left text-xs text-foreground flex items-center gap-3 group"
                     >
                       <prompt.icon size={14} className="text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform" />
                       {prompt.text}
@@ -144,7 +144,7 @@ const AIChat: React.FC<AIChatProps> = ({ socket, meetingCode, isOpen, onClose })
                   className={`max-w-[85%] p-3 rounded-2xl text-sm transition-colors ${
                     msg.sender === 'user'
                       ? 'bg-blue-600 text-white rounded-tr-none shadow-md'
-                      : 'bg-muted text-foreground border border-border rounded-tl-none'
+                      : 'bg-muted border border-border text-foreground rounded-tl-none'
                   }`}
                 >
                   {msg.text}

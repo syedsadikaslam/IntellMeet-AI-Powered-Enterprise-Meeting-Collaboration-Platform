@@ -642,8 +642,8 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
           })}
 
           {participants.length < 2 && (
-             <div className="relative rounded-3xl bg-muted/50 border-2 border-dashed border-border flex flex-col items-center justify-center gap-4 transition-colors">
-                <div className="w-12 h-12 rounded-full border border-border flex items-center justify-center animate-pulse">
+             <div className="relative rounded-3xl bg-muted border-2 border-dashed border-border flex flex-col items-center justify-center gap-4 transition-colors">
+                <div className="w-12 h-12 rounded-full border border-border flex items-center justify-center animate-pulse bg-background">
                    <Users size={20} className="text-muted-foreground transition-colors" />
                 </div>
                 <p className="text-muted-foreground text-[10px] font-black uppercase tracking-[0.3em] transition-colors">Waiting for others</p>
@@ -911,7 +911,7 @@ function VideoCard({ stream, label, isMuted = false, isOff = false, isHandRaised
       )}
 
       <div className="absolute bottom-2 md:bottom-4 left-2 md:left-4 z-20">
-        <span className={`px-3 md:px-4 py-1.5 md:py-2 backdrop-blur-md rounded-xl md:rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest border transition-all ${isHandRaised ? 'bg-yellow-400/20 border-yellow-400/50 text-yellow-500' : 'bg-background/40 dark:bg-black/40 border-border text-foreground dark:text-white'}`}>
+        <span className={`px-3 md:px-4 py-1.5 md:py-2 backdrop-blur-md rounded-xl md:rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest border transition-all ${isHandRaised ? 'bg-yellow-400/20 border-yellow-400/50 text-yellow-600' : 'bg-background/80 dark:bg-black/40 border-border text-foreground dark:text-white shadow-sm'}`}>
           {label}
         </span>
       </div>
