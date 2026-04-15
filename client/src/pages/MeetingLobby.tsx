@@ -345,38 +345,3 @@ export default function MeetingLobby({ meetingCode }: { meetingCode: string }) {
     </div>
   )
 }
-
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        .animate-fade-in {
-          animation: fadeIn 0.3s ease-out forwards;
-        }
-        @keyframes scaleIn {
-          from { transform: scale(0.9); opacity: 0; }
-          to { transform: scale(1); opacity: 1; }
-        }
-        .animate-scale-in {
-          animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-        @keyframes audioBar {
-          0%, 100% { height: 4px; }
-          50% { height: 16px; }
-        }
-        .animate-audio-bar {
-          animation: audioBar 0.8s ease-in-out infinite;
-        }
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-4px); }
-          75% { transform: translateX(4px); }
-        }
-        .animate-shake {
-          animation: shake 0.4s ease-in-out infinite;
-        }
-      `}} />
-    </div>
-  )
-}

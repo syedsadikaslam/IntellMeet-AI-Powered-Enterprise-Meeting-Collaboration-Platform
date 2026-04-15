@@ -652,35 +652,6 @@ export default function Dashboard() {
   )
 }
 
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(20px) scale(0.98); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        .animate-fade-in {
-          animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-        @keyframes gradient-x {
-           0%, 100% { background-position: 0% 50%; }
-           50% { background-position: 100% 50%; }
-        }
-        .animate-gradient-x {
-           background-size: 200% 200%;
-           animation: gradient-x 6s ease;
-           animation-iteration-count: infinite;
-         }
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}} />
-    </div>
-  )
-}
-
 function StatusItem({ label, status, active, icon }: { label: string, status: string, active: boolean, icon?: React.ReactNode }) {
    return (
       <div className="flex items-center justify-between group cursor-help">
