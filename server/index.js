@@ -33,20 +33,26 @@ const initSocket = require('./services/socketService');
 const app = express();
 const server = http.createServer(app);
 
-const allowedOrigins = process.env.FRONTEND_URL 
-  ? process.env.FRONTEND_URL.split(',') 
-  : [
-      'https://intellmeets.vercel.app',
-      'http://localhost:5173', 
-      'http://localhost:3000'
-    ];
+const allowedOrigins = [
+  'https://intellmeets.vercel.app',
+  'http://localhost:5173', 
+  'http://localhost:3000'
+];
+
+if (process.env.FRONTEND_URL) {
+  process.env.FRONTEND_URL.split(',').forEach(url => {
+    if (!allowedOrigins.includes(url)) allowedOrigins.push(url);
+  });
+}
 
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
     methods: ["GET", "POST"],
-    credentials: true
-  }
+    credentials: true,
+    allowedHeaders: ["my-custom-header"],
+  },
+  transports: ['websocket', 'polling']
 });
 
 // Initialize Socket.io service
