@@ -62,21 +62,21 @@ const processQueue = async () => {
                 lastRequestTime = Date.now();
                 resolve(result);
             } else {
-                throw new Error('OpenAI key missing');
+                throw new Error('OpenAI not configured');
             }
         } catch (error) {
             // If OpenAI fails (429, 401, or missing key) and we have Gemini, fallback immediately
             if (genAI) {
-                console.log(`[AI_SERVICE] Falling back to Gemini for ${type}...`);
+                console.log(`[AI_SERVICE] Falling back to Gemini for ${type}... (Reason: ${error.message})`);
                 try {
-                    // Use standard model name without 'models/' prefix
-                    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+                    // Using 'gemini-pro' for maximum compatibility with v1beta API
+                    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
                     
                     let prompt = "";
                     if (type === 'chat') {
-                        prompt = `Context: ${data.context || "No context"}\nUser Query: ${data.query}\nProvide a helpful, professional response based on the context.`;
+                        prompt = `You are a helpful meeting assistant. Context: ${data.context || "No transcript yet."}\nUser Question: ${data.query}\nResponse:`;
                     } else {
-                        prompt = `Transcript: ${data.transcript}\nSummarize and extract action items in JSON format:`;
+                        prompt = `Meeting Transcript: ${data.transcript}\nProvide a summary and extracted action items in JSON format:`;
                     }
 
                     const result = await model.generateContent(prompt);
