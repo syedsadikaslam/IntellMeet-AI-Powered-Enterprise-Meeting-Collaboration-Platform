@@ -14,7 +14,8 @@ if (process.env.OPENAI_API_KEY) {
 
 let genAI;
 if (process.env.GOOGLE_API_KEY) {
-    genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+    // Forcing stable v1 API to avoid 404 errors with experimental v1beta
+    genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY, { apiVersion: 'v1' });
 } else {
     console.warn('[AI_SERVICE] GOOGLE_API_KEY is missing. Fallback disabled.');
 }
