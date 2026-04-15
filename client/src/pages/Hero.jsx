@@ -104,7 +104,7 @@ function HeroModern() {
   const { user } = useAuthStore()
 
   return (
-    <section className="relative mx-auto w-full max-w-7xl px-4 pt-3 pb-8 sm:px-6 sm:pt-4 lg:px-8">
+    <section className="relative mx-auto w-full max-w-7xl px-4 pt-8 pb-8 sm:px-6 sm:pt-12 lg:px-8">
       {/* Light Mode Atmosphere */}
       <div className="pointer-events-none absolute -top-24 left-1/2 -z-10 h-[600px] w-full -translate-x-1/2 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.06),transparent_70%)] dark:hidden" />
       
