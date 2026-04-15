@@ -36,6 +36,14 @@ const initSocket = (io) => {
 
         console.log(`${userName} joined meeting: ${meetingId}`);
 
+        // Cleanup any existing entry for this userId (prevents duplicates on refresh)
+        const existingParticipants = await redis.smembers(`meeting:${meetingId}:participants`);
+        for (const p of existingParticipants) {
+          if (JSON.parse(p).userId === userId) {
+            await redis.srem(`meeting:${meetingId}:participants`, p);
+          }
+        }
+
         // Store participant in Redis for fast access
         const participant = JSON.stringify({ userId, userName, socketId: socket.id });
         await redis.sadd(`meeting:${meetingId}:participants`, participant);

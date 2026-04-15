@@ -24,7 +24,15 @@ interface PeerConnection {
 
 export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
   const { user } = useAuthStore()
-  const { stream: localStream, isMicOn, isVideoOn, toggleMic: toggleMicStore, toggleVideo: toggleVideoStore } = useMeetingStore()
+  const { 
+    stream: localStream, 
+    isMicOn, 
+    isVideoOn, 
+    toggleMic: toggleMicStore, 
+    toggleVideo: toggleVideoStore,
+    setAudioEnabled,
+    setVideoEnabled
+  } = useMeetingStore()
   
   const toggleMic = () => {
     toggleMicStore()
@@ -70,6 +78,12 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
   const transcribeRecorderRef = useRef<MediaRecorder | null>(null)
 
   const peersRef = useRef<Record<string, Peer.Instance>>({})
+  const participantsRef = useRef<Participant[]>([])
+
+  // Sync ref with state for socket listeners
+  useEffect(() => {
+    participantsRef.current = participants
+  }, [participants])
 
   useEffect(() => {
     if (!localStream) {
@@ -157,9 +171,10 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
     socket.on('user-left', ({ userId, socketId }) => {
       console.log('User left event received:', { userId, socketId })
       
-      // Cleanup peer
-      const sId = socketId || participants.find(p => p.userId === userId)?.socketId
+      // Cleanup peer using latest data from Ref
+      const sId = socketId || participantsRef.current.find(p => p.userId === userId)?.socketId
       if (sId && peersRef.current[sId]) {
+        console.log('Destroying peer for socketId:', sId)
         peersRef.current[sId].destroy()
         delete peersRef.current[sId]
       }
@@ -234,8 +249,11 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
       setRaisedHands(prev => ({ ...prev, [userId]: true }))
       setTimeout(() => {
         setRaisedHands(prev => ({ ...prev, [userId]: false }))
-      }, 5000) // Lower hand after 5s
+      }, 5000)
     })
+
+    socket.on('force-video-off', () => setVideoEnabled(false))
+    socket.on('force-mute', () => setAudioEnabled(false))
 
     socket.on('transcript-update', (chunk) => {
       setTranscripts(prev => [...prev, chunk])
@@ -354,16 +372,43 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
   }
 
   const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      containerRef.current?.requestFullscreen().catch(err => {
-        console.error(`Error attempting to enable full-screen mode: ${err.message}`)
-      })
+    const elem = containerRef.current as any
+    if (!elem) return
+
+    if (!document.fullscreenElement && !(document as any).webkitFullscreenElement && !(document as any).mozFullScreenElement && !(document as any).msFullscreenElement) {
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen()
+      } else if (elem.webkitRequestFullscreen) {
+        elem.webkitRequestFullscreen()
+      } else if (elem.mozRequestFullScreen) {
+        elem.mozRequestFullScreen()
+      } else if (elem.msRequestFullscreen) {
+        elem.msRequestFullscreen()
+      }
       setIsFullscreen(true)
     } else {
-      document.exitFullscreen()
+      if (document.exitFullscreen) {
+        document.exitFullscreen()
+      } else if ((document as any).webkitExitFullscreen) {
+        (document as any).webkitExitFullscreen()
+      } else if ((document as any).mozCancelFullScreen) {
+        (document as any).mozCancelFullScreen()
+      } else if ((document as any).msExitFullscreen) {
+        (document as any).msExitFullscreen()
+      }
       setIsFullscreen(false)
     }
   }
+
+  // Handle hardware enforcement when permissions change
+  useEffect(() => {
+    if (!permissions.micAllowed && isMicOn) {
+      setAudioEnabled(false)
+    }
+    if (!permissions.videoAllowed && isVideoOn) {
+      setVideoEnabled(false)
+    }
+  }, [permissions, isMicOn, isVideoOn, setAudioEnabled, setVideoEnabled])
 
   const handleDeleteMeeting = async () => {
     if (!meetingData) return
