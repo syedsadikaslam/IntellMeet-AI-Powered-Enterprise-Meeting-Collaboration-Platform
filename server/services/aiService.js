@@ -123,17 +123,20 @@ const getAIResponse = async (query, context) => {
         
         RULES:
         1. Answer the user's question by analyzing the ENTIRE provided meeting context below.
-        2. Respond in HINGLISH (a natural mix of Hindi and English) to keep it friendly and desi, like an Indian colleague would talk.
-        3. If the answer is not in the context, say "Mujhe transcript mein ye information nahi mili" but try to be helpful.
-        4. Be descriptive. Don't give one-word answers.
+        2. LANGUAGE: Respond in the SAME LANGUAGE/STYLE as the user's question. 
+           - If the user asks in English, reply in English.
+           - If the user asks in Hindi or Hinglish, reply in HINGLISH.
+           - DEFAULT to English if the user's language is unclear.
+        3. If the answer is not in the context, say "I couldn't find this in the meeting transcript" (or equivalent in the user's language).
+        4. Be descriptive and helpful.
         
         CONTEXT:
-        ${truncatedContext || "Abhi tak koi conversation nahi hui hai."}
+        ${truncatedContext || "No conversation has taken place yet."}
         
         USER QUESTION: 
         ${query}
         
-        RESPONSE (In Hinglish):`;
+        RESPONSE:`;
         
         return await callGemini(prompt);
     } catch (error) {
