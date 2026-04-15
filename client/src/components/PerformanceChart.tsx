@@ -13,7 +13,7 @@ const data = [
 export default function PerformanceChart() {
   return (
     <div className="w-full h-48 sm:h-64 mt-4 relative transition-colors duration-300">
-      <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+      <ResponsiveContainer width="100%" height="100%" debounce={100}>
         <AreaChart
           data={data}
           margin={{ top: 10, right: 10, left: 0, bottom: 0 }}

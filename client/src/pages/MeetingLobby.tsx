@@ -1,4 +1,4 @@
-import { Camera, Mic, MicOff, Settings, VideoOff, X, Check, Headphones, Speaker } from 'lucide-react'
+import { Camera, Mic, MicOff, Settings, VideoOff, X, Check, Headphones, Speaker, User as UserIcon } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useMeetingStore } from '../store/useMeetingStore'
 import api from '../utils/api'
