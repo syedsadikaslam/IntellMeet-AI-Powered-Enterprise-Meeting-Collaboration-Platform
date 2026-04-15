@@ -84,20 +84,33 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
     }
     fetchMeeting()
 
-    connectSocket()
+    const joinMeeting = () => {
+      if (!socket.id) return
+      
+      console.log('Emitting join-meeting with socket ID:', socket.id)
+      socket.emit('join-meeting', {
+        meetingId: meetingCode,
+        userId: user?.id,
+        userName: user?.name
+      })
+    }
 
-    socket.emit('join-meeting', {
-      meetingId: meetingCode,
-      userId: user?.id,
-      userName: user?.name
-    })
+    if (socket.connected) {
+      joinMeeting()
+    } else {
+      connectSocket()
+      socket.once('connect', joinMeeting)
+    }
 
     socket.on('all-participants', (users: Participant[]) => {
+      console.log('Received all-participants:', users)
       setParticipants(users)
-      // Create peers for all existing users (we are the initiator)
+      
       const newPeers: PeerConnection[] = []
       users.forEach((p) => {
-        if (p.socketId !== socket.id) {
+        // Only initiate if NOT ourselves AND we don't have a peer for them yet
+        if (p.socketId !== socket.id && !peersRef.current[p.socketId]) {
+          console.log('Creating initiator peer for:', p.userName)
           const peer = createPeer(p.socketId, socket.id!, localStream)
           peersRef.current[p.socketId] = peer
           newPeers.push({
@@ -111,18 +124,30 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
     })
 
     socket.on('user-joined', ({ userId, userName, socketId }) => {
-      setParticipants(prev => [...prev, { userId, userName, socketId }])
+      console.log('User joined event received:', { userName, socketId })
+      setParticipants(prev => {
+        if (prev.find(p => p.socketId === socketId)) return prev
+        return [...prev, { userId, userName, socketId }]
+      })
       
-      // Someone joined, they will initiate the peer and we will respond
-      const peer = addPeer(socketId, localStream)
-      peersRef.current[socketId] = peer
-      setPeers(prev => [...prev, { peerId: socketId, peer, userName }])
+      // Someone joined, they will initiate (if they are newcomer) or we will (if we are)
+      // Actually, in our logic, the newcomer initiates to everyone in 'all-participants'
+      // And existing members wait for the 'user-joined' to prepare for the incoming signal.
+      if (!peersRef.current[socketId]) {
+        console.log('Adding non-initiator peer for incoming join:', userName)
+        const peer = addPeer(socketId, localStream)
+        peersRef.current[socketId] = peer
+        setPeers(prev => [...prev, { peerId: socketId, peer, userName }])
+      }
     })
 
     socket.on('signal', ({ signal, from }) => {
+      console.log('Received signal from:', from)
       const peer = peersRef.current[from]
       if (peer) {
         peer.signal(signal)
+      } else {
+        console.warn('Received signal from unknown peer:', from)
       }
     })
 

@@ -29,28 +29,32 @@ const initSocket = (io) => {
     });
 
     socket.on('join-meeting', async ({ meetingId, userId, userName }) => {
-      socket.join(meetingId);
-      activeMeetingRooms.add(meetingId);
-      broadcastStats();
+      try {
+        socket.join(meetingId);
+        activeMeetingRooms.add(meetingId);
+        broadcastStats();
 
-      console.log(`${userName} joined meeting: ${meetingId}`);
+        console.log(`${userName} joined meeting: ${meetingId}`);
 
-      // Store participant in Redis for fast access
-      const participant = JSON.stringify({ userId, userName, socketId: socket.id });
-      await redis.sadd(`meeting:${meetingId}:participants`, participant);
+        // Store participant in Redis for fast access
+        const participant = JSON.stringify({ userId, userName, socketId: socket.id });
+        await redis.sadd(`meeting:${meetingId}:participants`, participant);
 
-      // Notify others in the meeting
-      socket.to(meetingId).emit('user-joined', { userId, userName, socketId: socket.id });
+        // Notify others in the meeting
+        socket.to(meetingId).emit('user-joined', { userId, userName, socketId: socket.id });
 
-      // Send the current list of participants to the new user
-      const participants = await redis.smembers(`meeting:${meetingId}:participants`);
-      socket.emit('all-participants', participants.map(p => JSON.parse(p)));
+        // Send the current list of participants to the new user
+        const participants = await redis.smembers(`meeting:${meetingId}:participants`);
+        socket.emit('all-participants', participants.map(p => JSON.parse(p)));
 
-      // Broadcast join notification
-      io.to(meetingId).emit('notification', {
-        type: 'info',
-        message: `${userName} has joined the meeting.`
-      });
+        // Broadcast join notification
+        io.to(meetingId).emit('notification', {
+          type: 'info',
+          message: `${userName} has joined the meeting.`
+        });
+      } catch (error) {
+        console.error('[SOCKET_SERVICE] Join meeting error:', error.message);
+      }
     });
 
     // WebRTC Signaling
@@ -189,15 +193,15 @@ const initSocket = (io) => {
       io.to(meetingId).emit('user-raised-hand', { userId });
     });
 
-    socket.on('ask-ai', async ({ meetingId, query }) => {
+    socket.on('ask-ai', async ({ meetingCode, question }) => {
       try {
-        const transcript = await redis.get(`meeting:${meetingId}:transcript`);
+        const transcript = await redis.get(`meeting:${meetingCode}:transcript`);
         const { getAIResponse } = require('./aiService');
-        const response = await getAIResponse(query, transcript);
-        socket.emit('ai-answer', { text: response, timestamp: new Date().toISOString() });
+        const response = await getAIResponse(question, transcript);
+        socket.emit('ai-answer', { answer: response, timestamp: new Date().toISOString() });
       } catch (error) {
         console.error('[SOCKET_SERVICE] AI Chat error:', error.message);
-        socket.emit('ai-answer', { text: "Error fetching AI response.", timestamp: new Date().toISOString() });
+        socket.emit('ai-answer', { answer: "Error fetching AI response.", timestamp: new Date().toISOString() });
       }
     });
 
