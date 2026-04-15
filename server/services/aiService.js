@@ -57,7 +57,7 @@ const generateMeetingIntelligence = async (transcript) => {
         if (!process.env.OPENAI_API_KEY || !transcript) return null;
 
         const response = await openai.chat.completions.create({
-            model: "gpt-4-turbo-preview",
+            model: "gpt-4o",
             messages: [
                 {
                     role: "system",
@@ -74,7 +74,7 @@ const generateMeetingIntelligence = async (transcript) => {
         const result = JSON.parse(response.choices[0].message.content);
         return result;
     } catch (error) {
-        console.error('[AI_SERVICE] Intelligence generation error:', error.message);
+        console.error('[AI_SERVICE] Intelligence generation error:', error);
         return null;
     }
 };
@@ -89,15 +89,22 @@ const getAIResponse = async (query, context) => {
     try {
         if (!openai) return "AI services are currently unavailable. Please check the API key configuration.";
 
+        // Basic truncation to stay within token limits (rough character count)
+        // gpt-4o-mini has a large context but we still want to be efficient
+        const maxContextChars = 15000; 
+        const truncatedContext = context && context.length > maxContextChars 
+            ? "..." + context.substring(context.length - maxContextChars)
+            : context;
+
         const response = await openai.chat.completions.create({
-            model: "gpt-3.5-turbo",
+            model: "gpt-4o-mini",
             messages: [
                 {
                     role: "system",
                     content: `You are an intelligent meeting assistant for the IntellMeet platform. 
                     You help users by answering questions based on the meeting's live transcript. 
                     Be professional, concise, and helpful. 
-                    Context from current meeting: ${context || "No transcript available yet."}`
+                    Context from current meeting: ${truncatedContext || "No transcript available yet."}`
                 },
                 {
                     role: "user",
@@ -108,7 +115,9 @@ const getAIResponse = async (query, context) => {
 
         return response.choices[0].message.content;
     } catch (error) {
-        console.error('[AI_SERVICE] Chat error:', error.message);
+        console.error('[AI_SERVICE] Chat error:', error);
+        if (error.status === 401) return "OpenAI API Key is invalid or expired.";
+        if (error.status === 429) return "Rate limit exceeded. Please try again later.";
         return "I'm sorry, I encountered an error while processing your request.";
     }
 };

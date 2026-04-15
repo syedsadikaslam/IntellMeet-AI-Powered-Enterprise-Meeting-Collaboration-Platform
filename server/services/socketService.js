@@ -48,6 +48,9 @@ const initSocket = (io) => {
         const participant = JSON.stringify({ userId, userName, socketId: socket.id });
         await redis.sadd(`meeting:${meetingId}:participants`, participant);
 
+        // Track userName on socket for transcription
+        socket.userName = userName;
+
         // Notify others in the meeting
         socket.to(meetingId).emit('user-joined', { userId, userName, socketId: socket.id });
 
@@ -225,20 +228,23 @@ const initSocket = (io) => {
     });
 
     socket.on('audio-stream', async ({ meetingId, audioBlob }) => {
-
-      const buffer = Buffer.from(audioBlob);
-      const text = await transcribeAudio(buffer, meetingId);
-      
-      if (text && text.trim()) {
-        const transcriptChunk = {
-          userId: socket.id,
-          userName: socket.userName || 'Someone',
-          text: text.trim(),
-          timestamp: new Date().toISOString()
-        };
+      try {
+        const buffer = Buffer.from(audioBlob);
+        const text = await transcribeAudio(buffer, meetingId);
         
-        io.to(meetingId).emit('transcript-update', transcriptChunk);
-        await redis.append(`meeting:${meetingId}:transcript`, ` ${text.trim()}`);
+        if (text && text.trim()) {
+          const transcriptChunk = {
+            userId: socket.id,
+            userName: socket.userName || 'Someone',
+            text: text.trim(),
+            timestamp: new Date().toISOString()
+          };
+          
+          io.to(meetingId).emit('transcript-update', transcriptChunk);
+          await redis.append(`meeting:${meetingId}:transcript`, ` [${socket.userName || 'Someone'}]: ${text.trim()}`);
+        }
+      } catch (error) {
+        console.error('[SOCKET_SERVICE] Transcription process error:', error);
       }
     });
 
