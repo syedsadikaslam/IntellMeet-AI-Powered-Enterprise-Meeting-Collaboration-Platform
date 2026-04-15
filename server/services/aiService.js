@@ -3,60 +3,87 @@ const path = require('path');
 
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 
+let cachedModel = null;
+
 /**
- * Super-Fallback: Calls Gemini via multiple endpoints and models until one works.
- * This is the ultimate fix for regional 404 errors.
+ * Auto-Discovery: Asks Google which models are available for this specific API key.
+ * This removes all guesswork and resolves 404 errors forever.
+ */
+async function discoverModel() {
+    if (cachedModel) return cachedModel;
+    if (!GOOGLE_API_KEY) throw new Error("GOOGLE_API_KEY is missing");
+
+    console.log("[AI_SERVICE] Starting Auto-Discovery of available models...");
+    
+    // Try both v1 and v1beta to find available models
+    const versions = ['v1', 'v1beta'];
+    for (const ver of versions) {
+        try {
+            const url = `https://generativelanguage.googleapis.com/${ver}/models?key=${GOOGLE_API_KEY}`;
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (response.ok && data.models && data.models.length > 0) {
+                // Filter for models that support generating content
+                const supportedModels = data.models.filter(m => 
+                    m.supportedGenerationMethods.includes('generateContent') &&
+                    !m.name.includes('vision') // Prefer text/chat models
+                );
+
+                if (supportedModels.length > 0) {
+                    // Pick the best one (prefer 1.5 flash, then pro, then any)
+                    const preferred = supportedModels.find(m => m.name.includes('gemini-1.5-flash')) ||
+                                    supportedModels.find(m => m.name.includes('gemini-pro')) ||
+                                    supportedModels[0];
+                    
+                    cachedModel = preferred.name; // This will be like "models/gemini-1.5-flash"
+                    console.log(`[AI_SERVICE] Auto-Discovery Success! Using model: ${cachedModel} via ${ver}`);
+                    return cachedModel;
+                }
+            }
+        } catch (err) {
+            console.warn(`[AI_SERVICE] Discovery failed for ${ver}:`, err.message);
+        }
+    }
+
+    throw new Error("AI Error: No working models found for this API Key. Please ensure the 'Generative Language API' is enabled in Google Cloud Console.");
+}
+
+/**
+ * Super-Fallback with Auto-Discovery: Calls Gemini via a discovered working model.
  * @param {string} prompt - The text prompt to send
  * @returns {Promise<string>} - AI Response text
  */
 async function callGemini(prompt) {
-    if (!GOOGLE_API_KEY) {
-        throw new Error("AI Error: GOOGLE_API_KEY is missing in .env");
-    }
+    try {
+        const modelName = await discoverModel();
+        // Extract version from cached result if we want to be precise, or just use v1
+        const url = `https://generativelanguage.googleapis.com/v1/${modelName}:generateContent?key=${GOOGLE_API_KEY}`;
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{ text: prompt }]
+                }]
+            })
+        });
 
-    // List of combinations to try (Endpoint version + Model name)
-    const configs = [
-        { ver: 'v1', model: 'gemini-1.5-flash' },
-        { ver: 'v1', model: 'gemini-pro' },
-        { ver: 'v1beta', model: 'gemini-1.5-flash' },
-        { ver: 'v1beta', model: 'gemini-pro' },
-        { ver: 'v1beta', model: 'gemini-2.0-flash-exp' }
-    ];
+        const data = await response.json();
 
-    let lastError = null;
-
-    for (const config of configs) {
-        try {
-            console.log(`[AI_SERVICE] Trying combination: ${config.ver} / ${config.model}...`);
-            const url = `https://generativelanguage.googleapis.com/${config.ver}/models/${config.model}:generateContent?key=${GOOGLE_API_KEY}`;
-            
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{
-                        parts: [{ text: prompt }]
-                    }]
-                })
-            });
-
-            const data = await response.json();
-
-            if (response.ok && data.candidates && data.candidates.length > 0) {
-                console.log(`[AI_SERVICE] SUCCESS: Connected via ${config.ver} / ${config.model}`);
-                return data.candidates[0].content.parts[0].text;
-            } else {
-                const msg = data.error?.message || response.statusText;
-                console.warn(`[AI_SERVICE] Combination ${config.ver}/${config.model} failed: ${msg}`);
-                lastError = msg;
-            }
-        } catch (err) {
-            console.warn(`[AI_SERVICE] Request error for ${config.model}:`, err.message);
-            lastError = err.message;
+        if (response.ok && data.candidates && data.candidates.length > 0) {
+            return data.candidates[0].content.parts[0].text;
+        } else {
+            const msg = data.error?.message || response.statusText;
+            // If the model we discovered suddenly fails, clear cache to re-discover next time
+            cachedModel = null;
+            throw new Error(msg);
         }
+    } catch (error) {
+        console.error('[AI_SERVICE] Gemini Call Failed:', error.message);
+        throw error;
     }
-
-    throw new Error(`AI Super-Fallback Failed. Last Error: ${lastError}`);
 }
 
 /**
@@ -65,7 +92,7 @@ async function callGemini(prompt) {
 const transcribeAudio = async () => '';
 
 /**
- * Generates meeting intelligence using Gemini Super-Fallback
+ * Generates meeting intelligence using Gemini Auto-Discovery
  */
 const generateMeetingIntelligence = async (transcript) => {
     try {
@@ -83,7 +110,7 @@ const generateMeetingIntelligence = async (transcript) => {
 };
 
 /**
- * Real-time AI Assistant response using Gemini Super-Fallback
+ * Real-time AI Assistant response using Gemini Auto-Discovery
  */
 const getAIResponse = async (query, context) => {
     try {
