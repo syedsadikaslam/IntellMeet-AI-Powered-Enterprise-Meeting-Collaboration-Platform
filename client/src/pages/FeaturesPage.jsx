@@ -52,8 +52,8 @@ function FeaturesPage() {
 
       <div className="mt-20 sm:mt-32 rounded-3xl sm:rounded-[3rem] bg-gradient-to-b from-sky-500/10 to-transparent p-6 sm:p-12 lg:p-20">
         <div className="mb-10 sm:mb-16 text-center">
-          <h2 className="text-2xl font-black text-white sm:text-5xl">Built for Reliability</h2>
-          <p className="mt-4 text-sm sm:text-base text-slate-400">The infrastructure that powers thousands of enterprise meetings every day.</p>
+          <h2 className="text-2xl font-black text-foreground sm:text-5xl">Built for Reliability</h2>
+          <p className="mt-4 text-sm sm:text-base text-muted-foreground">The infrastructure that powers thousands of enterprise meetings every day.</p>
         </div>
         
         <CardGrid columns={3}>
@@ -84,12 +84,12 @@ function FeaturesPage() {
       </div>
 
       <div className="mt-20 sm:mt-32 text-center">
-        <h2 className="text-2xl font-bold text-white mb-8">Ready to supercharge your meetings?</h2>
+        <h2 className="text-2xl font-bold text-foreground mb-8">Ready to supercharge your meetings?</h2>
         <div className="flex flex-col sm:flex-row justify-center gap-4 px-4 sm:px-0">
           <button className="rounded-full bg-sky-500 px-8 py-4 font-bold text-white hover:bg-sky-400 transition-all shadow-lg shadow-sky-500/20">
             Get Started Free
           </button>
-          <button className="rounded-full bg-white/10 px-8 py-4 font-bold text-white hover:bg-white/15 transition-all">
+          <button className="rounded-full bg-muted border border-border px-8 py-4 font-bold text-foreground hover:bg-muted/80 transition-all">
             View Live Demo
           </button>
         </div>

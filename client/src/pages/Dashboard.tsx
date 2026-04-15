@@ -654,12 +654,12 @@ export default function Dashboard() {
 
 function StatusItem({ label, status, active, icon }: { label: string, status: string, active: boolean, icon?: React.ReactNode }) {
    return (
-      <div className="flex items-center justify-between group cursor-help">
+      <div className="flex items-center justify-between group cursor-help transition-colors">
          <div className="flex items-center gap-3">
-            <span className="text-white/20 group-hover:text-blue-400 transition-colors uppercase">{icon}</span>
-            <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] group-hover:text-white transition-colors">{label}</span>
+            <span className="text-muted-foreground/60 group-hover:text-blue-500 transition-colors uppercase">{icon}</span>
+            <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-[0.2em] group-hover:text-foreground transition-colors">{label}</span>
          </div>
-         <div className="flex items-center gap-3 bg-white/2 px-3 py-1.5 rounded-xl border border-white/5 group-hover:border-white/10 transition-colors">
+         <div className="flex items-center gap-3 bg-muted/50 px-3 py-1.5 rounded-xl border border-border group-hover:border-blue-500/30 transition-colors">
             <span className={`text-[10px] font-black uppercase tracking-widest ${active ? 'text-[#50e3c2]' : 'text-orange-400'}`}>{status}</span>
             <div className={`w-1.5 h-1.5 rounded-full ${active ? 'bg-[#50e3c2] shadow-[0_0_10px_#50e3c2]' : 'bg-orange-500 animate-pulse'}`} />
          </div>
