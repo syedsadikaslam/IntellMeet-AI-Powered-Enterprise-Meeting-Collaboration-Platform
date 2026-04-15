@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useAuthStore } from '../store/useAuthStore'
 import api from '../utils/api'
-import { ChevronRight, Eye, EyeOff, Lock, Mail, User as UserIcon, ShieldCheck } from 'lucide-react'
+import { ChevronRight, Eye, EyeOff, Lock, Mail, User as UserIcon, ShieldCheck, Check } from 'lucide-react'
 
 export default function AuthPage() {
   const [mode, setMode] = useState<'login' | 'signup'>('login')
@@ -13,7 +13,14 @@ export default function AuthPage() {
     password: '',
     confirmPassword: ''
   })
+  const [isRobotChecked, setIsRobotChecked] = useState(false)
+  const [isEmailValid, setIsEmailValid] = useState(false)
   const [error, setError] = useState('')
+
+  const validateEmail = (email: string) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    setIsEmailValid(regex.test(email))
+  }
 
   const { setUser, setToken } = useAuthStore()
 
@@ -119,10 +126,16 @@ export default function AuthPage() {
                   type="email"
                   placeholder="name@company.com"
                   value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  className="w-full bg-muted border border-border rounded-xl p-4 pl-12 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-blue-500 focus:bg-background transition-all font-medium"
+                  onChange={(e) => {
+                    setFormData({...formData, email: e.target.value})
+                    validateEmail(e.target.value)
+                  }}
+                  className={`w-full bg-muted border border-border rounded-xl p-4 pl-12 pr-12 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-blue-500 focus:bg-background transition-all font-medium ${mode === 'signup' && isEmailValid ? 'border-emerald-500/50 bg-emerald-500/5' : ''}`}
                 />
-                <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-blue-600 transition-colors" />
+                <Mail size={18} className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${mode === 'signup' && isEmailValid ? 'text-emerald-500' : 'text-muted-foreground group-focus-within:text-blue-600'}`} />
+                {mode === 'signup' && isEmailValid && (
+                  <Check size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-emerald-500 animate-in zoom-in duration-300" />
+                )}
               </div>
             </div>
 
@@ -170,10 +183,28 @@ export default function AuthPage() {
               </div>
             )}
 
+            {mode === 'login' && (
+              <div 
+                onClick={() => setIsRobotChecked(!isRobotChecked)}
+                className={`mt-4 flex items-center gap-4 p-4 rounded-xl border cursor-pointer transition-all duration-300 ${isRobotChecked ? 'bg-emerald-500/5 border-emerald-500/30 shadow-md' : 'bg-muted/50 border-border hover:border-blue-500/30'}`}
+              >
+                <div className={`w-6 h-6 rounded-md border flex items-center justify-center transition-all duration-300 ${isRobotChecked ? 'bg-emerald-500 border-emerald-500' : 'bg-background border-border shadow-inner'}`}>
+                  {isRobotChecked && <Check size={14} className="text-white" />}
+                </div>
+                <div className="flex-1">
+                  <p className="text-[11px] font-black uppercase tracking-widest text-foreground">I am not a robot</p>
+                  <p className="text-[9px] font-bold text-muted-foreground uppercase opacity-60">Verification security check</p>
+                </div>
+                <div className="grayscale opacity-30 invert dark:invert-0">
+                  <img src="https://www.gstatic.com/recaptcha/api2/logo_48.png" alt="reCAPTCHA" className="w-6 h-6" />
+                </div>
+              </div>
+            )}
+
             <button 
               type="submit"
-              disabled={isLoading}
-              className="w-full bg-foreground text-background font-black uppercase tracking-[0.2em] text-[11px] py-4 rounded-xl mt-6 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50 shadow-xl shadow-foreground/10 hover:shadow-foreground/20"
+              disabled={isLoading || (mode === 'login' && !isRobotChecked)}
+              className="w-full bg-foreground text-background font-black uppercase tracking-[0.2em] text-[11px] py-4 rounded-xl mt-6 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed shadow-xl shadow-foreground/10 hover:shadow-foreground/20"
             >
               {isLoading ? (
                 <div className="w-4 h-4 border-2 border-background/20 border-t-background rounded-full animate-spin" />
