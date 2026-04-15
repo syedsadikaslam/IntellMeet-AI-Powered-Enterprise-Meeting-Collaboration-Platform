@@ -70,7 +70,9 @@ const processQueue = async () => {
             if (genAI) {
                 console.log(`[AI_SERVICE] OpenAI unavailable (${error.message}). Attempting Gemini Triple Fallback...`);
                 
-                const modelsToTry = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
+                // Added gemini-2.0-flash-exp as per user request (interpreting '2.5' as newest version)
+                const modelsToTry = ["gemini-2.0-flash-exp", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
+                let lastGeminiError = "";
                 let success = false;
 
                 for (const modelName of modelsToTry) {
@@ -100,15 +102,22 @@ const processQueue = async () => {
                         success = true;
                         break; 
                     } catch (geminiError) {
-                        console.warn(`[AI_SERVICE] ${modelName} attempt failed:`, geminiError.message);
-                        continue; // Try next model
+                        lastGeminiError = geminiError.message;
+                        console.warn(`[AI_SERVICE] ${modelName} attempt failed:`, lastGeminiError);
+                        continue; 
                     }
                 }
 
-                if (success) continue; // Go to next item in the while loop
+                if (success) {
+                    continue; // Successfully handled by Gemini
+                } else {
+                    // Diagnostic Mode: Return the specific Gemini error to the UI
+                    reject(new Error(`AI Error: ${lastGeminiError || "All models failed"}`));
+                    return;
+                }
             }
 
-            // If no Gemini or Gemini failed, handle Rate Limit (429) via retry
+            // If no Gemini or Gemini failed
             if (error.status === 429 && retries > 0) {
                 console.log(`[AI_SERVICE] Rate limit hit. Retrying in 15s... (${retries} left)`);
                 await new Promise(r => setTimeout(r, 15000));
@@ -227,8 +236,9 @@ const getAIResponse = async (query, context) => {
             return response.choices[0].message.content;
         }, 'chat', { query, context: truncatedContext });
     } catch (error) {
-        console.error('[AI_SERVICE] Chat error:', error);
-        return "I'm sorry, I encountered an error while processing your request.";
+        console.error('[AI_SERVICE] Chat error:', error.message);
+        // Display the specific AI error (Gemini or OpenAI) in the UI
+        return error.message.includes('AI Error:') ? error.message : "I'm sorry, I encountered an error while processing your request.";
     }
 };
 
