@@ -1,244 +1,90 @@
-const OpenAI = require('openai');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 const fs = require('fs');
 const path = require('path');
 
-let openai;
-if (process.env.OPENAI_API_KEY) {
-    openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-    });
-} else {
-    console.warn('[AI_SERVICE] OPENAI_API_KEY is missing.');
-}
-
-let genAI;
-if (process.env.GOOGLE_API_KEY) {
-    // Forcing stable v1 API to avoid 404 errors with experimental v1beta
-    genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY, { apiVersion: 'v1' });
-} else {
-    console.warn('[AI_SERVICE] GOOGLE_API_KEY is missing. Fallback disabled.');
-}
-
-
-// Throttling and Queuing Logic for OpenAI Free Tier (3 RPM)
-const queue = [];
-let isProcessing = false;
-const MIN_GAP_MS = 21000; // ~21 seconds gap to stay safely under 3 RPM
-let lastRequestTime = 0;
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 
 /**
- * Executes an AI request with throttling and automatic retries or fallback to Gemini
- * @param {Function} task - Async function that performs the OpenAI call
- * @param {string} type - 'chat' or 'intelligence'
- * @param {Object} data - Original request data for fallback
- * @param {number} retries - Number of retry attempts
- * @returns {Promise<any>}
+ * Calls Gemini AI directly via REST API (Ultra-Stable v1)
+ * @param {string} prompt - The text prompt to send
+ * @param {string} model - Model identifier (default: gemini-1.5-flash)
+ * @returns {Promise<string>} - AI Response text
  */
-const executeAITask = async (task, type, data, retries = 1) => {
-    return new Promise((resolve, reject) => {
-        queue.push({ task, type, data, retries, resolve, reject });
-        processQueue();
-    });
-};
-
-const processQueue = async () => {
-    if (isProcessing || queue.length === 0) return;
-    isProcessing = true;
-
-    while (queue.length > 0) {
-        const { task, type, data, retries, resolve, reject } = queue.shift();
-        
-        // Ensure minimum gap between requests only for OpenAI
-        const now = Date.now();
-        const timeSinceLast = now - lastRequestTime;
-        if (timeSinceLast < MIN_GAP_MS) {
-            await new Promise(r => setTimeout(r, MIN_GAP_MS - timeSinceLast));
-        }
-
-        try {
-            // Only try OpenAI if initialized
-            if (openai) {
-                const result = await task();
-                lastRequestTime = Date.now();
-                resolve(result);
-            } else {
-                throw new Error('OpenAI not configured');
-            }
-        } catch (error) {
-            // If OpenAI fails (429, 401, or missing key) and we have Gemini, fallback immediately
-            if (genAI) {
-                console.log(`[AI_SERVICE] OpenAI unavailable (${error.message}). Attempting Gemini Triple Fallback...`);
-                
-                // Added gemini-2.0-flash-exp as per user request (interpreting '2.5' as newest version)
-                const modelsToTry = ["gemini-2.0-flash-exp", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
-                let lastGeminiError = "";
-                let success = false;
-
-                for (const modelName of modelsToTry) {
-                    try {
-                        console.log(`[AI_SERVICE] Trying Gemini model: ${modelName}...`);
-                        const model = genAI.getGenerativeModel({ model: modelName });
-                        
-                        let prompt = "";
-                        if (type === 'chat') {
-                            prompt = `Meeting Context: ${data.context || "No transcript available yet."}\nUser Question: ${data.query}\nResponse:`;
-                        } else {
-                            prompt = `Transcript: ${data.transcript}\nSummarize and extract action items in JSON format:`;
-                        }
-
-                        const result = await model.generateContent(prompt);
-                        const response = await result.response;
-                        const text = response.text();
-
-                        if (type === 'intelligence') {
-                            const jsonMatch = text.match(/\{[\s\S]*\}/);
-                            resolve(JSON.parse(jsonMatch ? jsonMatch[0] : text));
-                        } else {
-                            resolve(text);
-                        }
-                        
-                        console.log(`[AI_SERVICE] Gemini responded successfully via ${modelName}`);
-                        success = true;
-                        break; 
-                    } catch (geminiError) {
-                        lastGeminiError = geminiError.message;
-                        console.warn(`[AI_SERVICE] ${modelName} attempt failed:`, lastGeminiError);
-                        continue; 
-                    }
-                }
-
-                if (success) {
-                    continue; // Successfully handled by Gemini
-                } else {
-                    // Diagnostic Mode: Return the specific Gemini error to the UI
-                    reject(new Error(`AI Error: ${lastGeminiError || "All models failed"}`));
-                    return;
-                }
-            }
-
-            // If no Gemini or Gemini failed
-            if (error.status === 429 && retries > 0) {
-                console.log(`[AI_SERVICE] Rate limit hit. Retrying in 15s... (${retries} left)`);
-                await new Promise(r => setTimeout(r, 15000));
-                queue.unshift({ task, type, data, retries: retries - 1, resolve, reject });
-                break; 
-            } else {
-                reject(error);
-            }
-        }
+async function callGemini(prompt, model = "gemini-1.5-flash") {
+    if (!GOOGLE_API_KEY) {
+        throw new Error("AI Error: GOOGLE_API_KEY is missing in .env");
     }
 
-    isProcessing = false;
-    if (queue.length > 0) setTimeout(processQueue, 500);
-};
-
-/**
- * Transcribes audio buffer using Whisper
- * @param {Buffer} buffer - Audio buffer (webm)
- * @param {string} meetingId - Associated meeting ID
- * @returns {Promise<string>} - Transcribed text
- */
-const transcribeAudio = async (buffer, meetingId) => {
+    const url = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${GOOGLE_API_KEY}`;
+    
     try {
-        if (!openai || !buffer) return '';
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{ text: prompt }]
+                }]
+            })
+        });
 
-        const tempDir = path.join(__dirname, '../temp');
-        if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir);
-        
-        const tempFilePath = path.join(tempDir, `chunk_${meetingId}_${Date.now()}.webm`);
-        fs.writeFileSync(tempFilePath, buffer);
+        const data = await response.json();
 
-        const result = await executeAITask(async () => {
-            const transcription = await openai.audio.transcriptions.create({
-                file: fs.createReadStream(tempFilePath),
-                model: "whisper-1",
-            });
-            return transcription.text;
-        }, 'transcription', { meetingId });
+        if (!response.ok) {
+            const errorMsg = data.error?.message || response.statusText;
+            throw new Error(`Google API Error: ${errorMsg} (${response.status})`);
+        }
 
-        // Cleanup temp file
-        if (fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath);
-        
-        return result;
+        if (!data.candidates || data.candidates.length === 0) {
+            throw new Error("AI Error: No response generated by Gemini.");
+        }
+
+        return data.candidates[0].content.parts[0].text;
     } catch (error) {
-        console.error(`[AI_SERVICE] Transcription error:`, error.message);
-        return ''; // Handled by client-side Web Speech API anyway
+        console.error('[AI_SERVICE] Gemini Direct Call Failed:', error.message);
+        throw error;
     }
-};
+}
 
 /**
- * Generates a summary and action items from a transcript
- * @param {string} transcript - Full meeting transcript
- * @returns {Promise<{summary: string, actionItems: Array<{task: string, user: string}>}>}
+ * Stub for transcription - Logic moved to client-side Web Speech API
+ */
+const transcribeAudio = async () => '';
+
+/**
+ * Generates meeting intelligence using Gemini REST API
  */
 const generateMeetingIntelligence = async (transcript) => {
     try {
-        if (!process.env.OPENAI_API_KEY || !transcript) return null;
+        if (!transcript) return null;
 
-        return await executeAITask(async () => {
-            const response = await openai.chat.completions.create({
-                model: "gpt-4o",
-                messages: [
-                    {
-                        role: "system",
-                        content: "You are an AI meeting assistant. Summarize the following meeting transcript and extract clear action items. Return a JSON object with 'summary' (string) and 'actionItems' (array of objects with 'task' and 'suggestedAssignee')."
-                    },
-                    {
-                        role: "user",
-                        content: transcript
-                    }
-                ],
-                response_format: { type: "json_object" }
-            });
-
-            return JSON.parse(response.choices[0].message.content);
-        }, 'intelligence', { transcript });
+        const prompt = `You are a professional meeting assistant. Analyzing the following transcript, provide a concise summary and extract key action items with suggested assignees. Format your response strictly as a JSON object with keys "summary" (string) and "actionItems" (array of {task, user}).\n\nTranscript: ${transcript}`;
+        
+        const responseText = await callGemini(prompt);
+        // Try to find and parse JSON block
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        return JSON.parse(jsonMatch ? jsonMatch[0] : responseText);
     } catch (error) {
-        console.error('[AI_SERVICE] Intelligence generation error:', error);
+        console.error('[AI_SERVICE] Intelligence Generation Error:', error.message);
         return null;
     }
 };
 
 /**
- * Provides a real-time response to user queries based on meeting context
- * @param {string} query - User question
- * @param {string} context - Current meeting transcript
- * @returns {Promise<string>} - AI response
+ * Real-time AI Assistant response using Gemini REST API
  */
 const getAIResponse = async (query, context) => {
     try {
-        if (!openai && !genAI) return "AI services are currently unavailable. Please check the API key configuration.";
-
-        const maxContextChars = 15000; 
+        const maxContextChars = 20000;
         const truncatedContext = context && context.length > maxContextChars 
             ? "..." + context.substring(context.length - maxContextChars)
             : context;
 
-        return await executeAITask(async () => {
-            const response = await openai.chat.completions.create({
-                model: "gpt-4o-mini",
-                messages: [
-                    {
-                        role: "system",
-                        content: `You are an intelligent meeting assistant for the IntellMeet platform. 
-                        You help users by answering questions based on the meeting's live transcript. 
-                        Be professional, concise, and helpful. 
-                        Context from current meeting: ${truncatedContext || "No transcript available yet."}`
-                    },
-                    {
-                        role: "user",
-                        content: query
-                    }
-                ]
-            });
-
-            return response.choices[0].message.content;
-        }, 'chat', { query, context: truncatedContext });
+        const prompt = `You are the IntellMeet AI Companion. Answer the user's question based on the provided meeting context. Be helpful, professional, and concise.\n\nContext: ${truncatedContext || "No transcript available yet."}\nUser Question: ${query}\nResponse:`;
+        
+        return await callGemini(prompt);
     } catch (error) {
-        console.error('[AI_SERVICE] Chat error:', error.message);
-        // Display the specific AI error (Gemini or OpenAI) in the UI
-        return error.message.includes('AI Error:') ? error.message : "I'm sorry, I encountered an error while processing your request.";
+        console.error('[AI_SERVICE] Chat Assistant Error:', error.message);
+        return `AI Error: ${error.message}`;
     }
 };
 
@@ -247,4 +93,3 @@ module.exports = {
     generateMeetingIntelligence,
     getAIResponse
 };
-
