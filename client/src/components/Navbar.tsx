@@ -1,6 +1,7 @@
-import { Menu, X, LogOut, Layout } from 'lucide-react'
+import { Menu, X, LogOut, Layout, Sun, Moon } from 'lucide-react'
 import { useEffect, useState, useRef } from 'react'
 import { useAuthStore } from '../store/useAuthStore'
+import { useTheme } from '../providers/ThemeContext'
 
 const navItems = [
   { href: '#/features', label: 'Features' },
@@ -15,6 +16,7 @@ interface NavbarProps {
 export default function Navbar({ currentRoute }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false)
   const { user, logout } = useAuthStore()
+  const { theme, toggleTheme } = useTheme()
 
   const [isVisible, setIsVisible] = useState(true)
   const lastScrollY = useRef(0)
@@ -63,7 +65,7 @@ export default function Navbar({ currentRoute }: NavbarProps) {
   return (
     <>
       <header 
-        className={`sticky top-0 z-50 border-b border-white/5 bg-[#0a0f1d]/80 px-4 backdrop-blur-xl sm:px-6 lg:px-8 transition-transform duration-300 ${
+        className={`sticky top-0 z-50 border-b border-border bg-nav-bg px-4 backdrop-blur-xl sm:px-6 lg:px-8 transition-all duration-300 ${
           isVisible ? 'translate-y-0' : '-translate-y-full'
         }`}
       >
@@ -76,7 +78,7 @@ export default function Navbar({ currentRoute }: NavbarProps) {
                 alt="IntellMeet logo"
               />
             </span>
-            <span className="whitespace-nowrap text-[1.6rem] leading-[0.9] font-black tracking-[-0.05em] text-white sm:text-[1.9rem]">
+            <span className="whitespace-nowrap text-[1.6rem] leading-[0.9] font-black tracking-[-0.05em] text-foreground sm:text-[1.9rem]">
               tellMeet
             </span>
           </a>
@@ -86,7 +88,7 @@ export default function Navbar({ currentRoute }: NavbarProps) {
               <a
                 key={item.href}
                 className={`mx-6 text-sm font-bold no-underline transition-colors duration-150 ${
-                  currentRoute === item.href ? 'text-blue-400' : 'text-white/70 hover:text-white'
+                  currentRoute === item.href ? 'text-blue-500' : 'text-muted-foreground hover:text-foreground'
                 }`}
                 href={item.href}
                 onClick={closeAll}
@@ -97,6 +99,19 @@ export default function Navbar({ currentRoute }: NavbarProps) {
           </nav>
 
           <div className="inline-flex items-center gap-3.5">
+            {/* Theme Toggle Button */}
+            <button
+              onClick={toggleTheme}
+              className="p-2.5 rounded-xl bg-muted hover:bg-muted/80 text-foreground transition-all border border-border group"
+              title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
+            >
+              {theme === 'light' ? (
+                <Moon size={18} className="group-hover:rotate-12 transition-transform" />
+              ) : (
+                <Sun size={18} className="group-hover:rotate-45 transition-transform" />
+              )}
+            </button>
+
             {user && (
               <div className="hidden lg:flex items-center gap-2 mr-2">
                 <div className="relative group/join">
@@ -104,7 +119,7 @@ export default function Navbar({ currentRoute }: NavbarProps) {
                     type="text"
                     placeholder="Enter code"
                     id="navbar-join-input"
-                    className="w-32 bg-white/5 border border-white/10 rounded-xl py-2 pl-3 pr-10 text-[11px] font-bold focus:outline-none focus:border-blue-500/50 focus:w-48 transition-all"
+                    className="w-32 bg-muted border border-border rounded-xl py-2 pl-3 pr-10 text-[11px] font-bold focus:outline-none focus:border-blue-500/50 focus:w-48 transition-all text-foreground"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         const val = (e.target as HTMLInputElement).value;
@@ -117,12 +132,12 @@ export default function Navbar({ currentRoute }: NavbarProps) {
                       const input = document.getElementById('navbar-join-input') as HTMLInputElement;
                       if (input.value.trim()) window.location.hash = `#/meeting/${input.value.trim()}`;
                     }}
-                    className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 text-white/20 hover:text-blue-400 font-black text-[10px] uppercase transition-colors"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-blue-500 font-black text-[10px] uppercase transition-colors"
                   >
                     Join
                   </button>
                 </div>
-                <div className="w-px h-6 bg-white/10 mx-1" />
+                <div className="w-px h-6 bg-border mx-1" />
               </div>
             )}
             
@@ -132,7 +147,7 @@ export default function Navbar({ currentRoute }: NavbarProps) {
                     className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
                       currentRoute === '#/dashboard' 
                       ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' 
-                      : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white'
+                      : 'bg-muted text-foreground hover:bg-muted/80'
                     }`}
                     href="#/dashboard"
                     onClick={closeAll}
@@ -150,7 +165,7 @@ export default function Navbar({ currentRoute }: NavbarProps) {
               </div>
             ) : (
               <a
-                className="hidden items-center justify-center rounded-xl bg-white px-6 py-2.5 text-sm font-black text-black no-underline transition hover:bg-blue-50 active:scale-95 md:inline-flex"
+                className="hidden items-center justify-center rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-black text-white no-underline transition hover:bg-blue-500 active:scale-95 md:inline-flex"
                 href="#/login"
                 onClick={closeAll}
               >
@@ -160,7 +175,7 @@ export default function Navbar({ currentRoute }: NavbarProps) {
 
             <button
               type="button"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-white/5 bg-white/5 text-white md:hidden hover:bg-white/10 transition-all"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-muted text-foreground md:hidden hover:bg-muted/80 transition-all"
               onClick={() => setIsOpen((open) => !open)}
             >
               {isOpen ? <X size={22} /> : <Menu size={22} />}
@@ -176,8 +191,8 @@ export default function Navbar({ currentRoute }: NavbarProps) {
             className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm animate-fade-in"
             onClick={() => setIsOpen(false)}
           />
-          <aside className="fixed top-0 right-0 z-50 flex h-screen w-[min(320px,84vw)] flex-col bg-[#0a0f1d] border-l border-white/10 shadow-2xl animate-slide-in-right">
-            <div className="flex items-center justify-between p-6 border-b border-white/5">
+          <aside className="fixed top-0 right-0 z-50 flex h-screen w-[min(320px,84vw)] flex-col bg-background border-l border-border shadow-2xl animate-slide-in-right">
+            <div className="flex items-center justify-between p-6 border-b border-border">
               <a className="inline-flex items-end gap-px no-underline" href="#/" onClick={closeAll}>
                 <span className="inline-flex flex-none items-end justify-center">
                   <img
@@ -189,21 +204,21 @@ export default function Navbar({ currentRoute }: NavbarProps) {
               </a>
               <button 
                 onClick={() => setIsOpen(false)}
-                className="p-2 bg-white/5 rounded-xl text-white/40 hover:text-white transition-all"
+                className="p-2 bg-muted rounded-xl text-muted-foreground hover:text-foreground transition-all"
               >
                 <X size={20} />
               </button>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-2">
-              <p className="mb-4 text-[10px] font-black tracking-[0.2em] text-white/20 uppercase">Main Links</p>
+              <p className="mb-4 text-[10px] font-black tracking-[0.2em] text-muted-foreground uppercase">Main Links</p>
               {navItems.map((item) => (
                 <a
                   key={item.href}
                   className={`flex items-center h-14 rounded-2xl px-5 text-sm font-bold no-underline transition-all ${
                     currentRoute === item.href
                       ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
-                      : 'bg-white/2 text-white/40 hover:bg-white/5 hover:text-white'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
                   }`}
                   href={item.href}
                   onClick={closeAll}
@@ -220,7 +235,7 @@ export default function Navbar({ currentRoute }: NavbarProps) {
                     className={`flex items-center h-14 rounded-2xl px-5 text-sm font-bold no-underline transition-all ${
                       currentRoute === '#/dashboard'
                         ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
-                        : 'bg-white/2 text-white/40 hover:bg-white/5'
+                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
                     }`}
                   >
                     <Layout size={18} className="mr-3" />
@@ -239,7 +254,7 @@ export default function Navbar({ currentRoute }: NavbarProps) {
                   <a
                     href="#/login"
                     onClick={closeAll}
-                    className="w-full flex h-14 items-center justify-center rounded-2xl bg-white text-sm font-black text-black uppercase tracking-widest hover:bg-blue-50 transition-all font-bold"
+                    className="w-full flex h-14 items-center justify-center rounded-2xl bg-blue-600 text-sm font-black text-white uppercase tracking-widest hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/20"
                   >
                     Login Portal
                   </a>

@@ -170,7 +170,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#030507] text-white overflow-x-hidden font-sans selection:bg-blue-500/30 flex">
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden font-sans selection:bg-blue-500/30 flex transition-colors duration-300">
       <main className="flex-1 pt-6 sm:pt-10 pb-20 px-4 sm:px-8 lg:px-12 max-w-7xl mx-auto relative">
         {/* Ambient Glows */}
         <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-blue-600/5 rounded-full blur-[120px] -z-10 pointer-events-none" />
@@ -179,35 +179,35 @@ export default function Dashboard() {
         {/* Welcome Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center mb-12 sm:mb-20">
            <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-[9px] sm:text-[10px] font-black uppercase tracking-widest animate-fade-in">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-600 dark:text-blue-400 text-[9px] sm:text-[10px] font-black uppercase tracking-widest animate-fade-in">
                  <ShieldCheck size={12} className="animate-pulse" />
                  Verified Workspace
               </div>
               <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black tracking-tighter mb-4 leading-[0.9] sm:leading-[1.1]">
                 Session Ready,<br/>
-                <span className="bg-gradient-to-r from-blue-400 via-violet-400 to-blue-400 bg-clip-text text-transparent animate-gradient-x inline-block">
+                <span className="bg-gradient-to-r from-blue-600 via-violet-600 to-blue-600 bg-clip-text text-transparent animate-gradient-x inline-block">
                   {user?.name?.split(' ')[0]}!
                 </span>
               </h1>
-              <p className="text-white/40 text-base sm:text-lg max-w-md leading-relaxed font-medium">
+              <p className="text-muted-foreground text-base sm:text-lg max-w-md leading-relaxed font-medium">
                 Connect with your team instantly or deploy a high-performance meeting instance.
               </p>
               
               <div className="flex gap-4 pt-4">
-                <div className="bg-white/[0.02] border border-white/5 px-6 py-4 rounded-3xl">
-                  <span className="block text-[10px] font-black text-white/20 uppercase tracking-widest mb-1">Active Operatives</span>
-                  <span className="text-2xl font-black text-blue-500">{stats.onlineUsers}</span>
+                <div className="bg-card border border-border px-6 py-4 rounded-3xl shadow-sm">
+                  <span className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Active Operatives</span>
+                  <span className="text-2xl font-black text-blue-600">{stats.onlineUsers}</span>
                 </div>
-                <div className="bg-white/[0.02] border border-white/5 px-6 py-4 rounded-3xl">
-                  <span className="block text-[10px] font-black text-white/20 uppercase tracking-widest mb-1">Live Sectors</span>
-                  <span className="text-2xl font-black text-violet-500">{stats.activeRooms}</span>
+                <div className="bg-card border border-border px-6 py-4 rounded-3xl shadow-sm">
+                  <span className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Live Sectors</span>
+                  <span className="text-2xl font-black text-violet-600">{stats.activeRooms}</span>
                 </div>
               </div>
            </div>
            
            <div className="flex flex-col gap-4">
-               <div className="w-full bg-white/[0.03] border border-white/10 p-6 sm:p-8 rounded-[36px] sm:rounded-[48px] backdrop-blur-xl shadow-2xl">
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20 mb-6 font-mono">Operations Console</h3>
+               <div className="w-full bg-card border border-border p-6 sm:p-8 rounded-[36px] sm:rounded-[48px] backdrop-blur-xl shadow-xl">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-6 font-mono">Operations Console</h3>
                   <div className="space-y-4">
                      <form onSubmit={handleJoinByCode} className="relative group/join">
                         <input 
@@ -215,10 +215,10 @@ export default function Dashboard() {
                           placeholder="Enter Room Code..."
                           value={joinCode}
                           onChange={(e) => setJoinCode(e.target.value)}
-                          className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:border-blue-500/50 focus:bg-white/[0.08] transition-all font-bold placeholder:text-white/10"
+                          className="w-full bg-muted border border-border rounded-2xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:border-blue-500/50 focus:bg-muted/80 transition-all font-bold placeholder:text-muted-foreground/30 text-foreground"
                         />
-                        <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within/join:text-blue-500 transition-colors" />
-                        <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 bg-blue-600 rounded-xl hover:bg-blue-500 transition-all shadow-lg active:scale-95">
+                        <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within/join:text-blue-500 transition-colors" />
+                        <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-500 transition-all shadow-lg active:scale-95">
                            <ArrowRight size={18} />
                         </button>
                      </form>
@@ -226,7 +226,7 @@ export default function Dashboard() {
                      <div className="grid grid-cols-2 gap-4">
                        <button 
                          onClick={() => setShowCreateModal(true)}
-                         className="flex items-center justify-center gap-3 bg-white text-black py-4 rounded-2xl font-black text-[10px] tracking-widest hover:bg-blue-50 transition-all active:scale-95 shadow-[0_8px_32px_rgba(255,255,255,0.1)] group"
+                         className="flex items-center justify-center gap-3 bg-blue-600 text-white py-4 rounded-2xl font-black text-[10px] tracking-widest hover:bg-blue-500 transition-all active:scale-95 shadow-lg group"
                        >
                          <Plus size={18} className="group-hover:rotate-90 transition-transform" />
                          DEPLOY
@@ -234,7 +234,7 @@ export default function Dashboard() {
                        <button 
                          onClick={() => setShowChat(!showChat)}
                          className={`flex items-center justify-center gap-3 py-4 rounded-2xl font-black text-[10px] tracking-widest transition-all active:scale-95 border ${
-                           showChat ? 'bg-blue-600 text-white border-blue-500' : 'bg-white/5 text-white/70 border-white/10 hover:bg-white/10'
+                           showChat ? 'bg-blue-600 text-white border-blue-500' : 'bg-muted text-foreground border-border hover:bg-muted/80'
                          }`}
                        >
                          <MessageSquare size={18} />
@@ -242,25 +242,25 @@ export default function Dashboard() {
                        </button>
                      </div>
 
-                     <div className="pt-4 border-t border-white/5 space-y-3">
-                         <h4 className="text-[10px] font-black uppercase tracking-widest text-white/20 px-2 font-mono">Workspaces</h4>
+                     <div className="pt-4 border-t border-border space-y-3">
+                         <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2 font-mono">Workspaces</h4>
                          {projects.length > 0 ? projects.map(p => (
                             <a 
                               key={p._id}
                               href={`#/projects/${p._id}`} 
-                              className="flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 rounded-2xl transition-all group border border-white/5"
+                              className="flex items-center justify-between p-4 bg-muted/50 hover:bg-card rounded-2xl transition-all group border border-border"
                             >
                                <div className="flex items-center gap-3">
-                                 <div className="p-2 bg-violet-500/10 text-violet-400 rounded-lg group-hover:bg-violet-500 group-hover:text-white transition-all">
+                                 <div className="p-2 bg-violet-500/10 text-violet-600 dark:text-violet-400 rounded-lg group-hover:bg-violet-600 group-hover:text-white transition-all">
                                     <Layout size={16} />
                                  </div>
-                                 <span className="text-sm font-bold truncate">{p.name}</span>
+                                 <span className="text-sm font-bold truncate text-foreground">{p.name}</span>
                                </div>
-                               <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
+                               <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all text-foreground" />
                             </a>
                          )) : (
-                            <div className="p-4 text-center border border-dashed border-white/5 rounded-2xl">
-                               <p className="text-[10px] text-white/20 font-bold uppercase">No active projects</p>
+                            <div className="p-4 text-center border border-dashed border-border rounded-2xl">
+                               <p className="text-[10px] text-muted-foreground font-bold uppercase">No active projects</p>
                             </div>
                          )}
                       </div>
@@ -279,24 +279,24 @@ export default function Dashboard() {
                   <div className="h-px w-20 bg-gradient-to-r from-blue-500/20 to-transparent" />
                 </h2>
                 {!isLoading && meetings.length > 0 && (
-                  <span className="text-[10px] font-black uppercase tracking-widest text-white/20">{meetings.length} rooms active</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{meetings.length} rooms active</span>
                 )}
               </div>
 
               {isLoading ? (
                 <div className="space-y-4">
-                   {[1,2,3].map(i => <div key={i} className="h-28 sm:h-32 bg-white/5 rounded-[32px] animate-pulse" />)}
+                   {[1,2,3].map(i => <div key={i} className="h-28 sm:h-32 bg-card rounded-[32px] animate-pulse border border-border" />)}
                 </div>
               ) : meetings.length === 0 ? (
-                <div className="bg-white/[0.02] border border-white/5 border-dashed rounded-[48px] p-12 sm:p-24 text-center flex flex-col items-center justify-center">
+                <div className="bg-card border border-border border-dashed rounded-[48px] p-12 sm:p-24 text-center flex flex-col items-center justify-center shadow-sm">
                    <div className="w-20 h-20 bg-blue-600/10 rounded-[32px] flex items-center justify-center mb-8 border border-blue-500/20 group hover:border-blue-500/40 transition-colors cursor-pointer">
-                      <Video size={32} className="text-blue-500 group-hover:scale-110 transition-transform" />
+                      <Video size={32} className="text-blue-600 group-hover:scale-110 transition-transform" />
                    </div>
                    <h3 className="text-xl sm:text-2xl font-black mb-3">No Active Channels</h3>
-                   <p className="text-white/30 text-sm sm:text-base max-w-[280px] leading-relaxed mb-10 font-medium">Your organization&apos;s stream is empty. Start a session to begin.</p>
+                   <p className="text-muted-foreground text-sm sm:text-base max-w-[280px] leading-relaxed mb-10 font-medium">Your organization&apos;s stream is empty. Start a session to begin.</p>
                    <button 
                      onClick={() => setShowCreateModal(true)}
-                     className="px-10 py-4 bg-white/5 hover:bg-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/5"
+                     className="px-10 py-4 bg-blue-600 text-white hover:bg-blue-500 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg"
                    >
                      Initialize First Room
                    </button>
@@ -304,35 +304,35 @@ export default function Dashboard() {
               ) : (
                 <div className="grid gap-5">
                    {meetings.map((meeting) => (
-                    <article key={meeting.meetingCode} className="group relative bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] hover:border-blue-500/30 p-5 sm:p-6 rounded-[32px] transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-6 overflow-hidden">
+                    <article key={meeting.meetingCode} className="group relative bg-card border border-border hover:bg-card/80 hover:border-blue-500/30 p-5 sm:p-6 rounded-[32px] transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-6 overflow-hidden shadow-sm hover:shadow-md">
                        <div className="absolute -top-12 -right-12 w-40 h-40 bg-blue-500/5 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
                        
                        <div className="flex items-center gap-5 sm:gap-6 min-w-0 relative z-10">
-                        <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-600/10 to-violet-600/10 rounded-2xl flex items-center justify-center border border-white/5 flex-shrink-0 group-hover:scale-105 transition-all shadow-inner">
-                           <Video className="text-blue-500 group-hover:text-blue-400 transition-colors" size={26} />
+                        <div className="w-14 h-14 sm:w-16 sm:h-16 bg-blue-500/5 rounded-2xl flex items-center justify-center border border-border flex-shrink-0 group-hover:scale-105 transition-all">
+                           <Video className="text-blue-600 group-hover:text-blue-500 transition-colors" size={26} />
                         </div>
                         <div className="min-w-0 space-y-1.5">
-                          <h3 className="font-black text-lg sm:text-xl truncate group-hover:text-blue-400 transition-colors uppercase tracking-tight">{meeting.title}</h3>
+                          <h3 className="font-black text-lg sm:text-xl truncate group-hover:text-blue-600 transition-colors uppercase tracking-tight text-foreground">{meeting.title}</h3>
                           <div className="flex flex-wrap items-center gap-3">
-                             <span className="text-[10px] text-blue-500/60 font-black tracking-widest font-mono bg-blue-500/5 px-2 py-0.5 rounded-md border border-blue-500/10">{meeting.meetingCode}</span>
-                             <div className="w-1 h-1 bg-white/10 rounded-full" />
-                             <span className="text-[10px] text-white/30 font-black uppercase tracking-[0.15em] flex items-center gap-1.5 whitespace-nowrap">
-                                 <Clock size={12} className="text-white/20" />
+                             <span className="text-[10px] text-blue-600 font-black tracking-widest font-mono bg-blue-500/10 px-2 py-0.5 rounded-md border border-blue-500/20">{meeting.meetingCode}</span>
+                             <div className="w-1 h-1 bg-border rounded-full" />
+                             <span className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.15em] flex items-center gap-1.5 whitespace-nowrap">
+                                 <Clock size={12} className="text-muted-foreground/50" />
                                  {new Date(meeting.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                               </span>
                              {meeting.sentiment && (
                                <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border ${ 
-                                 meeting.sentiment === 'positive' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 
-                                 meeting.sentiment === 'negative' ? 'bg-red-500/10 text-red-400 border-red-500/20' : 
-                                 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                                 meeting.sentiment === 'positive' ? 'bg-green-500/10 text-green-600 border-green-500/20' : 
+                                 meeting.sentiment === 'negative' ? 'bg-red-500/10 text-red-600 border-red-500/20' : 
+                                 'bg-blue-500/10 text-blue-600 border-blue-500/20'
                                }`}>
                                  {meeting.sentiment}
                                </span>
                              )}
                           </div>
                           {meeting.summary && (
-                            <p className="text-[11px] text-white/40 line-clamp-1 mt-2 max-w-sm">
-                              <span className="text-blue-500 font-black mr-2 uppercase tracking-tighter">AI Summary:</span>
+                            <p className="text-[11px] text-muted-foreground line-clamp-1 mt-2 max-w-sm">
+                              <span className="text-blue-600 font-black mr-2 uppercase tracking-tighter">AI Summary:</span>
                               {meeting.summary}
                             </p>
                           )}
@@ -342,14 +342,14 @@ export default function Dashboard() {
                         {meeting.summary && (
                           <button 
                             onClick={() => setSelectedMeeting(meeting)}
-                            className="bg-white/5 hover:bg-white/10 text-white px-6 py-4 sm:py-5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border border-white/10"
+                            className="bg-muted text-foreground hover:bg-muted/80 px-6 py-4 sm:py-5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border border-border"
                           >
                             Intelligence
                           </button>
                         )}
                         <a 
                           href={`#/meeting/${meeting.meetingCode}`}
-                          className="w-full sm:w-auto text-center bg-white text-black hover:bg-blue-50 px-8 py-4 sm:py-5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-[0_8px_24px_rgba(255,255,255,0.05)] active:scale-95 border border-white/10"
+                          className="w-full sm:w-auto text-center bg-blue-600 text-white hover:bg-blue-500 px-8 py-4 sm:py-5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-lg active:scale-95"
                         >
                           Launch Visuals
                         </a>
@@ -365,40 +365,40 @@ export default function Dashboard() {
               <div className="space-y-8">
                 <h2 className="text-xl sm:text-2xl font-black flex items-center gap-4">
                   Intelligence
-                  <div className="h-px flex-1 bg-gradient-to-r from-white/5 to-transparent" />
+                  <div className="h-px flex-1 bg-gradient-to-r from-border to-transparent" />
                 </h2>
 
-                <div className="bg-gradient-to-br from-blue-600/40 via-violet-600/40 to-transparent p-[1px] rounded-[48px] group transition-all shadow-2xl">
-                   <div className="bg-[#0a0f1d] rounded-[47px] p-8 sm:p-10 h-full relative overflow-hidden backdrop-blur-3xl">
+                <div className="bg-gradient-to-br from-blue-600/40 via-violet-600/40 to-transparent p-[1px] rounded-[48px] group transition-all shadow-xl">
+                   <div className="bg-card rounded-[47px] p-8 sm:p-10 h-full relative overflow-hidden backdrop-blur-3xl shadow-inner">
                       <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/10 rounded-full blur-[60px] translate-x-1/2 -translate-y-1/2" />
                       
                       <div className="relative z-10">
                         <div className="flex items-center justify-between mb-6">
-                           <div className="p-3.5 bg-blue-500/10 w-fit rounded-2xl border border-blue-500/20 shadow-inner">
-                              <Activity size={24} className="text-blue-400" />
+                           <div className="p-3.5 bg-blue-500/10 w-fit rounded-2xl border border-blue-500/20">
+                              <Activity size={24} className="text-blue-600 dark:text-blue-400" />
                            </div>
-                           <span className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Efficiency Protocol</span>
+                           <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Efficiency Protocol</span>
                         </div>
                         
-                        <h3 className="text-xl font-black mb-2 tracking-tight uppercase">Performance Velocity</h3>
+                        <h3 className="text-xl font-black mb-2 tracking-tight uppercase text-foreground">Performance Velocity</h3>
                         <PerformanceChart />
                         
                         <div className="grid grid-cols-2 gap-4 mt-8">
-                           <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
-                              <span className="block text-[9px] font-black text-white/30 uppercase tracking-widest mb-1">Weekly Delta</span>
-                              <span className="text-lg font-black text-green-400">+24.8%</span>
+                           <div className="bg-muted p-4 rounded-2xl border border-border">
+                              <span className="block text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">Weekly Delta</span>
+                              <span className="text-lg font-black text-green-600">+24.8%</span>
                            </div>
-                           <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
-                              <span className="block text-[9px] font-black text-white/30 uppercase tracking-widest mb-1">Optimization</span>
-                              <span className="text-lg font-black text-blue-400">Stable</span>
+                           <div className="bg-muted p-4 rounded-2xl border border-border">
+                              <span className="block text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">Optimization</span>
+                              <span className="text-lg font-black text-blue-600">Stable</span>
                            </div>
                         </div>
                       </div>
                    </div>
                 </div>
 
-                <div className="bg-white/[0.02] border border-white/5 rounded-[40px] p-8 sm:p-10 relative overflow-hidden">
-                   <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mb-8 flex items-center gap-3">
+                <div className="bg-card border border-border rounded-[40px] p-8 sm:p-10 relative overflow-hidden shadow-sm">
+                   <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-8 flex items-center gap-3">
                       <div className="w-2 h-2 rounded-full bg-[#50e3c2] animate-pulse shadow-[0_0_8px_#50e3c2]" />
                       Deployment Nodes
                    </h3>
@@ -427,24 +427,24 @@ export default function Dashboard() {
 
       {/* Create Meeting Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/90 backdrop-blur-2xl animate-fade-in">
-          <div className="bg-[#0a0f1d] border border-white/10 rounded-[48px] p-8 sm:p-12 w-full max-w-xl shadow-[0_0_120px_rgba(37,99,235,0.15)] relative overflow-hidden">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-background/80 backdrop-blur-2xl animate-fade-in transition-colors duration-300">
+          <div className="bg-card border border-border rounded-[48px] p-8 sm:p-12 w-full max-w-xl shadow-2xl relative overflow-hidden">
             <div className="absolute -top-32 -right-32 w-80 h-80 bg-blue-600/10 rounded-full blur-[100px]" />
             
-            <div className="relative z-10">
+            <div className="relative z-10 text-foreground">
               <div className="flex items-center justify-between mb-10">
                 <div>
-                  <h2 className="text-3xl sm:text-4xl font-black mb-2 tracking-tighter uppercase">Initialize</h2>
-                  <p className="text-white/30 text-sm font-medium tracking-wide">Configure a high-performance meeting node.</p>
+                  <h2 className="text-3xl sm:text-4xl font-black mb-2 tracking-tighter uppercase text-foreground">Initialize</h2>
+                  <p className="text-muted-foreground text-sm font-medium tracking-wide">Configure a high-performance meeting node.</p>
                 </div>
-                <button onClick={() => setShowCreateModal(false)} className="p-4 bg-white/5 hover:bg-red-500/10 hover:text-red-500 rounded-2xl text-white/20 transition-all border border-white/5 hover:border-red-500/20 group">
+                <button onClick={() => setShowCreateModal(false)} className="p-4 bg-muted hover:bg-red-500/10 hover:text-red-500 rounded-2xl text-muted-foreground transition-all border border-border hover:border-red-500/20 group">
                    <Plus className="rotate-45 group-hover:rotate-[135deg] transition-transform" size={24} />
                 </button>
               </div>
               
               <form onSubmit={handleCreateMeeting} className="space-y-8">
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-500/60 ml-1">Instance Identifier</label>
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 ml-1">Instance Identifier</label>
                   <input 
                     autoFocus
                     required
@@ -452,25 +452,25 @@ export default function Dashboard() {
                     placeholder="e.g. ALPHA_CLUSTER_01"
                     value={newMeeting.title}
                     onChange={(e) => setNewMeeting({ ...newMeeting, title: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-lg text-white focus:outline-none focus:border-blue-500 focus:bg-white/[0.08] transition-all font-bold placeholder:text-white/10"
+                    className="w-full bg-muted border border-border rounded-2xl p-5 text-lg text-foreground focus:outline-none focus:border-blue-500 focus:bg-muted/80 transition-all font-bold placeholder:text-muted-foreground/30"
                   />
                 </div>
                 
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-500/60 ml-1">Briefing Scope</label>
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 ml-1">Briefing Scope</label>
                   <textarea 
                     rows={2}
                     placeholder="Strategic alignment for next sprint..."
                     value={newMeeting.description}
                     onChange={(e) => setNewMeeting({ ...newMeeting, description: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-sm text-white focus:outline-none focus:border-blue-500 focus:bg-white/[0.08] transition-all font-medium resize-none placeholder:text-white/10"
+                    className="w-full bg-muted border border-border rounded-2xl p-5 text-sm text-foreground focus:outline-none focus:border-blue-500 focus:bg-muted/80 transition-all font-medium resize-none placeholder:text-muted-foreground/30"
                   />
                 </div>
 
                 <div className="flex gap-4 pt-6">
                   <button 
                     type="submit"
-                    className="flex-1 bg-white text-black py-5 sm:py-6 rounded-2xl font-black text-xs sm:text-sm tracking-[0.3em] uppercase hover:bg-blue-50 transition-all shadow-[0_12px_48px_rgba(255,255,255,0.1)] active:scale-[0.98] border border-white/10"
+                    className="flex-1 bg-blue-600 text-white py-5 sm:py-6 rounded-2xl font-black text-xs sm:text-sm tracking-[0.3em] uppercase hover:bg-blue-500 transition-all shadow-lg active:scale-[0.98]"
                   >
                     DEPLOY NODE
                   </button>
@@ -483,17 +483,17 @@ export default function Dashboard() {
 
       {/* Meeting Intelligence Modal */}
       {selectedMeeting && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-black/95 backdrop-blur-3xl animate-fade-in">
-          <div className="bg-[#0a0f1d] border border-white/10 rounded-[48px] w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-[0_0_120px_rgba(37,99,235,0.2)] relative">
-            <div className="p-8 sm:p-12 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6 bg-background/90 backdrop-blur-3xl animate-fade-in transition-colors duration-300">
+          <div className="bg-card border border-border rounded-[48px] w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl relative text-foreground">
+            <div className="p-8 sm:p-12 border-b border-border flex items-center justify-between bg-muted/50">
                <div className="space-y-2">
                   <div className="flex items-center gap-3">
-                    <span className="px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-[10px] font-black uppercase tracking-widest">Post-Session Intelligence</span>
-                    <span className="text-[10px] text-white/20 font-mono">{selectedMeeting.meetingCode}</span>
+                    <span className="px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-600 dark:text-blue-400 text-[10px] font-black uppercase tracking-widest">Post-Session Intelligence</span>
+                    <span className="text-[10px] text-muted-foreground font-mono">{selectedMeeting.meetingCode}</span>
                   </div>
-                  <h2 className="text-3xl font-black tracking-tighter uppercase">{selectedMeeting.title}</h2>
+                  <h2 className="text-3xl font-black tracking-tighter uppercase text-foreground">{selectedMeeting.title}</h2>
                </div>
-               <button onClick={() => setSelectedMeeting(null)} className="p-4 bg-white/5 hover:bg-red-500/10 hover:text-red-500 rounded-2xl text-white/20 transition-all border border-white/5">
+               <button onClick={() => setSelectedMeeting(null)} className="p-4 bg-muted hover:bg-red-500/10 hover:text-red-500 rounded-2xl text-muted-foreground transition-all border border-border">
                   <Plus className="rotate-45" size={24} />
                </button>
             </div>
@@ -501,41 +501,41 @@ export default function Dashboard() {
             <div className="flex-1 overflow-y-auto p-8 sm:p-12 space-y-12">
                {/* Sentiment & Quick Stats */}
                <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="bg-white/[0.03] border border-white/5 p-6 rounded-[32px] flex flex-col items-center justify-center text-center">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-white/20 mb-3">Tone Analysis</span>
+                  <div className="bg-muted border border-border p-6 rounded-[32px] flex flex-col items-center justify-center text-center">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-3">Tone Analysis</span>
                     <div className={`p-4 rounded-2xl mb-2 ${
-                      selectedMeeting.sentiment === 'positive' ? 'bg-green-500/10 text-green-400' :
-                      selectedMeeting.sentiment === 'negative' ? 'bg-red-500/10 text-red-400' :
-                      selectedMeeting.sentiment === 'mixed' ? 'bg-orange-500/10 text-orange-400' :
-                      'bg-blue-500/10 text-blue-400'
+                      selectedMeeting.sentiment === 'positive' ? 'bg-green-500/10 text-green-600' :
+                      selectedMeeting.sentiment === 'negative' ? 'bg-red-500/10 text-red-600' :
+                      selectedMeeting.sentiment === 'mixed' ? 'bg-orange-500/10 text-orange-600' :
+                      'bg-blue-500/10 text-blue-600'
                     }`}>
                       <Activity size={32} />
                     </div>
-                    <span className="text-xl font-black uppercase tracking-tighter">
+                    <span className="text-xl font-black uppercase tracking-tighter text-foreground">
                       {selectedMeeting.sentiment || 'Analyzing...'}
                     </span>
                   </div>
 
-                  <div className="md:col-span-2 bg-white/[0.03] border border-white/5 p-6 rounded-[32px] space-y-4">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-white/20">Key Highlights</span>
+                  <div className="md:col-span-2 bg-muted border border-border p-6 rounded-[32px] space-y-4">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Key Highlights</span>
                     <div className="flex flex-wrap gap-2">
                       {selectedMeeting.highlights?.map((h, i) => (
-                        <span key={i} className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-xl text-xs font-medium text-white/60">
+                        <span key={i} className="px-3 py-1.5 bg-card border border-border rounded-xl text-xs font-medium text-foreground">
                           {h}
                         </span>
-                      )) || <span className="text-white/20 italic">No highlights available yet.</span>}
+                      )) || <span className="text-muted-foreground italic text-sm">No highlights available yet.</span>}
                     </div>
                   </div>
                </section>
 
                {/* Summary Section */}
                <section className="space-y-6">
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-500 flex items-center gap-3">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 flex items-center gap-3">
                     <Layout size={14} /> Executive Summary
                   </h3>
-                  <div className="bg-white/[0.03] border border-white/5 p-8 rounded-[32px] relative overflow-hidden">
+                  <div className="bg-muted border border-border p-8 rounded-[32px] relative overflow-hidden">
                      <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/5 rounded-full blur-3xl" />
-                     <p className="text-white/70 leading-relaxed text-lg font-medium relative z-10">
+                     <p className="text-foreground leading-relaxed text-lg font-medium relative z-10 transition-colors">
                         {selectedMeeting.summary || 'Summary not generated yet. Click analyze to process the transcript.'}
                      </p>
                   </div>
@@ -544,18 +544,18 @@ export default function Dashboard() {
                {/* Action Items Section */}
                {selectedMeeting.actionItems && selectedMeeting.actionItems.length > 0 && (
                  <section className="space-y-6">
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-violet-500 flex items-center gap-3">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-violet-600 flex items-center gap-3">
                       <Plus size={14} /> Action Items
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                        {selectedMeeting.actionItems.map((item, idx) => (
-                          <div key={idx} className="bg-white/[0.02] border border-white/5 p-6 rounded-3xl flex items-start gap-4 hover:bg-white/[0.04] transition-all">
+                          <div key={idx} className="bg-muted border border-border p-6 rounded-3xl flex items-start gap-4 hover:bg-card transition-all shadow-sm">
                              <div className="w-6 h-6 rounded-full bg-violet-500/10 border border-violet-500/30 flex items-center justify-center flex-shrink-0 mt-1">
-                                <ArrowRight size={12} className="text-violet-400" />
+                                <ArrowRight size={12} className="text-violet-600" />
                              </div>
                              <div className="space-y-1">
-                                <p className="text-sm font-bold text-white/90">{item.task}</p>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-white/30 truncate">Assignee: {item.suggestedAssignee}</p>
+                                <p className="text-sm font-bold text-foreground transition-colors">{item.task}</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground truncate">Assignee: {item.suggestedAssignee}</p>
                              </div>
                           </div>
                        ))}
@@ -565,20 +565,20 @@ export default function Dashboard() {
 
                {/* Full Transcript Preview */}
                <section className="space-y-6">
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20 flex items-center gap-3">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-3">
                     <Clock size={14} /> Transcript Stream
                   </h3>
-                  <div className="bg-black/40 border border-white/5 p-8 rounded-[32px] h-60 overflow-y-auto scrollbar-hide">
-                     <p className="text-xs text-white/40 leading-loose font-mono">{selectedMeeting.transcript || 'No transcript data available.'}</p>
+                  <div className="bg-muted border border-border p-8 rounded-[32px] h-60 overflow-y-auto scrollbar-hide shadow-inner">
+                     <p className="text-xs text-muted-foreground leading-loose font-mono">{selectedMeeting.transcript || 'No transcript data available.'}</p>
                   </div>
                </section>
             </div>
 
-            <div className="p-8 border-t border-white/5 bg-white/[0.02] flex flex-col sm:flex-row gap-4">
+            <div className="p-8 border-t border-border bg-muted/50 flex flex-col sm:flex-row gap-4">
                {!selectedMeeting.summary && (
                  <button 
                    onClick={() => handleAnalyzeMeeting(selectedMeeting._id)}
-                   className="flex-1 bg-gradient-to-r from-blue-600 to-violet-600 text-white py-4 rounded-2xl font-black text-[10px] tracking-[0.2em] uppercase transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
+                   className="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-black text-[10px] tracking-[0.2em] uppercase transition-all hover:bg-blue-500 active:scale-95 flex items-center justify-center gap-2"
                  >
                    <Zap size={14} />
                    INITIALIZE AI ANALYSIS
@@ -588,7 +588,7 @@ export default function Dashboard() {
                {selectedMeeting.summary && (
                  <button 
                    onClick={() => generateMeetingReport(selectedMeeting)}
-                   className="flex-1 bg-white text-black py-4 rounded-2xl font-black text-[10px] tracking-[0.2em] uppercase transition-all hover:bg-blue-50 active:scale-95 flex items-center justify-center gap-2"
+                   className="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-black text-[10px] tracking-[0.2em] uppercase transition-all hover:bg-blue-500 active:scale-95 flex items-center justify-center gap-2"
                  >
                    <FileText size={14} />
                    EXPORT PDF Dossier
@@ -600,10 +600,10 @@ export default function Dashboard() {
                     <select 
                       value={selectedProjectId}
                       onChange={(e) => setSelectedProjectId(e.target.value)}
-                      className="bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-xs font-bold text-white focus:outline-none focus:border-blue-500 transition-all"
+                      className="bg-muted border border-border rounded-2xl px-4 py-3 text-xs font-bold text-foreground focus:outline-none focus:border-blue-500 transition-all font-mono"
                     >
                       {projects.map(p => (
-                        <option key={p._id} value={p._id} className="bg-[#0a0f1d] text-white">
+                        <option key={p._id} value={p._id} className="bg-card text-foreground">
                           Push to: {p.name}
                         </option>
                       ))}
@@ -611,10 +611,10 @@ export default function Dashboard() {
                     <button 
                       onClick={handlePushToProject}
                       disabled={isPushing}
-                      className="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-black text-[10px] tracking-[0.2em] uppercase transition-all hover:bg-blue-500 active:scale-95 disabled:opacity-50 inline-flex items-center justify-center gap-2"
+                      className="flex-1 bg-violet-600 text-white py-4 rounded-2xl font-black text-[10px] tracking-[0.2em] uppercase transition-all hover:bg-violet-500 active:scale-95 disabled:opacity-50 inline-flex items-center justify-center gap-2 shadow-lg"
                     >
                       <Plus size={14} />
-                      {isPushing ? 'DEPLOYING TO KANBAN...' : 'PUSH TO PROJECT BOARD'}
+                      {isPushing ? 'DEPLOYING...' : 'PUSH TO BOARD'}
                     </button>
                  </div>
                )}
@@ -622,6 +622,35 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(20px) scale(0.98); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes gradient-x {
+           0%, 100% { background-position: 0% 50%; }
+           50% { background-position: 100% 50%; }
+        }
+        .animate-gradient-x {
+           background-size: 200% 200%;
+           animation: gradient-x 6s ease;
+           animation-iteration-count: infinite;
+         }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}} />
+    </div>
+  )
+}
 
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes fadeIn {

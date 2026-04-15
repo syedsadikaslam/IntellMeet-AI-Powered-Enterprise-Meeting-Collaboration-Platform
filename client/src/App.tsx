@@ -18,6 +18,7 @@ import PlansPage from './pages/PlansPage'
 import ProductPage from './pages/ProductPage'
 import SolutionsPage from './pages/SolutionsPage'
 import TalkToSalesPage from './pages/TalkToSalesPage'
+import { ThemeProvider } from './providers/ThemeContext'
 
 const routes: Record<string, any> = {
   '#/': Hero,
@@ -101,13 +102,15 @@ function App() {
   const { Component, params } = routeInfo
 
   return (
-    <main className="min-h-screen text-slate-50">
-      {/* Don't show global Navbar in MeetingRoom to keep it clean */}
-      {Component !== MeetingRoom && <Navbar currentRoute={window.location.hash} />}
-      <Component meetingCode={params.code} />
-      {Component !== MeetingRoom && <Footer />}
-      <SpeedInsights />
-    </main>
+    <ThemeProvider>
+      <main className="min-h-screen text-foreground transition-colors duration-300">
+        {/* Don't show global Navbar in MeetingRoom to keep it clean */}
+        {Component !== MeetingRoom && <Navbar currentRoute={window.location.hash} />}
+        <Component meetingCode={params.code} />
+        {Component !== MeetingRoom && <Footer />}
+        <SpeedInsights />
+      </main>
+    </ThemeProvider>
   )
 }
 

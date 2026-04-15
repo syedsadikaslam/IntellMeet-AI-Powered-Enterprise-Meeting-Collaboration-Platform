@@ -584,12 +584,12 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
   }
 
   return (
-    <div ref={containerRef} className="flex h-screen bg-[#030507] text-white overflow-hidden font-sans">
+    <div ref={containerRef} className="flex h-screen bg-background text-foreground overflow-hidden font-sans transition-colors duration-300">
       {/* Notifications Layer */}
       <div className="fixed top-20 right-6 z-[100] flex flex-col gap-3 pointer-events-none">
         {notifications.map(n => (
           <div key={n.id} className="bg-blue-600/90 backdrop-blur-md px-4 py-3 rounded-xl shadow-2xl border border-white/20 animate-slide-in-right pointer-events-auto">
-            <p className="text-sm font-medium">{n.message}</p>
+            <p className="text-sm font-medium text-white">{n.message}</p>
           </div>
         ))}
       </div>
@@ -597,18 +597,18 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
       {/* Main Content */}
       <div className="flex-1 flex flex-col relative min-w-0">
         {/* Top Header */}
-        <div className="h-16 flex items-center justify-between px-6 bg-white/2 border-b border-white/5">
+        <div className="h-16 flex items-center justify-between px-6 bg-muted/30 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-600 rounded-lg">
+            <div className="p-2 bg-blue-600 text-white rounded-lg shadow-md">
               <Users size={18} />
             </div>
             <div>
-              <h1 className="text-sm font-bold truncate max-w-[200px]">Live Session • {meetingCode}</h1>
-              <p className="text-[10px] text-white/50">{participants.length} participants connected</p>
+              <h1 className="text-sm font-bold truncate max-w-[200px] text-foreground transition-colors">Live Session • {meetingCode}</h1>
+              <p className="text-[10px] text-muted-foreground transition-colors">{participants.length} participants connected</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-500/10 text-red-100 text-[10px] font-black uppercase tracking-widest rounded-full border border-red-500/20">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-500/10 text-red-600 dark:text-red-400 text-[10px] font-black uppercase tracking-widest rounded-full border border-red-500/20">
               <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
               Live
             </span>
@@ -642,21 +642,21 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
           })}
 
           {participants.length < 2 && (
-             <div className="relative rounded-3xl bg-white/2 border-2 border-dashed border-white/5 flex flex-col items-center justify-center gap-4">
-                <div className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center animate-pulse">
-                   <Users size={20} className="text-white/20" />
+             <div className="relative rounded-3xl bg-muted/50 border-2 border-dashed border-border flex flex-col items-center justify-center gap-4 transition-colors">
+                <div className="w-12 h-12 rounded-full border border-border flex items-center justify-center animate-pulse">
+                   <Users size={20} className="text-muted-foreground transition-colors" />
                 </div>
-                <p className="text-white/10 text-[10px] font-black uppercase tracking-[0.3em]">Waiting for others</p>
+                <p className="text-muted-foreground text-[10px] font-black uppercase tracking-[0.3em] transition-colors">Waiting for others</p>
              </div>
           )}
         </div>
 
         {/* Bottom Bar */}
-        <div className="h-20 md:h-24 bg-[rgba(3,5,7,0.92)] backdrop-blur-xl border-t border-white/5 flex items-center px-1 md:px-8 relative justify-between overflow-hidden">
+        <div className="h-20 md:h-24 bg-background/80 backdrop-blur-xl border-t border-border flex items-center px-1 md:px-8 relative justify-between overflow-hidden shadow-[0_-10px_40px_rgba(0,0,0,0.05)] transition-colors duration-300">
             <div className="flex items-center gap-2 md:gap-4 flex-none">
                <button 
                  onClick={() => setShowDetails(!showDetails)}
-                 className={`flex items-center gap-2 md:gap-3 px-3 md:px-5 py-2 md:py-3 rounded-xl md:rounded-2xl transition-all ${showDetails ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30' : 'bg-white/5 text-white/50 hover:text-white'} hidden sm:flex`}
+                 className={`flex items-center gap-2 md:gap-3 px-3 md:px-5 py-2 md:py-3 rounded-xl md:rounded-2xl transition-all ${showDetails ? 'bg-blue-600/20 text-blue-600 border border-blue-500/30' : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80'} hidden sm:flex`}
                >
                  <Info size={18} className={`md:w-5 md:h-5 ${showDetails ? 'animate-pulse' : ''}`} />
                  <span className="text-[10px] md:text-[11px] font-black uppercase tracking-wider hidden lg:block">Details</span>
@@ -672,7 +672,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
                 
                 <button 
                   onClick={handleRaiseHand}
-                  className={`p-2.5 md:p-5 rounded-2xl md:rounded-3xl transition-all ${raisedHands[user?.id || ''] ? 'bg-yellow-400 text-black shadow-xl shadow-yellow-400/20 animate-bounce' : 'bg-white/5 hover:bg-white/10 text-white'}`}
+                  className={`p-2.5 md:p-5 rounded-2xl md:rounded-3xl transition-all ${raisedHands[user?.id || ''] ? 'bg-yellow-400 text-black shadow-xl shadow-yellow-400/20 animate-bounce' : 'bg-muted hover:bg-muted/80 text-foreground'}`}
                   title="Raise Hand"
                 >
                   <Hand className="w-5 h-5 md:w-[22px] md:h-[22px]" />
@@ -689,7 +689,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
                 {user?.id === (meetingData?.host?._id || meetingData?.host) && (
                   <button 
                     onClick={handleDeleteMeeting}
-                    className="p-3 md:p-5 bg-red-900 hover:bg-red-800 rounded-2xl md:rounded-3xl text-white transition-all shadow-2xl shadow-red-900/20 transform hover:scale-105 active:scale-95 hidden sm:flex"
+                    className="p-3 md:p-5 bg-red-900 border border-red-800/50 hover:bg-red-800 rounded-2xl md:rounded-3xl text-white transition-all shadow-2xl shadow-red-900/20 transform hover:scale-105 active:scale-95 hidden sm:flex"
                     title="End & Delete Meeting"
                   >
                     <Trash2 className="w-5 h-5 md:w-6 md:h-6" />
@@ -701,33 +701,33 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
               <div className="flex flex-none items-center gap-1 md:gap-3 md:absolute md:right-8">
                 <button 
                   onClick={() => { setIsChatOpen(!isChatOpen); setIsParticipantsOpen(false); setIsTranscriptOpen(false); setIsAIAssistantOpen(false); }}
-                  className={`p-2.5 md:p-5 rounded-2xl md:rounded-3xl transition-all relative ${isChatOpen ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'bg-white/5 text-white/50 hover:text-white'}`}
+                  className={`p-2.5 md:p-5 rounded-2xl md:rounded-3xl transition-all relative ${isChatOpen ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}
                 >
                   <MessageSquare className="w-5 h-5 md:w-[22px] md:h-[22px]" />
                   {messages.length > 0 && !isChatOpen && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 md:w-6 md:h-6 bg-blue-500 rounded-full text-[9px] md:text-[10px] flex items-center justify-center border-2 border-[#030507] font-black">{messages.length}</span>
+                    <span className="absolute -top-1 -right-1 w-5 h-5 md:w-6 md:h-6 bg-blue-600 text-white rounded-full text-[9px] md:text-[10px] flex items-center justify-center border-2 border-background font-black animate-slide-in-up transition-colors">{messages.length}</span>
                   )}
                 </button>
 
                 <button 
                   onClick={() => { setIsTranscriptOpen(!isTranscriptOpen); setIsChatOpen(false); setIsParticipantsOpen(false); setIsAIAssistantOpen(false); }}
-                  className={`p-2.5 md:p-5 rounded-2xl md:rounded-3xl transition-all relative ${isTranscriptOpen ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'bg-white/5 text-white/50 hover:text-white'}`}
+                  className={`p-2.5 md:p-5 rounded-2xl md:rounded-3xl transition-all relative ${isTranscriptOpen ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}
                   title="Live Transcription"
                 >
                   <Layout className="w-5 h-5 md:w-[22px] md:h-[22px]" />
-                  {isTranscribing && <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />}
+                  {isTranscribing && <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.4)]" />}
                 </button>
 
                 <button 
                   onClick={() => { setIsParticipantsOpen(!isParticipantsOpen); setIsChatOpen(false); setIsTranscriptOpen(false); setIsAIAssistantOpen(false); }}
-                  className={`p-2.5 md:p-5 rounded-2xl md:rounded-3xl transition-all relative ${isParticipantsOpen ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'bg-white/5 text-white/50 hover:text-white'}`}
+                  className={`p-2.5 md:p-5 rounded-2xl md:rounded-3xl transition-all relative ${isParticipantsOpen ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}
                 >
                   <Users className="w-5 h-5 md:w-[22px] md:h-[22px]" />
                 </button>
 
                 <button 
                   onClick={toggleFullscreen}
-                  className={`p-2.5 md:p-5 rounded-2xl md:rounded-3xl transition-all relative ${isFullscreen ? 'bg-blue-600 text-white' : 'bg-white/5 text-white/50 hover:text-white'}`}
+                  className={`p-2.5 md:p-5 rounded-2xl md:rounded-3xl transition-all relative ${isFullscreen ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}
                   title="Toggle Fullscreen"
                 >
                   {isFullscreen ? <Minimize className="w-5 h-5 md:w-[22px] md:h-[22px]" /> : <Maximize className="w-5 h-5 md:w-[22px] md:h-[22px]" />}
@@ -735,7 +735,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
 
                 <button 
                   onClick={() => { setIsAIAssistantOpen(!isAIAssistantOpen); setIsChatOpen(false); setIsTranscriptOpen(false); setIsParticipantsOpen(false); }}
-                  className={`p-2.5 md:p-5 rounded-2xl md:rounded-3xl transition-all relative ${isAIAssistantOpen ? 'bg-purple-600 text-white shadow-xl shadow-purple-600/20' : 'bg-white/5 text-white/50 hover:text-white'}`}
+                  className={`p-2.5 md:p-5 rounded-2xl md:rounded-3xl transition-all relative ${isAIAssistantOpen ? 'bg-purple-600 dark:bg-purple-500 text-white shadow-xl shadow-purple-600/20' : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}
                   title="AI Assistant"
                 >
                   <Bot className="w-5 h-5 md:w-[22px] md:h-[22px]" />
@@ -748,29 +748,29 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
 
         {/* Meeting Details Modal: GMeet style */}
         {showDetails && (
-          <div className="absolute bottom-28 left-8 w-80 bg-[#0d1425] border border-white/10 rounded-[32px] p-6 shadow-[0_24px_80px_rgba(0,0,0,0.6)] animate-slide-in-up z-50 overflow-hidden">
+          <div className="absolute bottom-28 left-8 w-80 bg-card border border-border rounded-[32px] p-6 shadow-2xl animate-slide-in-up z-50 overflow-hidden transition-colors duration-300">
              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/10 rounded-full blur-[60px] translate-x-1/2 -translate-y-1/2" />
              
              <div className="relative z-10 space-y-5">
                 <div>
-                   <h3 className="text-sm font-black uppercase tracking-widest text-white/30 mb-1">Joining Info</h3>
-                   <p className="text-lg font-black text-white truncate">{meetingData?.title}</p>
+                   <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground mb-1">Joining Info</h3>
+                   <p className="text-lg font-black text-foreground truncate transition-colors">{meetingData?.title}</p>
                 </div>
 
                 <div className="space-y-3">
-                   <div className="bg-black/40 border border-white/5 p-4 rounded-2xl">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-2">Meeting Link</p>
-                      <p className="text-xs text-white/60 truncate mb-4">{window.location.href.split('/room')[0]}</p>
+                   <div className="bg-muted border border-border p-4 rounded-2xl transition-colors">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-2 font-bold">Meeting Link</p>
+                      <p className="text-xs text-muted-foreground truncate mb-4 transition-colors">{window.location.href.split('/room')[0]}</p>
                       <button 
                         onClick={copyJoiningInfo}
-                        className="w-full py-3 bg-white/5 hover:bg-white text-white/50 hover:text-black rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all border border-white/10 hover:border-white"
+                        className="w-full py-3 bg-card border border-border hover:bg-blue-600 hover:text-white text-foreground rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all"
                       >
                          Copy Joining Info
                       </button>
                    </div>
                    <div className="flex items-center justify-between px-4">
-                      <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">Dial-in Node</span>
-                      <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest">{meetingCode}</span>
+                      <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Dial-in Node</span>
+                      <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">{meetingCode}</span>
                    </div>
                 </div>
              </div>
@@ -779,12 +779,12 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
       </div>
 
       {isTranscriptOpen && (
-        <aside className="fixed md:relative top-0 right-0 z-[60] w-full sm:w-80 h-full bg-[#0a0f1d] border-l border-white/10 p-6 flex flex-col gap-6 animate-slide-in-right overflow-hidden">
+        <aside className="fixed md:relative top-0 right-0 z-[60] w-full sm:w-80 h-full bg-card border-l border-border p-6 flex flex-col gap-6 animate-slide-in-right overflow-hidden shadow-2xl transition-colors duration-300">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-black uppercase tracking-widest text-white/50 flex items-center gap-2">
+            <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
               <Layout size={16} /> Live Transcript
             </h3>
-            <button onClick={() => setIsTranscriptOpen(false)} className="p-2 hover:bg-white/5 rounded-lg text-white/20 hover:text-white transition-all">
+            <button onClick={() => setIsTranscriptOpen(false)} className="p-2 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-all">
               <Plus size={18} className="rotate-45" />
             </button>
           </div>
@@ -792,21 +792,21 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
           <div className="flex-1 overflow-y-auto space-y-4 scrollbar-hide pr-2">
             {transcripts.map((t, i) => (
               <div key={i} className="animate-fade-in">
-                <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-1">{t.userName}</p>
-                <p className="text-xs text-white/70 leading-relaxed bg-white/5 p-3 rounded-2xl border border-white/5">{t.text}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-1">{t.userName}</p>
+                <p className="text-xs text-foreground leading-relaxed bg-muted/50 p-3 rounded-2xl border border-border transition-colors">{t.text}</p>
               </div>
             ))}
             {transcripts.length === 0 && (
-              <div className="h-full flex flex-col items-center justify-center text-center opacity-20">
-                <Layout size={40} className="mb-4" />
-                <p className="text-[10px] font-black uppercase tracking-widest">No Transcripts yet</p>
+              <div className="h-full flex flex-col items-center justify-center text-center opacity-40">
+                <Sparkles className="text-muted-foreground mb-4" size={32} />
+                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Waiting for speech...</p>
               </div>
             )}
           </div>
 
           <button 
             onClick={toggleTranscription}
-            className={`w-full py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${isTranscribing ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-blue-600 text-white border border-blue-500/20 shadow-lg shadow-blue-600/20'}`}
+            className={`w-full py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all ${isTranscribing ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-blue-600 text-white border border-blue-500/20 shadow-lg shadow-blue-600/20 hover:bg-blue-500'}`}
           >
             {isTranscribing ? 'Stop Intelligence' : 'Start Live Analysis'}
           </button>
@@ -814,8 +814,9 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
       )}
 
       {isChatOpen && (
-        <aside className="fixed md:relative top-0 right-0 z-[60] w-full sm:w-80 animate-slide-in-right">
+        <aside className="fixed md:relative top-0 right-0 z-[60] w-full sm:w-80 h-full bg-card border-l border-border animate-slide-in-right shadow-2xl overflow-hidden transition-colors duration-300">
           <ChatSidebar 
+            meetingId={meetingCode}
             messages={messages} 
             onSendMessage={handleSendMessage} 
             onClose={() => setIsChatOpen(false)} 
@@ -828,7 +829,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
       )}
 
       {isParticipantsOpen && (
-         <aside className="fixed md:relative top-0 right-0 z-[60] w-full sm:w-80 animate-slide-in-right">
+         <aside className="fixed md:relative top-0 right-0 z-[60] w-full sm:w-80 h-full bg-card border-l border-border animate-slide-in-right shadow-2xl overflow-hidden transition-colors duration-300">
             <ParticipantSidebar 
               participants={participants}
               participantStates={participantStates}
@@ -854,9 +855,21 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
           from { transform: translateX(100%); opacity: 0; }
           to { transform: translateX(0); opacity: 1; }
         }
-        .animate-slide-in-right {
-          animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        @keyframes slideInUp {
+          from { transform: translateY(20px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
         }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .animate-slide-in-right { animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .animate-slide-in-up { animation: slideInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .animate-fade-in { animation: fadeIn 0.4s ease forwards; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}} />
     </div>
   )
@@ -866,18 +879,19 @@ function VideoCard({ stream, label, isMuted = false, isOff = false, isHandRaised
   const videoRef = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
-    if (videoRef.current && stream) {
+    if (videoRef.current && stream && !isOff) {
       videoRef.current.srcObject = stream
     }
-  }, [stream])
+  }, [stream, isOff])
 
   return (
-    <div className={`relative group rounded-2xl md:rounded-[32px] bg-white/5 border transition-all duration-500 overflow-hidden shadow-2xl ${isHandRaised ? 'border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.2)] scale-[1.02]' : 'border-white/5 hover:border-blue-500/30'}`}>
+    <div className={`relative group rounded-2xl md:rounded-[32px] bg-muted/50 border transition-all duration-500 overflow-hidden shadow-2xl ${isHandRaised ? 'border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.2)] scale-[1.02]' : 'border-border hover:border-blue-500/30'}`}>
       {(!stream || isOff) ? (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0a0f1d] z-10">
-           <div className={`w-20 h-20 rounded-full flex items-center justify-center border transition-all ${isHandRaised ? 'border-yellow-400/30 bg-yellow-400/5' : 'bg-white/5 border-white/10'}`}>
-              <p className={`text-2xl font-black transition-colors ${isHandRaised ? 'text-yellow-400' : 'text-white/20'}`}>{label.charAt(0)}</p>
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-card z-10">
+           <div className={`w-20 h-20 rounded-full flex items-center justify-center border transition-all ${isHandRaised ? 'border-yellow-400/30 bg-yellow-400/5 shadow-[0_0_15px_rgba(250,204,21,0.1)]' : 'bg-muted border-border'}`}>
+              <p className={`text-2xl font-black transition-colors ${isHandRaised ? 'text-yellow-400' : 'text-muted-foreground'}`}>{label.charAt(0)}</p>
            </div>
+           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mt-4">Camera Offline</p>
         </div>
       ) : (
         <video 
@@ -890,14 +904,14 @@ function VideoCard({ stream, label, isMuted = false, isOff = false, isHandRaised
       )}
       
       {isHandRaised && (
-         <div className="absolute top-4 left-4 z-30 bg-yellow-400 text-black px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2 animate-bounce">
+         <div className="absolute top-4 left-4 z-30 bg-yellow-400 text-black px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2 animate-bounce shadow-lg">
             <Hand size={12} fill="currentColor" />
             Hand Raised
          </div>
       )}
 
       <div className="absolute bottom-2 md:bottom-4 left-2 md:left-4 z-20">
-        <span className={`px-3 md:px-4 py-1.5 md:py-2 backdrop-blur-md rounded-xl md:rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest border transition-all ${isHandRaised ? 'bg-yellow-400/20 border-yellow-400/50 text-yellow-400' : 'bg-black/40 border-white/10 text-white'}`}>
+        <span className={`px-3 md:px-4 py-1.5 md:py-2 backdrop-blur-md rounded-xl md:rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest border transition-all ${isHandRaised ? 'bg-yellow-400/20 border-yellow-400/50 text-yellow-500' : 'bg-background/40 dark:bg-black/40 border-border text-foreground dark:text-white'}`}>
           {label}
         </span>
       </div>
@@ -909,7 +923,7 @@ function ControlBtn({ active, onClick, onIcon, offIcon }: { active: boolean, onC
   return (
     <button 
       onClick={onClick}
-      className={`p-3.5 md:p-5 rounded-2xl md:rounded-3xl transition-all shadow-xl ${active ? 'bg-white/5 hover:bg-white/10 text-white' : 'bg-red-500/20 text-red-500 border border-red-500/20'}`}
+      className={`p-3.5 md:p-5 rounded-2xl md:rounded-3xl transition-all shadow-xl ${active ? 'bg-muted border border-border hover:bg-muted/80 text-foreground' : 'bg-red-500/20 text-red-600 dark:text-red-500 border border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.1)]'}`}
     >
       {active ? onIcon : offIcon}
     </button>

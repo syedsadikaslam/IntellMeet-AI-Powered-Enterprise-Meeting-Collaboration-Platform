@@ -12,7 +12,7 @@ const data = [
 
 export default function PerformanceChart() {
   return (
-    <div className="w-full h-48 sm:h-64 mt-4 relative">
+    <div className="w-full h-48 sm:h-64 mt-4 relative transition-colors duration-300">
       <ResponsiveContainer width="100%" height="100%" minWidth={0}>
         <AreaChart
           data={data}
@@ -24,22 +24,30 @@ export default function PerformanceChart() {
               <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-border" vertical={false} />
           <XAxis 
             dataKey="name" 
-            stroke="#ffffff40" 
+            stroke="currentColor" 
+            className="text-muted-foreground/40"
             fontSize={10} 
             tickLine={false} 
             axisLine={false}
           />
           <YAxis 
-            stroke="#ffffff40" 
+            stroke="currentColor" 
+            className="text-muted-foreground/40"
             fontSize={10} 
             tickLine={false} 
             axisLine={false}
           />
           <Tooltip 
-            contentStyle={{ backgroundColor: '#0a0f1d', border: '1px solid #ffffff10', borderRadius: '12px' }}
+            contentStyle={{ 
+              backgroundColor: 'var(--card)', 
+              border: '1px solid var(--border)', 
+              borderRadius: '12px',
+              fontSize: '12px',
+              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+            }}
             itemStyle={{ color: '#3b82f6', fontWeight: 'bold' }}
           />
           <Area 
