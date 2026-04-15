@@ -67,32 +67,44 @@ const processQueue = async () => {
         } catch (error) {
             // If OpenAI fails (429, 401, or missing key) and we have Gemini, fallback immediately
             if (genAI) {
-                console.log(`[AI_SERVICE] Falling back to Gemini for ${type}... (Reason: ${error.message})`);
-                try {
-                    // Using 'gemini-pro' for maximum compatibility with v1beta API
-                    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-                    
-                    let prompt = "";
-                    if (type === 'chat') {
-                        prompt = `You are a helpful meeting assistant. Context: ${data.context || "No transcript yet."}\nUser Question: ${data.query}\nResponse:`;
-                    } else {
-                        prompt = `Meeting Transcript: ${data.transcript}\nProvide a summary and extracted action items in JSON format:`;
-                    }
+                console.log(`[AI_SERVICE] OpenAI unavailable (${error.message}). Attempting Gemini Triple Fallback...`);
+                
+                const modelsToTry = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
+                let success = false;
 
-                    const result = await model.generateContent(prompt);
-                    const response = await result.response;
-                    const text = response.text();
+                for (const modelName of modelsToTry) {
+                    try {
+                        console.log(`[AI_SERVICE] Trying Gemini model: ${modelName}...`);
+                        const model = genAI.getGenerativeModel({ model: modelName });
+                        
+                        let prompt = "";
+                        if (type === 'chat') {
+                            prompt = `Meeting Context: ${data.context || "No transcript available yet."}\nUser Question: ${data.query}\nResponse:`;
+                        } else {
+                            prompt = `Transcript: ${data.transcript}\nSummarize and extract action items in JSON format:`;
+                        }
 
-                    if (type === 'intelligence') {
-                        const jsonMatch = text.match(/\{[\s\S]*\}/);
-                        resolve(JSON.parse(jsonMatch ? jsonMatch[0] : text));
-                    } else {
-                        resolve(text);
+                        const result = await model.generateContent(prompt);
+                        const response = await result.response;
+                        const text = response.text();
+
+                        if (type === 'intelligence') {
+                            const jsonMatch = text.match(/\{[\s\S]*\}/);
+                            resolve(JSON.parse(jsonMatch ? jsonMatch[0] : text));
+                        } else {
+                            resolve(text);
+                        }
+                        
+                        console.log(`[AI_SERVICE] Gemini responded successfully via ${modelName}`);
+                        success = true;
+                        break; 
+                    } catch (geminiError) {
+                        console.warn(`[AI_SERVICE] ${modelName} attempt failed:`, geminiError.message);
+                        continue; // Try next model
                     }
-                    continue; 
-                } catch (geminiError) {
-                    console.error('[AI_SERVICE] Gemini fallback failed:', geminiError.message);
                 }
+
+                if (success) continue; // Go to next item in the while loop
             }
 
             // If no Gemini or Gemini failed, handle Rate Limit (429) via retry
