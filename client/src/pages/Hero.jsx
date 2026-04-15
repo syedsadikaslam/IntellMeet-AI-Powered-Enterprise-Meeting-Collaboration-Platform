@@ -110,7 +110,7 @@ function HeroModern() {
       
       <section className="grid items-center gap-7 pt-1 pb-7 md:grid-cols-[minmax(0,1fr)_minmax(430px,0.96fr)] md:gap-14 md:pt-2 md:pb-11">
         <div className="max-w-[620px]">
-          <span className="inline-flex min-h-[34px] items-center rounded-full border border-blue-500/20 bg-blue-500/5 px-3.5 text-[0.78rem] font-black text-blue-600 dark:text-blue-400 sm:min-h-11 sm:px-5 sm:text-[0.9rem] uppercase tracking-widest shadow-sm backdrop-blur-md">
+          <span className="inline-flex min-h-[30px] items-center rounded-full border border-blue-500/20 bg-blue-500/5 px-3 text-[10px] font-black text-blue-600 dark:text-blue-400 sm:min-h-9 sm:px-4 sm:text-[11px] uppercase tracking-[0.2em] shadow-sm backdrop-blur-md">
             <span className="mr-2.5 h-2 w-2 rounded-full bg-blue-600 shadow-[0_0_12px_rgba(37,99,235,0.6)]" />
             AI-Powered Enterprise Platform
           </span>
