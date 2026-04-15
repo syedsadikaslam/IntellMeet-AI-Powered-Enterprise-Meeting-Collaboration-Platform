@@ -114,7 +114,7 @@ function HeroModern() {
             <span className="mr-2.5 h-2 w-2 rounded-full bg-blue-600 shadow-[0_0_12px_rgba(37,99,235,0.6)]" />
             AI-Powered Enterprise Platform
           </span>
-          <h1 className="mt-8 text-[3.7rem] leading-[0.92] font-black tracking-[-0.06em] text-foreground sm:text-[clamp(4.1rem,8vw,6.4rem)]">
+          <h1 className="mt-8 text-4xl leading-tight font-extrabold tracking-tight text-foreground sm:text-6xl lg:text-7xl lg:leading-[1.1]">
             The Future of
             <span className="block bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-500 bg-clip-text text-transparent dark:from-[#4f8cff] dark:via-[#a96cff] dark:to-[#2be4d7]">
               {' '}
