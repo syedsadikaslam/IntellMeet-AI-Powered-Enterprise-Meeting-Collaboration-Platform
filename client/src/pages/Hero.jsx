@@ -54,12 +54,12 @@ const showcases = [
 function PresenceCard({ name, className, badgeClassName, children }) {
   return (
     <article
-      className={`group relative min-h-[110px] overflow-hidden rounded-[22px] border border-border sm:min-h-[128px] ${className}`}
+      className={`group relative min-h-[110px] overflow-hidden rounded-[24px] border border-border sm:min-h-[132px] transition-all duration-500 hover:shadow-xl hover:shadow-blue-500/5 ${className}`}
     >
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.18),transparent_36%)] dark:opacity-70 opacity-40" />
-      <div className="absolute -top-8 right-8 h-20 w-20 rounded-full bg-white/8 blur-2xl transition group-hover:scale-125" />
-      <div className="absolute inset-x-6 top-5 flex items-center justify-between">
-        <div className="flex gap-1.5">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.12),transparent_40%)] dark:opacity-70 opacity-40 transition-opacity group-hover:opacity-60" />
+      <div className="absolute -top-12 -right-12 h-32 w-32 rounded-full bg-white/5 blur-3xl transition-transform duration-700 group-hover:scale-125" />
+      <div className="absolute inset-x-6 top-5 flex items-center justify-between z-10">
+        <div className="flex gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity duration-300">
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white/70" />
           <span
             className="h-1.5 w-1.5 animate-pulse rounded-full bg-white/45"
@@ -73,7 +73,7 @@ function PresenceCard({ name, className, badgeClassName, children }) {
         {children}
       </div>
       <span
-        className={`absolute bottom-3.5 left-3.5 inline-flex min-h-[30px] items-center rounded-[10px] px-3 text-sm font-bold text-white shadow-[0_10px_24px_rgba(0,0,0,0.18)] ${badgeClassName}`}
+        className={`absolute bottom-4 left-4 inline-flex min-h-[32px] items-center rounded-xl px-3.5 text-xs font-black text-white shadow-2xl backdrop-blur-md transition-transform duration-300 group-hover:translate-x-1 ${badgeClassName}`}
       >
         {name}
       </span>
@@ -84,17 +84,17 @@ function PresenceCard({ name, className, badgeClassName, children }) {
 function FloatingChip({ icon, title, text, className, iconClassName }) {
   return (
     <div
-      className={`absolute flex max-w-[210px] items-center gap-3.5 rounded-[22px] border border-border bg-card/90 dark:bg-[linear-gradient(135deg,rgba(20,24,34,0.96),rgba(26,31,42,0.88))] p-3.5 shadow-2xl backdrop-blur-xl sm:min-w-[244px] sm:max-w-none sm:p-[16px_18px] ${className}`}
+      className={`absolute flex max-w-[210px] items-center gap-3.5 rounded-[22px] border border-border bg-card/90 dark:bg-[linear-gradient(135deg,rgba(20,24,34,0.96),rgba(26,31,42,0.88))] p-3.5 shadow-xl dark:shadow-2xl backdrop-blur-xl sm:min-w-[244px] sm:max-w-none sm:p-[16px_18px] transition-all hover:shadow-2xl hover:scale-[1.02] ${className}`}
     >
       <div
-        className={`relative grid h-[42px] w-[42px] place-items-center overflow-hidden rounded-[14px] text-lg shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] ${iconClassName}`}
+        className={`relative grid h-[42px] w-[42px] place-items-center overflow-hidden rounded-[14px] text-lg shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] bg-muted/50 ${iconClassName}`}
       >
-        <span className="absolute inset-0 animate-pulse bg-white/8" />
+        <div className="absolute inset-0 bg-white/5 animate-pulse" />
         <span className="relative z-10">{icon}</span>
       </div>
       <div>
-        <strong className="block text-base font-bold text-foreground">{title}</strong>
-        <p className="mt-1 text-[0.88rem] text-muted-foreground">{text}</p>
+        <strong className="block text-base font-black tracking-tight text-foreground">{title}</strong>
+        <p className="mt-1 text-[0.85rem] font-medium text-muted-foreground">{text}</p>
       </div>
     </div>
   )
@@ -104,39 +104,42 @@ function HeroModern() {
   const { user } = useAuthStore()
 
   return (
-    <section className="mx-auto w-full max-w-7xl px-4 pt-3 pb-8 sm:px-6 sm:pt-4 lg:px-8">
+    <section className="relative mx-auto w-full max-w-7xl px-4 pt-3 pb-8 sm:px-6 sm:pt-4 lg:px-8">
+      {/* Light Mode Atmosphere */}
+      <div className="pointer-events-none absolute -top-24 left-1/2 -z-10 h-[600px] w-full -translate-x-1/2 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.06),transparent_70%)] dark:hidden" />
+      
       <section className="grid items-center gap-7 pt-1 pb-7 md:grid-cols-[minmax(0,1fr)_minmax(430px,0.96fr)] md:gap-14 md:pt-2 md:pb-11">
         <div className="max-w-[620px]">
-          <span className="inline-flex min-h-[34px] items-center rounded-full border border-blue-500/20 bg-blue-500/10 px-3.5 text-[0.78rem] font-bold text-blue-600 dark:text-blue-400 sm:min-h-10 sm:px-4 sm:text-[0.98rem]">
-            <span className="mr-2.5 h-2 w-2 rounded-full bg-blue-500 shadow-[0_0_12px_rgba(79,127,255,0.8)]" />
+          <span className="inline-flex min-h-[34px] items-center rounded-full border border-blue-500/20 bg-blue-500/5 px-3.5 text-[0.78rem] font-black text-blue-600 dark:text-blue-400 sm:min-h-11 sm:px-5 sm:text-[0.9rem] uppercase tracking-widest shadow-sm backdrop-blur-md">
+            <span className="mr-2.5 h-2 w-2 rounded-full bg-blue-600 shadow-[0_0_12px_rgba(37,99,235,0.6)]" />
             AI-Powered Enterprise Platform
           </span>
-          <h1 className="mt-7 text-[3.7rem] leading-[0.94] font-black tracking-[-0.08em] text-foreground sm:text-[clamp(4.1rem,8vw,6.8rem)]">
+          <h1 className="mt-8 text-[3.7rem] leading-[0.92] font-black tracking-[-0.06em] text-foreground sm:text-[clamp(4.1rem,8vw,6.4rem)]">
             The Future of
-            <span className="block bg-gradient-to-r from-[#4f8cff] via-[#a96cff] to-[#2be4d7] bg-clip-text text-transparent">
+            <span className="block bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-500 bg-clip-text text-transparent dark:from-[#4f8cff] dark:via-[#a96cff] dark:to-[#2be4d7]">
               {' '}
               Meetings &
             </span>
-            <span className="block bg-gradient-to-r from-[#4f8cff] via-[#a96cff] to-[#2be4d7] bg-clip-text text-transparent">
+            <span className="block bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-500 bg-clip-text text-transparent dark:from-[#4f8cff] dark:via-[#a96cff] dark:to-[#2be4d7]">
               {' '}
               Collaboration
             </span>
           </h1>
-          <p className="mt-7 max-w-[620px] text-base leading-7 text-muted-foreground sm:text-[1.1rem] sm:leading-[1.8]">
+          <p className="mt-8 max-w-[600px] text-base leading-relaxed text-muted-foreground sm:text-[1.1rem] font-medium transition-colors">
             IntellMeet transforms how your enterprise connects. Experience
             seamless video conferencing, AI-driven insights, and next-generation
             collaboration tools in one unified workspace.
           </p>
 
-          <div className="mt-8 flex flex-col gap-4 sm:mt-9 sm:flex-row">
+          <div className="mt-10 flex flex-col gap-4 sm:flex-row">
             <a
-              className="inline-flex min-h-[54px] items-center justify-center rounded-[14px] bg-blue-600 px-6 text-base font-bold text-white no-underline shadow-[0_20px_40px_rgba(79,115,255,0.28)] transition hover:-translate-y-px sm:min-w-[172px]"
+              className="inline-flex min-h-[60px] items-center justify-center rounded-2xl bg-blue-600 px-8 text-base font-black text-white no-underline shadow-xl shadow-blue-600/25 transition-all hover:bg-blue-500 hover:-translate-y-px active:scale-95 sm:min-w-[190px]"
               href={user ? '#/dashboard' : '#/login'}
             >
               Host a Meeting
             </a>
             <a
-              className="inline-flex min-h-[54px] items-center justify-center rounded-[14px] border border-border bg-card px-6 text-base font-bold text-foreground no-underline transition hover:-translate-y-px sm:min-w-[172px]"
+              className="inline-flex min-h-[60px] items-center justify-center rounded-2xl border border-border bg-card/50 backdrop-blur-sm px-8 text-base font-black text-foreground no-underline shadow-sm transition-all hover:bg-muted hover:border-blue-500/20 hover:-translate-y-px active:scale-95 sm:min-w-[190px]"
               href={user ? '#/dashboard' : '#/login'}
             >
               Join with Code
