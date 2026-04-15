@@ -259,6 +259,10 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
       setTranscripts(prev => [...prev, chunk])
     })
 
+    socket.on('transcript-history', (history) => {
+      setTranscripts(history)
+    })
+
     return () => {
       socket.emit('leave-meeting', { meetingId: meetingCode, userId: user?.id })
       Object.values(peersRef.current).forEach(peer => peer.destroy())
@@ -535,7 +539,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
       
       recognition.continuous = true
       recognition.interimResults = false
-      recognition.lang = 'en-US' // Can be made dynamic later
+      recognition.lang = 'en-IN' // Better for Indian accents and Hinglish
 
       recognition.onresult = (event: any) => {
         const last = event.results.length - 1

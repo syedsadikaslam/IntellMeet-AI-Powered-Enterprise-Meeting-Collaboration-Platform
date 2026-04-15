@@ -58,6 +58,21 @@ const initSocket = (io) => {
         const participants = await redis.smembers(`meeting:${meetingId}:participants`);
         socket.emit('all-participants', participants.map(p => JSON.parse(p)));
 
+        // NEW: Send transcript history to late joiners
+        const history = await redis.get(`meeting:${meetingId}:transcript`);
+        if (history) {
+          // Send as chunks to match the frontend expectations
+          const chunks = history.split('\n').filter(line => line.includes(']: ')).map(line => {
+             const parts = line.trim().split(']: ');
+             return {
+                userName: parts[0].replace('[', ''),
+                text: parts[1],
+                timestamp: new Date().toISOString()
+             };
+          });
+          socket.emit('transcript-history', chunks);
+        }
+
         // Broadcast join notification
         io.to(meetingId).emit('notification', {
           type: 'info',
@@ -259,7 +274,8 @@ const initSocket = (io) => {
         };
         
         io.to(meetingId).emit('transcript-update', transcriptChunk);
-        await redis.append(`meeting:${meetingId}:transcript`, ` [${socket.userName || 'Someone'}]: ${text.trim()}`);
+        // Better formatting for AI analysis: name followed by text in new line
+        await redis.append(`meeting:${meetingId}:transcript`, `\n[${socket.userName || 'Someone'}]: ${text.trim()}`);
       }
     });
 

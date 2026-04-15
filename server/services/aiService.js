@@ -114,12 +114,26 @@ const generateMeetingIntelligence = async (transcript) => {
  */
 const getAIResponse = async (query, context) => {
     try {
-        const maxContextChars = 20000;
+        const maxContextChars = 30000; // Increased context window
         const truncatedContext = context && context.length > maxContextChars 
             ? "..." + context.substring(context.length - maxContextChars)
             : context;
 
-        const prompt = `You are the IntellMeet AI Companion. Answer the user's question based on the provided meeting context. Be helpful, professional, and concise.\n\nContext: ${truncatedContext || "No transcript available yet."}\nUser Question: ${query}\nResponse:`;
+        const prompt = `You are the IntellMeet AI Companion. Your goal is to be a helpful meeting sidekick.
+        
+        RULES:
+        1. Answer the user's question by analyzing the ENTIRE provided meeting context below.
+        2. Respond in HINGLISH (a natural mix of Hindi and English) to keep it friendly and desi, like an Indian colleague would talk.
+        3. If the answer is not in the context, say "Mujhe transcript mein ye information nahi mili" but try to be helpful.
+        4. Be descriptive. Don't give one-word answers.
+        
+        CONTEXT:
+        ${truncatedContext || "Abhi tak koi conversation nahi hui hai."}
+        
+        USER QUESTION: 
+        ${query}
+        
+        RESPONSE (In Hinglish):`;
         
         return await callGemini(prompt);
     } catch (error) {
