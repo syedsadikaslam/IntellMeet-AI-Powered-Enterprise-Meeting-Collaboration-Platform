@@ -56,21 +56,25 @@ const processQueue = async () => {
         }
 
         try {
-            const result = await task();
-            lastRequestTime = Date.now();
-            resolve(result);
+            // Only try OpenAI if initialized
+            if (openai) {
+                const result = await task();
+                lastRequestTime = Date.now();
+                resolve(result);
+            } else {
+                throw new Error('OpenAI key missing');
+            }
         } catch (error) {
-            console.error('[AI_SERVICE] OpenAI task failed:', error.message);
-            
-            // If OpenAI fails (429 or other) and we have Gemini, fallback immediately
+            // If OpenAI fails (429, 401, or missing key) and we have Gemini, fallback immediately
             if (genAI) {
                 console.log(`[AI_SERVICE] Falling back to Gemini for ${type}...`);
                 try {
+                    // Use standard model name without 'models/' prefix
                     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
                     
                     let prompt = "";
                     if (type === 'chat') {
-                        prompt = `Context: ${data.context}\nUser: ${data.query}\nHelpful response:`;
+                        prompt = `Context: ${data.context || "No context"}\nUser Query: ${data.query}\nProvide a helpful, professional response based on the context.`;
                     } else {
                         prompt = `Transcript: ${data.transcript}\nSummarize and extract action items in JSON format:`;
                     }
@@ -80,7 +84,6 @@ const processQueue = async () => {
                     const text = response.text();
 
                     if (type === 'intelligence') {
-                        // Attempt to parse JSON from Gemini's response
                         const jsonMatch = text.match(/\{[\s\S]*\}/);
                         resolve(JSON.parse(jsonMatch ? jsonMatch[0] : text));
                     } else {
