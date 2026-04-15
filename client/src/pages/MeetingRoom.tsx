@@ -522,24 +522,28 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
   }
 
   const startTranscription = () => {
-    if (!localStream) return
+    if (!localStream) return;
     
-    // Use the local audio stream to record chunks every 5s
-    const recorder = new MediaRecorder(localStream, { mimeType: 'audio/webm' })
-    
-    recorder.ondataavailable = async (event) => {
-      if (event.data.size > 0) {
-        const audioBlob = event.data
-        // Send to server via socket
-        socket.emit('audio-stream', { meetingId: meetingCode, audioBlob })
-      }
-    }
+    try {
+      // Use the local audio stream to record chunks every 25s (OpenAI Free Tier limit)
+      const recorder = new MediaRecorder(localStream, { mimeType: 'audio/webm' });
+      
+      recorder.ondataavailable = async (event) => {
+        if (event.data.size > 0) {
+          const audioBlob = event.data;
+          // Send to server via socket
+          socket.emit('audio-stream', { meetingId: meetingCode, audioBlob });
+        }
+      };
 
-    recorder.start(5000) // Send a chunk every 5 seconds
-    transcribeRecorderRef.current = recorder
-    setIsTranscribing(true)
-    setIsTranscriptOpen(true)
-  }
+      recorder.start(25000); 
+      transcribeRecorderRef.current = recorder;
+      setIsTranscribing(true);
+      setIsTranscriptOpen(true);
+    } catch (error) {
+      console.error('[TRANSCRIPTION] Failed to start recorder:', error);
+    }
+  };
 
   const stopTranscription = () => {
     if (transcribeRecorderRef.current) {

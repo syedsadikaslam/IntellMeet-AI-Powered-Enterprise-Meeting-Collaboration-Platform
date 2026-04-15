@@ -42,7 +42,8 @@ const transcribeAudio = async (buffer, meetingId) => {
 
         return transcription.text;
     } catch (error) {
-        console.error(`[AI_SERVICE] Transcription error for meeting ${meetingId}:`, error.message);
+        console.error(`[AI_SERVICE] Transcription error for meeting ${meetingId}:`, error);
+        if (error.status === 429) return '[Transcription Rate Limit Exceeded]';
         return '';
     }
 };
