@@ -8,6 +8,7 @@ interface ChatSidebarProps {
   onTyping: () => void
   onStopTyping: () => void
   typingUsers: { userId: string, userName: string }[]
+  isDisabled?: boolean
 }
 
 export default function ChatSidebar({ 
@@ -16,7 +17,8 @@ export default function ChatSidebar({
   onClose,
   onTyping,
   onStopTyping,
-  typingUsers
+  typingUsers,
+  isDisabled = false
 }: ChatSidebarProps) {
   const [inputText, setInputText] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -127,12 +129,13 @@ export default function ChatSidebar({
             type="text"
             value={inputText}
             onChange={handleInputChange}
-            placeholder="Type a message..."
-            className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-4 pr-12 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all font-medium"
+            disabled={isDisabled}
+            placeholder={isDisabled ? "Chat disabled by host" : "Type a message..."}
+            className={`w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-4 pr-12 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all font-medium ${isDisabled ? 'opacity-50 cursor-not-allowed bg-red-500/5' : ''}`}
           />
           <button
             type="submit"
-            disabled={!inputText.trim()}
+            disabled={isDisabled || !inputText.trim()}
             className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:bg-white/10 rounded-lg text-white transition-all shadow-lg shadow-blue-500/10"
           >
             <Send size={16} />

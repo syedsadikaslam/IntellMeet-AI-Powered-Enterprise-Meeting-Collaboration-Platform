@@ -79,7 +79,7 @@ const initSocket = (io) => {
         broadcastStats();
       }
 
-      socket.to(meetingId).emit('user-left', { userId });
+      socket.to(meetingId).emit('user-left', { userId, socketId: socket.id });
       
       // Broadcast system notification
       io.to(meetingId).emit('notification', { 
@@ -151,7 +151,18 @@ const initSocket = (io) => {
         if (participantToRemove) {
           await redis.srem(`meeting:${meetingId}:participants`, participantToRemove);
         }
-        socket.to(meetingId).emit('user-left', { userId: targetUserId });
+        socket.to(meetingId).emit('user-left', { userId: targetUserId, socketId: target.socketId });
+      }
+    });
+
+    socket.on('update-permissions', async ({ meetingId, targetUserId, permissions }) => {
+      const participants = await redis.smembers(`meeting:${meetingId}:participants`);
+      const target = participants.map(p => JSON.parse(p)).find(p => p.userId === targetUserId);
+      if (target) {
+        io.to(target.socketId).emit('permission-update', permissions);
+        
+        // Also notify others so they can update UI indicators if needed
+        socket.to(meetingId).emit('user-permission-changed', { userId: targetUserId, permissions });
       }
     });
 

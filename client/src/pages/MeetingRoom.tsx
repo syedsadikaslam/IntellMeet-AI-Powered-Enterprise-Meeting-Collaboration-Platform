@@ -1,4 +1,4 @@
-import { Mic, MicOff, Video, VideoOff, PhoneOff, Users, MessageSquare, Info, Layout, Plus, Hand, Circle, Square, MonitorUp, Bot, Sparkles, Trash2 } from 'lucide-react'
+import { Mic, MicOff, Video, VideoOff, PhoneOff, Users, MessageSquare, Info, Layout, Plus, Hand, Circle, Square, MonitorUp, Bot, Sparkles, Trash2, Maximize, Minimize } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import Peer from 'simple-peer'
 import ChatSidebar from '../components/ChatSidebar'
@@ -44,8 +44,11 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
   const [isParticipantsOpen, setIsParticipantsOpen] = useState(false)
   const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false)
   const [typingUsers, setTypingUsers] = useState<{ userId: string, userName: string }[]>([])
-  const [participantStates, setParticipantStates] = useState<Record<string, { isMicOn: boolean, isVideoOn: boolean }>>({})
+  const [participantStates, setParticipantStates] = useState<Record<string, { isMicOn: boolean, isVideoOn: boolean, micAllowed?: boolean, videoAllowed?: boolean, chatAllowed?: boolean }>>({})
   const [meetingData, setMeetingData] = useState<any>(null)
+  const [permissions, setPermissions] = useState({ micAllowed: true, videoAllowed: true, chatAllowed: true })
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
   
   // Screen Sharing State
   const [isSharingScreen, setIsSharingScreen] = useState(false)
@@ -151,18 +154,38 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
       }
     })
 
-    socket.on('user-left', ({ userId }) => {
-      // Find the socketId for this userId to cleanup the peer
-      const participant = participants.find(p => p.userId === userId)
-      if (participant) {
-         if (peersRef.current[participant.socketId]) {
-           peersRef.current[participant.socketId].destroy()
-           delete peersRef.current[participant.socketId]
-         }
-         setPeers(prev => prev.filter(p => p.peerId !== participant.socketId))
+    socket.on('user-left', ({ userId, socketId }) => {
+      console.log('User left event received:', { userId, socketId })
+      
+      // Cleanup peer
+      const sId = socketId || participants.find(p => p.userId === userId)?.socketId
+      if (sId && peersRef.current[sId]) {
+        peersRef.current[sId].destroy()
+        delete peersRef.current[sId]
       }
+
+      setPeers(prev => prev.filter(p => p.peerId !== sId))
       setParticipants(prev => prev.filter(p => p.userId !== userId))
       setTypingUsers(prev => prev.filter(u => u.userId !== userId))
+    })
+
+    socket.on('permission-update', (newPermissions) => {
+      setPermissions(newPermissions)
+      
+      // Enforce immediately
+      if (!newPermissions.micAllowed && isMicOn) toggleMicStore()
+      if (!newPermissions.videoAllowed && isVideoOn) toggleVideoStore()
+      
+      const nId = Date.now()
+      setNotifications(prev => [...prev, { message: 'Permissions updated by host', id: nId }])
+      setTimeout(() => setNotifications(prev => prev.filter(x => x.id !== nId)), 3000)
+    })
+
+    socket.on('user-permission-changed', ({ userId, permissions: pms }) => {
+      setParticipantStates(prev => ({
+        ...prev,
+        [userId]: { ...prev[userId], ...pms }
+      }))
     })
 
     socket.on('receive-message', (msg) => setMessages(prev => [...prev, msg]))
@@ -314,12 +337,24 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
     alert('Joining info copied to clipboard!')
   }
 
-  const handleMuteParticipant = (targetUserId: string) => {
-    socket.emit('mute-participant', { meetingId: meetingCode, targetUserId })
+  const handleUpdateParticipantPermission = (targetUserId: string, pms: any) => {
+    socket.emit('update-permissions', { 
+      meetingId: meetingCode, 
+      targetUserId, 
+      permissions: pms 
+    })
   }
 
-  const handleRemoveParticipant = (targetUserId: string) => {
-    socket.emit('remove-participant', { meetingId: meetingCode, targetUserId })
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      containerRef.current?.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable full-screen mode: ${err.message}`)
+      })
+      setIsFullscreen(true)
+    } else {
+      document.exitFullscreen()
+      setIsFullscreen(false)
+    }
   }
 
   const handleDeleteMeeting = async () => {
@@ -462,7 +497,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
   }
 
   return (
-    <div className="flex h-screen bg-[#030507] text-white overflow-hidden font-sans">
+    <div ref={containerRef} className="flex h-screen bg-[#030507] text-white overflow-hidden font-sans">
       {/* Notifications Layer */}
       <div className="fixed top-20 right-6 z-[100] flex flex-col gap-3 pointer-events-none">
         {notifications.map(n => (
@@ -604,6 +639,14 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
                 </button>
 
                 <button 
+                  onClick={toggleFullscreen}
+                  className={`p-2.5 md:p-5 rounded-2xl md:rounded-3xl transition-all relative ${isFullscreen ? 'bg-blue-600 text-white' : 'bg-white/5 text-white/50 hover:text-white'}`}
+                  title="Toggle Fullscreen"
+                >
+                  {isFullscreen ? <Minimize className="w-5 h-5 md:w-[22px] md:h-[22px]" /> : <Maximize className="w-5 h-5 md:w-[22px] md:h-[22px]" />}
+                </button>
+
+                <button 
                   onClick={() => { setIsAIAssistantOpen(!isAIAssistantOpen); setIsChatOpen(false); setIsTranscriptOpen(false); setIsParticipantsOpen(false); }}
                   className={`p-2.5 md:p-5 rounded-2xl md:rounded-3xl transition-all relative ${isAIAssistantOpen ? 'bg-purple-600 text-white shadow-xl shadow-purple-600/20' : 'bg-white/5 text-white/50 hover:text-white'}`}
                   title="AI Assistant"
@@ -692,6 +735,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
             onTyping={handleTyping}
             onStopTyping={handleStopTyping}
             typingUsers={typingUsers}
+            isDisabled={!permissions.chatAllowed}
           />
         </aside>
       )}
@@ -705,6 +749,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
               hostId={meetingData?.host?._id || meetingData?.host}
               onMuteParticipant={handleMuteParticipant}
               onRemoveParticipant={handleRemoveParticipant}
+              onUpdatePermission={handleUpdateParticipantPermission}
               onClose={() => setIsParticipantsOpen(false)}
             />
          </aside>

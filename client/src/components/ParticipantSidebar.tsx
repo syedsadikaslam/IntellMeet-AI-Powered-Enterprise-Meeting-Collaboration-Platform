@@ -1,4 +1,4 @@
-import { Mic, MicOff, Search, User as UserIcon, Video, VideoOff, X, Shield, Trash2, MicOff as MicOffIcon } from 'lucide-react'
+import { Mic, MicOff, Search, User as UserIcon, Video, VideoOff, X, Shield, Trash2, MicOff as MicOffIcon, MessageSquare, ShieldAlert } from 'lucide-react'
 import { useState } from 'react'
 
 interface Participant {
@@ -21,6 +21,7 @@ interface ParticipantSidebarProps {
   hostId: string
   onMuteParticipant: (userId: string) => void
   onRemoveParticipant: (userId: string) => void
+  onUpdatePermission: (userId: string, permissions: { micAllowed?: boolean, videoAllowed?: boolean, chatAllowed?: boolean }) => void
   onClose: () => void
 }
 
@@ -31,6 +32,7 @@ export default function ParticipantSidebar({
   hostId,
   onMuteParticipant,
   onRemoveParticipant,
+  onUpdatePermission,
   onClose 
 }: ParticipantSidebarProps) {
   const [searchTerm, setSearchTerm] = useState('')
@@ -104,24 +106,38 @@ export default function ParticipantSidebar({
 
               <div className="flex items-center gap-2">
                  {/* Admin Controls */}
-                 {isAdmin && !isHost && (
-                   <div className="flex items-center gap-1.5 mr-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button 
-                        onClick={() => onMuteParticipant(p.userId)}
-                        title="Mute Participant"
-                        className="p-1.5 rounded-lg bg-white/5 hover:bg-red-500/20 text-white/40 hover:text-red-400 transition-all"
-                      >
-                         <MicOffIcon size={14} />
-                      </button>
-                      <button 
-                        onClick={() => onRemoveParticipant(p.userId)}
-                        title="Remove Participant"
-                        className="p-1.5 rounded-lg bg-white/5 hover:bg-red-600/20 text-white/40 hover:text-red-500 transition-all"
-                      >
-                         <Trash2 size={14} />
-                      </button>
-                   </div>
-                 )}
+                  {isAdmin && !isHost && (
+                    <div className="flex items-center gap-1.5 mr-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                       <button 
+                         onClick={() => onUpdatePermission(p.userId, { micAllowed: !state.micAllowed })}
+                         title={state.micAllowed === false ? "Enable Microphone" : "Disable Microphone"}
+                         className={`p-1.5 rounded-lg transition-all ${state.micAllowed === false ? 'bg-red-500/20 text-red-400' : 'bg-white/5 text-white/40 hover:text-white'}`}
+                       >
+                          {state.micAllowed === false ? <MicOff size={14} /> : <Mic size={14} />}
+                       </button>
+                       <button 
+                         onClick={() => onUpdatePermission(p.userId, { videoAllowed: !state.videoAllowed })}
+                         title={state.videoAllowed === false ? "Enable Camera" : "Disable Camera"}
+                         className={`p-1.5 rounded-lg transition-all ${state.videoAllowed === false ? 'bg-red-500/20 text-red-400' : 'bg-white/5 text-white/40 hover:text-white'}`}
+                       >
+                          {state.videoAllowed === false ? <VideoOff size={14} /> : <Video size={14} />}
+                       </button>
+                       <button 
+                         onClick={() => onUpdatePermission(p.userId, { chatAllowed: !state.chatAllowed })}
+                         title={state.chatAllowed === false ? "Enable Chat" : "Disable Chat"}
+                         className={`p-1.5 rounded-lg transition-all ${state.chatAllowed === false ? 'bg-red-500/20 text-red-400' : 'bg-white/5 text-white/40 hover:text-white'}`}
+                       >
+                          <MessageSquare size={14} />
+                       </button>
+                       <button 
+                         onClick={() => onRemoveParticipant(p.userId)}
+                         title="Remove Participant"
+                         className="p-1.5 rounded-lg bg-white/5 hover:bg-red-600/20 text-white/40 hover:text-red-500 transition-all border border-transparent hover:border-red-500/30"
+                       >
+                          <Trash2 size={14} />
+                       </button>
+                    </div>
+                  )}
 
                  <div className={`p-1.5 rounded-lg border transition-all ${state.isMicOn ? 'bg-white/5 border-white/5 text-white/40' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
                     {state.isMicOn ? <Mic size={14} /> : <MicOff size={14} />}
