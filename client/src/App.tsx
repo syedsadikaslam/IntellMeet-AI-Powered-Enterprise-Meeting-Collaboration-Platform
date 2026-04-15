@@ -100,14 +100,16 @@ function App() {
   }, [routeInfo])
 
   const { Component, params } = routeInfo
+  const currentHash = window.location.hash
+  const isInMeetingRoom = currentHash.startsWith('#/meeting/') && currentHash.endsWith('/room')
 
   return (
     <ThemeProvider>
-      <main className="min-h-screen text-foreground transition-colors duration-300">
-        {/* Don't show global Navbar in MeetingRoom to keep it clean */}
-        {Component !== MeetingRoom && <Navbar currentRoute={window.location.hash} />}
+      <main className={`min-h-screen text-foreground transition-colors duration-300 ${isInMeetingRoom ? 'dark bg-black' : ''}`}>
+        {/* Strictly hide global Navbar and Footer in MeetingRoom to restore immersion */}
+        {!isInMeetingRoom && <Navbar currentRoute={currentHash} />}
         <Component meetingCode={params.code} />
-        {Component !== MeetingRoom && <Footer />}
+        {!isInMeetingRoom && <Footer />}
         <SpeedInsights />
       </main>
     </ThemeProvider>
