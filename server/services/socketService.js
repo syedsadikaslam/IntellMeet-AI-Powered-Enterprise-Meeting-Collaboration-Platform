@@ -248,6 +248,21 @@ const initSocket = (io) => {
       }
     });
 
+    // New event for Web Speech API text chunks
+    socket.on('text-stream', async ({ meetingId, text }) => {
+      if (text && text.trim()) {
+        const transcriptChunk = {
+          userId: socket.id,
+          userName: socket.userName || 'Someone',
+          text: text.trim(),
+          timestamp: new Date().toISOString()
+        };
+        
+        io.to(meetingId).emit('transcript-update', transcriptChunk);
+        await redis.append(`meeting:${meetingId}:transcript`, ` [${socket.userName || 'Someone'}]: ${text.trim()}`);
+      }
+    });
+
     socket.on('disconnect', () => {
       console.log('User disconnected:', socket.id);
       activeConnections.delete(socket.id);

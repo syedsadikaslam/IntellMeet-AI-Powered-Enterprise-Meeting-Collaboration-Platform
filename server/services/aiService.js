@@ -1,4 +1,5 @@
 const OpenAI = require('openai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const fs = require('fs');
 const path = require('path');
 
@@ -8,7 +9,14 @@ if (process.env.OPENAI_API_KEY) {
         apiKey: process.env.OPENAI_API_KEY,
     });
 } else {
-    console.warn('[AI_SERVICE] OPENAI_API_KEY is missing. AI features will be disabled.');
+    console.warn('[AI_SERVICE] OPENAI_API_KEY is missing.');
+}
+
+let genAI;
+if (process.env.GOOGLE_API_KEY) {
+    genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+} else {
+    console.warn('[AI_SERVICE] GOOGLE_API_KEY is missing. Fallback disabled.');
 }
 
 
@@ -19,14 +27,16 @@ const MIN_GAP_MS = 21000; // ~21 seconds gap to stay safely under 3 RPM
 let lastRequestTime = 0;
 
 /**
- * Executes an AI request with throttling and automatic retries
+ * Executes an AI request with throttling and automatic retries or fallback to Gemini
  * @param {Function} task - Async function that performs the OpenAI call
+ * @param {string} type - 'chat' or 'intelligence'
+ * @param {Object} data - Original request data for fallback
  * @param {number} retries - Number of retry attempts
  * @returns {Promise<any>}
  */
-const executeAITask = async (task, retries = 2) => {
+const executeAITask = async (task, type, data, retries = 1) => {
     return new Promise((resolve, reject) => {
-        queue.push({ task, retries, resolve, reject });
+        queue.push({ task, type, data, retries, resolve, reject });
         processQueue();
     });
 };
@@ -36,9 +46,9 @@ const processQueue = async () => {
     isProcessing = true;
 
     while (queue.length > 0) {
-        const { task, retries, resolve, reject } = queue.shift();
+        const { task, type, data, retries, resolve, reject } = queue.shift();
         
-        // Ensure minimum gap between requests
+        // Ensure minimum gap between requests only for OpenAI
         const now = Date.now();
         const timeSinceLast = now - lastRequestTime;
         if (timeSinceLast < MIN_GAP_MS) {
@@ -50,14 +60,44 @@ const processQueue = async () => {
             lastRequestTime = Date.now();
             resolve(result);
         } catch (error) {
-            console.error('[AI_SERVICE] Task execution error:', error);
+            console.error('[AI_SERVICE] OpenAI task failed:', error.message);
             
-            // Handle Rate Limit (429) specifically
+            // If OpenAI fails (429 or other) and we have Gemini, fallback immediately
+            if (genAI) {
+                console.log(`[AI_SERVICE] Falling back to Gemini for ${type}...`);
+                try {
+                    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+                    
+                    let prompt = "";
+                    if (type === 'chat') {
+                        prompt = `Context: ${data.context}\nUser: ${data.query}\nHelpful response:`;
+                    } else {
+                        prompt = `Transcript: ${data.transcript}\nSummarize and extract action items in JSON format:`;
+                    }
+
+                    const result = await model.generateContent(prompt);
+                    const response = await result.response;
+                    const text = response.text();
+
+                    if (type === 'intelligence') {
+                        // Attempt to parse JSON from Gemini's response
+                        const jsonMatch = text.match(/\{[\s\S]*\}/);
+                        resolve(JSON.parse(jsonMatch ? jsonMatch[0] : text));
+                    } else {
+                        resolve(text);
+                    }
+                    continue; 
+                } catch (geminiError) {
+                    console.error('[AI_SERVICE] Gemini fallback failed:', geminiError.message);
+                }
+            }
+
+            // If no Gemini or Gemini failed, handle Rate Limit (429) via retry
             if (error.status === 429 && retries > 0) {
-                console.log(`[AI_SERVICE] Rate limit hit. Retrying in 30s... (${retries} attempts left)`);
-                await new Promise(r => setTimeout(r, 30000));
-                queue.unshift({ task, retries: retries - 1, resolve, reject });
-                break; // Stop processing and wait
+                console.log(`[AI_SERVICE] Rate limit hit. Retrying in 15s... (${retries} left)`);
+                await new Promise(r => setTimeout(r, 15000));
+                queue.unshift({ task, type, data, retries: retries - 1, resolve, reject });
+                break; 
             } else {
                 reject(error);
             }
@@ -65,7 +105,7 @@ const processQueue = async () => {
     }
 
     isProcessing = false;
-    if (queue.length > 0) setTimeout(processQueue, 1000);
+    if (queue.length > 0) setTimeout(processQueue, 500);
 };
 
 /**
@@ -90,16 +130,15 @@ const transcribeAudio = async (buffer, meetingId) => {
                 model: "whisper-1",
             });
             return transcription.text;
-        });
+        }, 'transcription', { meetingId });
 
         // Cleanup temp file
         if (fs.existsSync(tempFilePath)) fs.unlinkSync(tempFilePath);
         
         return result;
     } catch (error) {
-        console.error(`[AI_SERVICE] Transcription error for meeting ${meetingId}:`, error);
-        if (error.status === 429) return '[AI stabilizes connection...]';
-        return '';
+        console.error(`[AI_SERVICE] Transcription error:`, error.message);
+        return ''; // Handled by client-side Web Speech API anyway
     }
 };
 
@@ -129,7 +168,7 @@ const generateMeetingIntelligence = async (transcript) => {
             });
 
             return JSON.parse(response.choices[0].message.content);
-        });
+        }, 'intelligence', { transcript });
     } catch (error) {
         console.error('[AI_SERVICE] Intelligence generation error:', error);
         return null;
@@ -144,7 +183,7 @@ const generateMeetingIntelligence = async (transcript) => {
  */
 const getAIResponse = async (query, context) => {
     try {
-        if (!openai) return "AI services are currently unavailable. Please check the API key configuration.";
+        if (!openai && !genAI) return "AI services are currently unavailable. Please check the API key configuration.";
 
         const maxContextChars = 15000; 
         const truncatedContext = context && context.length > maxContextChars 
@@ -170,10 +209,9 @@ const getAIResponse = async (query, context) => {
             });
 
             return response.choices[0].message.content;
-        });
+        }, 'chat', { query, context: truncatedContext });
     } catch (error) {
         console.error('[AI_SERVICE] Chat error:', error);
-        if (error.status === 429) return "I'm currently stabilizing the AI connection. Please try again in 30 seconds.";
         return "I'm sorry, I encountered an error while processing your request.";
     }
 };

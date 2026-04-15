@@ -512,7 +512,9 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
     }
   }
 
-  // AI Transcription Logic
+  // AI Transcription Logic (Web Speech API - Free & Real-time)
+  const recognitionRef = useRef<any>(null)
+
   const toggleTranscription = () => {
     if (!isTranscribing) {
       startTranscription()
@@ -522,35 +524,59 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
   }
 
   const startTranscription = () => {
-    if (!localStream) return;
-    
-    try {
-      // Use the local audio stream to record chunks every 25s (OpenAI Free Tier limit)
-      const recorder = new MediaRecorder(localStream, { mimeType: 'audio/webm' });
-      
-      recorder.ondataavailable = async (event) => {
-        if (event.data.size > 0) {
-          const audioBlob = event.data;
-          // Send to server via socket
-          socket.emit('audio-stream', { meetingId: meetingCode, audioBlob });
-        }
-      };
-
-      recorder.start(25000); 
-      transcribeRecorderRef.current = recorder;
-      setIsTranscribing(true);
-      setIsTranscriptOpen(true);
-    } catch (error) {
-      console.error('[TRANSCRIPTION] Failed to start recorder:', error);
+    if (!('webkitSpeechRecognition' in window)) {
+      alert("Web Speech API is not supported in this browser. Please use Chrome.")
+      return
     }
-  };
+
+    try {
+      const SpeechRecognition = (window as any).webkitSpeechRecognition
+      const recognition = new SpeechRecognition()
+      
+      recognition.continuous = true
+      recognition.interimResults = false
+      recognition.lang = 'en-US' // Can be made dynamic later
+
+      recognition.onresult = (event: any) => {
+        const last = event.results.length - 1
+        const text = event.results[last][0].transcript
+
+        if (text && text.trim()) {
+          // Send transcribed text to server instantly
+          socket.emit('text-stream', { meetingId: meetingCode, text: text.trim() })
+        }
+      }
+
+      recognition.onerror = (event: any) => {
+        console.error('[SPEECH_RECOGNITION] Error:', event.error)
+        if (event.error === 'network') {
+          alert('Network error in Speech Recognition. Please check your connection.')
+        }
+      }
+
+      recognition.onend = () => {
+        // Auto-restart if still marked as transcribing
+        if (isTranscribing && recognitionRef.current) {
+          recognitionRef.current.start()
+        }
+      }
+
+      recognition.start()
+      recognitionRef.current = recognition
+      setIsTranscribing(true)
+      setIsTranscriptOpen(true)
+    } catch (error) {
+      console.error('[TRANSCRIPTION] Failed to start:', error)
+    }
+  }
 
   const stopTranscription = () => {
-    if (transcribeRecorderRef.current) {
-      transcribeRecorderRef.current.stop()
-      transcribeRecorderRef.current = null
-      setIsTranscribing(false)
+    if (recognitionRef.current) {
+      recognitionRef.current.onend = null // Prevent auto-restart
+      recognitionRef.current.stop()
+      recognitionRef.current = null
     }
+    setIsTranscribing(false)
   }
 
   return (
