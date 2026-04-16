@@ -1,4 +1,4 @@
-import { Mic, MicOff, Video, VideoOff, PhoneOff, Users, MessageSquare, Info, Layout, Plus, Hand, Circle, Square, MonitorUp, Bot, Sparkles, Trash2, Maximize, Minimize } from 'lucide-react'
+import { Mic, MicOff, Video, VideoOff, PhoneOff, Users, MessageSquare, Info, Layout, Plus, Hand, Circle, Square, MonitorUp, Bot, Sparkles, Trash2, Maximize, Minimize, Target, Zap, ShieldCheck } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import Peer from 'simple-peer'
 import ChatSidebar from '../components/ChatSidebar'
