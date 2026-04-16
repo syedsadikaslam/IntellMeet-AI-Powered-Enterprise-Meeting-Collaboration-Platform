@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, MoreVertical, Calendar, User, ArrowRight, Layout, Search, Filter, Settings, ShieldCheck } from 'lucide-react'
+import { Plus, Calendar, User, Layout, Search, ShieldCheck } from 'lucide-react'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import api from '../utils/api'
 import { useParams } from 'react-router-dom'
@@ -101,64 +101,69 @@ export default function ProjectBoard() {
     }
   }
 
-  if (isLoading) return <div className="h-screen bg-[#030507] flex items-center justify-center"><div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" /></div>
+  if (isLoading) return (
+    <div className="h-screen bg-background flex flex-col items-center justify-center gap-6">
+      <div className="w-16 h-16 border-[6px] border-blue-600 border-t-transparent rounded-full animate-spin shadow-xl shadow-blue-600/10" />
+      <p className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground animate-pulse">Syncing Environment</p>
+    </div>
+  )
 
   const getTasksByStatus = (status: string) => project?.tasks.filter(t => t.status === status) || []
 
   return (
-    <div className="min-h-screen bg-[#030507] text-white font-sans selection:bg-blue-500/30">
-      <header className="h-20 border-b border-white/5 bg-white/2 backdrop-blur-xl sticky top-0 z-50 px-8 flex items-center justify-between">
-         <div className="flex items-center gap-6">
-            <div className="p-3 bg-gradient-to-br from-blue-600 to-violet-600 rounded-2xl shadow-lg shadow-blue-600/20">
-               <Layout size={20} />
-            </div>
-            <div>
-               <h1 className="text-xl font-black tracking-tighter uppercase">{project?.name || 'Workspace Board'}</h1>
-               <p className="text-[10px] text-white/30 font-black uppercase tracking-widest flex items-center gap-2">
-                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                 Active Sector
-               </p>
-            </div>
-         </div>
+    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-blue-600/20">
+      <header className="h-24 border-b border-border bg-background/60 backdrop-blur-2xl sticky top-0 z-50 px-6 sm:px-12 flex items-center justify-between">
+          <div className="flex items-center gap-4 sm:gap-8">
+             <div className="p-3.5 bg-gradient-to-br from-blue-600 to-violet-600 rounded-[22px] shadow-xl shadow-blue-600/20">
+                <Layout size={22} className="text-white" />
+             </div>
+             <div>
+                <h1 className="text-xl sm:text-2xl font-black tracking-tight uppercase leading-none">{project?.name || 'Workspace Board'}</h1>
+                <p className="text-[9px] text-muted-foreground font-black uppercase tracking-[0.2em] flex items-center gap-2 mt-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse border border-blue-400/50" />
+                  Active Team Space
+                </p>
+             </div>
+          </div>
 
-         <div className="flex items-center gap-4">
-            <div className="relative group hidden sm:block">
-               <input 
-                 type="text" 
-                 placeholder="Search Tasks..." 
-                 className="bg-white/5 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-xs focus:outline-none focus:border-blue-500/50 w-64 transition-all"
-               />
-               <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-blue-500 transition-colors" />
-            </div>
-            <button 
-              onClick={() => window.location.hash = '#/dashboard'}
-              className="px-6 py-2.5 bg-blue-600 text-white hover:bg-blue-500 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20"
-            >
-               Return Dashboard
-            </button>
-         </div>
+          <div className="flex items-center gap-4 sm:gap-6">
+             <div className="relative group hidden lg:block">
+                <input 
+                  type="text" 
+                  placeholder="Query Subsystems..." 
+                  className="bg-muted border border-border rounded-2xl py-3 pl-11 pr-5 text-xs font-bold focus:outline-none focus:border-blue-500/50 w-72 transition-all shadow-inner"
+                />
+                <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-blue-500 transition-colors" />
+             </div>
+             <button 
+               onClick={() => window.location.hash = '#/dashboard'}
+               className="px-6 py-3.5 bg-blue-600 text-white hover:bg-blue-500 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 active:scale-95 border border-blue-500/50"
+             >
+                Dashboard
+             </button>
+          </div>
       </header>
 
-      <main className="p-8">
+      <main className="p-6 sm:p-12">
         <DragDropContext onDragEnd={onDragEnd}>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 items-start max-w-[1600px] mx-auto">
             {COLUMNS.map(column => (
               <Droppable key={column.id} droppableId={column.id}>
                 {(provided, snapshot) => (
                   <div 
                     {...provided.droppableProps}
                     ref={provided.innerRef}
-                    className={`flex flex-col gap-6 p-4 rounded-[40px] transition-all min-h-[500px] border border-transparent ${snapshot.isDraggingOver ? 'bg-white/[0.03] border-white/5' : ''}`}
+                    className={`flex flex-col gap-8 p-6 sm:p-8 rounded-[48px] transition-all min-h-[600px] border border-transparent ${snapshot.isDraggingOver ? 'bg-muted/40 border-border/50 shadow-inner scale-[1.01]' : 'bg-muted/20'}`}
                   >
-                    <div className="flex items-center justify-between px-4">
+                    <div className="flex items-center justify-between px-2">
                        <div className="flex items-center gap-3">
-                          <div className={`w-2 h-2 rounded-full ${column.color}`} />
-                          <h2 className="text-xs font-black uppercase tracking-[0.2em] text-white/40">{column.title}</h2>
-                          <span className="text-[10px] font-mono text-white/10 bg-white/5 px-2 py-0.5 rounded-md">{getTasksByStatus(column.id).length}</span>
+                          <div className={`w-2.5 h-2.5 rounded-full ${column.color} shadow-sm border border-white/20`} />
+                          <h2 className="text-xs font-black uppercase tracking-[0.25em] text-foreground/50">{column.title}</h2>
+                          <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full">{getTasksByStatus(column.id).length}</span>
                        </div>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                       {getTasksByStatus(column.id).map((task, index) => (
                         <Draggable key={task._id} draggableId={task._id} index={index}>
                           {(provided, snapshot) => (
@@ -166,33 +171,33 @@ export default function ProjectBoard() {
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
-                              className={`bg-[#0d121f] border border-white/5 p-6 rounded-[32px] group hover:border-blue-500/30 transition-all shadow-xl ${snapshot.isDragging ? 'shadow-2xl shadow-blue-600/20 scale-[1.02] border-blue-500/50 z-50' : ''}`}
+                              className={`bg-card border border-border p-6 sm:p-8 rounded-[36px] group hover:border-blue-500/40 transition-all shadow-xl ${snapshot.isDragging ? 'shadow-[0_20px_60px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_60px_rgba(37,99,235,0.1)] scale-[1.05] border-blue-500/60 z-50 ring-4 ring-blue-500/5' : ''}`}
                             >
-                               <div className="flex justify-between items-start mb-4">
-                                  <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border ${
+                               <div className="flex justify-between items-start mb-6">
+                                  <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border shadow-sm ${
                                     task.priority === 'high' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 
                                     task.priority === 'medium' ? 'bg-orange-500/10 text-orange-500 border-orange-500/20' : 
                                     'bg-blue-500/10 text-blue-500 border-blue-500/20'
                                   }`}>
-                                    {task.priority}
+                                    {task.priority || 'standard'}
                                   </span>
-                                  {task.status === 'done' && <ShieldCheck size={14} className="text-green-500" />}
+                                  {task.status === 'done' && <ShieldCheck size={16} className="text-green-500 animate-pulse" />}
                                </div>
                                
-                               <h3 className={`text-sm font-bold text-white/90 mb-5 leading-relaxed ${task.status === 'done' ? 'line-through opacity-50' : ''}`}>{task.title}</h3>
+                               <h3 className={`text-md sm:text-lg font-black tracking-tight text-foreground/90 mb-8 leading-tight transition-all ${task.status === 'done' ? 'line-through opacity-40' : ''}`}>{task.title}</h3>
                                
-                               <div className="flex items-center justify-between border-t border-white/5 pt-4">
-                                  <div className="flex items-center gap-2">
-                                     <div className="w-6 h-6 rounded-full bg-blue-600/20 border border-blue-500/30 flex items-center justify-center overflow-hidden">
-                                        <User size={12} className="text-blue-400" />
+                               <div className="flex items-center justify-between border-t border-border pt-6 mt-2">
+                                  <div className="flex items-center gap-3">
+                                     <div className="w-8 h-8 rounded-xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center overflow-hidden shadow-sm group-hover:scale-110 transition-all">
+                                        <User size={14} className="text-blue-600 dark:text-blue-400" />
                                      </div>
-                                     <span className="text-[10px] font-black uppercase tracking-widest text-white/30">{task.assignee?.name || 'Unassigned'}</span>
+                                     <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">{task.assignee?.name || 'Unassigned'}</span>
                                   </div>
-                                  <div className="flex items-center gap-1.5 text-white/20">
-                                     <Calendar size={12} />
-                                     <span className="text-[9px] font-black">2d</span>
+                                  <div className="group/time flex items-center gap-2 text-muted-foreground/30 hover:text-blue-500 transition-colors">
+                                     <Calendar size={12} className="group-hover/time:animate-bounce" />
+                                     <span className="text-[9px] font-black tracking-widest uppercase">Target</span>
                                   </div>
-                               </div>
+                                </div>
                             </div>
                           )}
                         </Draggable>

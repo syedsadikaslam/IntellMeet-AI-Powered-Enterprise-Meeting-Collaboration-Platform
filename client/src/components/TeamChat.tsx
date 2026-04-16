@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Send, X, MessageSquare, User, AtSign } from 'lucide-react';
 import api from '../utils/api';
-import { io, Socket } from 'socket.io-client';
+import { socket, connectSocket } from '../utils/socket';
 import { useAuthStore } from '../store/useAuthStore';
-import { SOCKET_URL } from '../utils/socket'
 
 interface Message {
   _id: string;
@@ -22,29 +21,26 @@ interface TeamChatProps {
   onClose: () => void;
 }
 
-
-
 export default function TeamChat({ teamId, teamName, onClose }: TeamChatProps) {
   const { user } = useAuthStore();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
     fetchMessages();
 
-    // Initialize Socket
-    socketRef.current = io(SOCKET_URL);
-    socketRef.current.emit('join-team', teamId);
+    // Initialize/Connect Socket
+    connectSocket();
+    socket.emit('join-team', teamId);
 
-    socketRef.current.on('receive-team-message', (message: Message) => {
+    socket.on('receive-team-message', (message: Message) => {
       setMessages((prev) => [...prev, message]);
     });
 
     return () => {
-      socketRef.current?.disconnect();
+      socket.off('receive-team-message');
     };
   }, [teamId]);
 
@@ -76,7 +72,7 @@ export default function TeamChat({ teamId, teamName, onClose }: TeamChatProps) {
       });
 
       // Broadcast via socket
-      socketRef.current?.emit('send-team-message', {
+      socket.emit('send-team-message', {
         teamId,
         message: response.data,
       });
@@ -88,22 +84,22 @@ export default function TeamChat({ teamId, teamName, onClose }: TeamChatProps) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#0a0f1d] border-l border-white/10 w-80 sm:w-96 shadow-2xl animate-in slide-in-from-right duration-300">
+    <div className="flex flex-col h-full bg-card border-l border-border w-full sm:w-80 md:w-96 shadow-2xl animate-in slide-in-from-right duration-300">
       {/* Header */}
-      <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
+      <div className="p-6 border-b border-border flex items-center justify-between bg-muted/30">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-500/10 rounded-xl text-blue-400">
+          <div className="p-2 bg-blue-500/10 rounded-xl text-blue-600 dark:text-blue-400">
             <MessageSquare size={18} />
           </div>
           <div>
-            <h3 className="font-black text-sm uppercase tracking-tighter">{teamName} Chat</h3>
+            <h3 className="font-black text-sm uppercase tracking-tighter text-foreground">{teamName} Chat</h3>
             <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-              <span className="text-[10px] text-white/30 font-bold uppercase">Team Pipeline</span>
+              <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+              <span className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Team Pipeline</span>
             </div>
           </div>
         </div>
-        <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-xl transition-colors text-white/40 hover:text-white">
+        <button onClick={onClose} className="p-2 hover:bg-muted rounded-xl transition-colors text-muted-foreground hover:text-foreground">
           <X size={20} />
         </button>
       </div>
@@ -114,43 +110,45 @@ export default function TeamChat({ teamId, teamName, onClose }: TeamChatProps) {
         className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide"
       >
         {isLoading ? (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {[1, 2, 3].map((i) => (
               <div key={i} className="flex gap-3 animate-pulse">
-                <div className="w-8 h-8 rounded-lg bg-white/5 shrink-0" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-3 bg-white/5 rounded w-1/4" />
-                  <div className="h-10 bg-white/5 rounded w-3/4" />
+                <div className="w-8 h-8 rounded-lg bg-muted shrink-0" />
+                <div className="flex-1 space-y-3">
+                  <div className="h-2 bg-muted rounded w-1/4" />
+                  <div className="h-10 bg-muted/60 rounded-2xl w-3/4" />
                 </div>
               </div>
             ))}
           </div>
         ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center space-y-4 opacity-20">
-            <AtSign size={40} />
-            <p className="text-xs font-bold uppercase tracking-widest">No transmissions yet</p>
+          <div className="flex flex-col items-center justify-center h-full text-center space-y-6 opacity-30">
+            <div className="p-6 bg-muted rounded-[32px] shadow-inner">
+               <AtSign size={48} className="text-muted-foreground" />
+            </div>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">No transmissions yet</p>
           </div>
         ) : (
           messages.map((msg) => (
-            <div key={msg._id} className={`flex gap-3 ${msg.sender._id === user?._id ? 'flex-row-reverse' : ''}`}>
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center shrink-0 shadow-lg">
+            <div key={msg._id} className={`flex gap-3 ${msg.sender._id === user?._id ? 'flex-row-reverse' : ''} animate-in fade-in slide-in-from-bottom-2`}>
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center shrink-0 shadow-lg shadow-blue-600/10">
                 {msg.sender.avatar ? (
-                  <img src={msg.sender.avatar} className="w-full h-full rounded-lg object-cover" />
+                  <img src={msg.sender.avatar} className="w-full h-full rounded-xl object-cover" />
                 ) : (
-                  <User size={14} className="text-white" />
+                  <User size={16} className="text-white" />
                 )}
               </div>
-              <div className={`flex flex-col ${msg.sender._id === user?._id ? 'items-end' : ''}`}>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[10px] font-black uppercase text-white/40">{msg.sender.name}</span>
-                  <span className="text-[9px] text-white/20 font-mono">
+              <div className={`flex flex-col ${msg.sender._id === user?._id ? 'items-end' : ''} max-w-[80%]`}>
+                <div className="flex items-center gap-2 mb-1.5 px-1">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">{msg.sender.name}</span>
+                  <span className="text-[8px] text-muted-foreground/40 font-black">
                     {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
-                <div className={`px-4 py-2.5 rounded-2xl text-sm font-medium max-w-[240px] shadow-sm ${
+                <div className={`px-4 py-3 rounded-2xl text-sm font-medium shadow-sm transition-all ${
                   msg.sender._id === user?._id 
-                    ? 'bg-blue-600 text-white rounded-tr-none' 
-                    : 'bg-white/5 text-white/80 border border-white/5 rounded-tl-none'
+                    ? 'bg-blue-600 text-white rounded-tr-none shadow-blue-600/10' 
+                    : 'bg-muted text-foreground border border-border shadow-inner rounded-tl-none'
                 }`}>
                   {msg.content}
                 </div>
@@ -161,19 +159,19 @@ export default function TeamChat({ teamId, teamName, onClose }: TeamChatProps) {
       </div>
 
       {/* Footer */}
-      <div className="p-6 border-t border-white/5 bg-white/[0.01]">
+      <div className="p-6 border-t border-border bg-muted/10">
         <form onSubmit={handleSendMessage} className="relative">
           <input 
             type="text"
             placeholder="Broadcast a message..."
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-5 pr-14 text-sm focus:outline-none focus:border-blue-500/50 focus:bg-white/[0.08] transition-all font-bold placeholder:text-white/10"
+            className="w-full bg-muted border border-border rounded-2xl py-4 pl-5 pr-14 text-sm font-bold text-foreground focus:outline-none focus:border-blue-500/50 shadow-inner transition-all placeholder:text-muted-foreground/30"
           />
           <button 
             type="submit"
             disabled={!newMessage.trim()}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 bg-blue-600 disabled:opacity-50 disabled:bg-white/5 text-white rounded-xl hover:bg-blue-500 transition-all shadow-lg active:scale-95"
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 bg-blue-600 disabled:opacity-20 disabled:bg-muted text-white rounded-xl hover:bg-blue-500 transition-all shadow-lg active:scale-95 shadow-blue-600/20"
           >
             <Send size={18} />
           </button>
