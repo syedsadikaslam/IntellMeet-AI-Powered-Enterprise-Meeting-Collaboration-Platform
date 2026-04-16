@@ -83,7 +83,14 @@ const initSocket = (io) => {
         const savedNotes = await redis.get(`meeting:${meetingId}:notes`);
         const savedTasks = await redis.get(`meeting:${meetingId}:liveTasks`);
         if (savedNotes) socket.emit('note-update', savedNotes);
-        if (savedTasks) socket.emit('tasks-sync', JSON.parse(savedTasks));
+        if (savedTasks) {
+          try {
+            socket.emit('tasks-sync', JSON.parse(savedTasks));
+          } catch (e) {
+            console.error('[SOCKET_SERVICE] Task parse error:', e);
+            socket.emit('tasks-sync', []);
+          }
+        }
       } catch (error) {
         console.error('[SOCKET_SERVICE] Join meeting error:', error.message);
       }
@@ -305,6 +312,19 @@ const initSocket = (io) => {
       currentTasks.push(newTask);
       await redis.set(`meeting:${meetingId}:liveTasks`, JSON.stringify(currentTasks));
       io.to(meetingId).emit('live-task-added', newTask);
+    });
+
+    socket.on('request-collab-state', async ({ meetingId }) => {
+      const savedNotes = await redis.get(`meeting:${meetingId}:notes`);
+      const savedTasks = await redis.get(`meeting:${meetingId}:liveTasks`);
+      if (savedNotes) socket.emit('note-update', savedNotes);
+      if (savedTasks) {
+        try {
+          socket.emit('tasks-sync', JSON.parse(savedTasks));
+        } catch (e) {
+          socket.emit('tasks-sync', []);
+        }
+      }
     });
 
     // Kanban Board Sync (Day 25)

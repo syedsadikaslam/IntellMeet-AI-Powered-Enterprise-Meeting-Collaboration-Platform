@@ -25,6 +25,9 @@ export default function MeetingCollaboration({ meetingId, userName, onClose }: M
   const notesTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    // Request current state from server
+    socket.emit('request-collab-state', { meetingId });
+
     // Socket listeners for sync
     socket.on('note-update', (content: string) => {
       setNotes(content);

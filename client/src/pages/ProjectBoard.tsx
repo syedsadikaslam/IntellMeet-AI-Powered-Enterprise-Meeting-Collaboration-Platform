@@ -55,7 +55,10 @@ export default function ProjectBoard() {
   }, [projectId]);
 
   const fetchProject = async () => {
-    if (!projectId) return;
+    if (!projectId) {
+      setIsLoading(false);
+      return;
+    }
     try {
       const res = await api.get(`/projects/${projectId}`);
       setProject(res.data);
