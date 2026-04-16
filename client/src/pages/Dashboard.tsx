@@ -35,8 +35,6 @@ interface GlobalStats {
   activeRooms: number
 }
 
-
-
 export default function Dashboard() {
   const { user } = useAuthStore()
   const [meetings, setMeetings] = useState<Meeting[]>([])
@@ -48,16 +46,19 @@ export default function Dashboard() {
   const [projects, setProjects] = useState<Project[]>([])
   const [selectedProjectId, setSelectedProjectId] = useState<string>('')
   const [isPushing, setIsPushing] = useState(false)
-  
-  // Day 19 State
   const [stats, setStats] = useState<GlobalStats>({ onlineUsers: 0, activeRooms: 0 })
   const [showChat, setShowChat] = useState(false)
   const [activeTeamId, setActiveTeamId] = useState<string | null>(null)
+  const [performanceData, setPerformanceData] = useState<any[]>([])
+  const [isCreatingProject, setIsCreatingProject] = useState(false)
+  const [newProjectName, setNewProjectName] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
   const socketRef = useRef<Socket | null>(null)
 
   useEffect(() => {
     fetchMeetings()
     fetchProjects()
+    fetchAnalytics()
 
     // Initialize Global Stats Socket
     socketRef.current = io(SOCKET_URL);
@@ -94,6 +95,17 @@ export default function Dashboard() {
     }
   }
 
+  const fetchAnalytics = async () => {
+    try {
+      const response = await api.get('/meetings/analytics')
+      if (response.data && response.data.frequencyData) {
+        setPerformanceData(response.data.frequencyData)
+      }
+    } catch (err) {
+      console.error('Failed to fetch analytics', err)
+    }
+  }
+
   const handleCreateMeeting = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
@@ -112,24 +124,25 @@ export default function Dashboard() {
     }
   }
 
-  const handleExportLogs = (meeting?: Meeting) => {
-    const dataToExport = meeting || meetings;
-    if (!dataToExport || (Array.isArray(dataToExport) && dataToExport.length === 0)) {
-      alert('No meeting data available to export.');
-      return;
-    }
+  const handleCreateProject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newProjectName.trim()) return;
 
-    const dataStr = JSON.stringify(dataToExport, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    
-    const exportFileDefaultName = meeting 
-      ? `intellmeet_report_${meeting.meetingCode}.json`
-      : `intellmeet_logs_${new Date().toISOString().split('T')[0]}.json`;
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
+    try {
+      const teamRes = await api.post('/teams', { 
+        name: `${newProjectName} Team`, 
+        description: `Workspace for ${newProjectName}` 
+      });
+      const teamId = teamRes.data._id;
+
+      await api.post('/projects', { name: newProjectName, teamId });
+      setNewProjectName('');
+      setIsCreatingProject(false);
+      fetchProjects();
+    } catch (error) {
+      console.error('Failed to create project', error);
+      alert('Error creating project workspace.');
+    }
   }
 
   const handleAnalyzeMeeting = async (meetingId: string) => {
@@ -141,6 +154,20 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Failed to analyze meeting', error);
       alert('Failed to generate AI insights. Make sure there is a transcript available.');
+    }
+  }
+
+  const handleToggleActionItem = async (index: number) => {
+    if (!selectedMeeting) return;
+    const updatedItems = [...(selectedMeeting.actionItems || [])];
+    updatedItems[index].status = updatedItems[index].status === 'completed' ? 'pending' : 'completed';
+    
+    try {
+      const response = await api.put(`/meetings/${selectedMeeting._id}/action-items`, { actionItems: updatedItems });
+      setMeetings(prev => prev.map(m => m._id === selectedMeeting._id ? response.data : m));
+      setSelectedMeeting(response.data);
+    } catch (error) {
+       console.error('Failed to update action item', error);
     }
   }
 
@@ -207,9 +234,18 @@ export default function Dashboard() {
            
            <div className="flex flex-col gap-4">
                <div className="w-full bg-card border border-border p-6 sm:p-8 rounded-[36px] sm:rounded-[48px] backdrop-blur-xl shadow-xl">
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-6 font-mono">Operations Console</h3>
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground font-mono">Operations Console</h3>
+                    <button 
+                      onClick={() => setIsCreatingProject(true)}
+                      className="p-2 bg-blue-500/10 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                      title="New Project Board"
+                    >
+                      <Plus size={14} />
+                    </button>
+                  </div>
                   <div className="space-y-4">
-                     <form onSubmit={handleJoinByCode} className="relative group/join">
+                     <form onSubmit={handleJoinByCode} className="relative group/join mt-8">
                         <input 
                           type="text"
                           placeholder="Enter Room Code..."
@@ -275,12 +311,19 @@ export default function Dashboard() {
            <div className="lg:col-span-2 space-y-8 sm:space-y-10">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl sm:text-2xl font-black flex items-center gap-4">
-                  Recent Stream
+                  History
                   <div className="h-px w-20 bg-gradient-to-r from-blue-500/20 to-transparent" />
                 </h2>
-                {!isLoading && meetings.length > 0 && (
-                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{meetings.length} rooms active</span>
-                )}
+                <div className="relative group/search w-full sm:w-64">
+                   <input 
+                     type="text" 
+                     placeholder="Search Sessions..." 
+                     value={searchTerm}
+                     onChange={(e) => setSearchTerm(e.target.value)}
+                     className="w-full bg-card border border-border rounded-2xl py-2.5 pl-10 pr-4 text-xs focus:outline-none focus:border-blue-500/50 transition-all font-bold"
+                   />
+                   <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/40 group-focus-within/search:text-blue-500 transition-colors" />
+                </div>
               </div>
 
               {isLoading ? (
@@ -303,7 +346,12 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <div className="grid gap-5">
-                   {meetings.map((meeting) => (
+                   {meetings
+                    .filter(m => 
+                      m.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                      m.meetingCode.toLowerCase().includes(searchTerm.toLowerCase())
+                    )
+                    .map((meeting) => (
                     <article key={meeting.meetingCode} className="group relative bg-card border border-border hover:bg-card/80 hover:border-blue-500/30 p-5 sm:p-6 rounded-[32px] transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-6 overflow-hidden shadow-sm hover:shadow-md">
                        <div className="absolute -top-12 -right-12 w-40 h-40 bg-blue-500/5 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
                        
@@ -381,7 +429,7 @@ export default function Dashboard() {
                         </div>
                         
                         <h3 className="text-xl font-black mb-2 tracking-tight uppercase text-foreground">Performance Velocity</h3>
-                        <PerformanceChart />
+                        <PerformanceChart data={performanceData} />
                         
                         <div className="grid grid-cols-2 gap-4 mt-8">
                            <div className="bg-muted p-4 rounded-2xl border border-border">
@@ -422,6 +470,37 @@ export default function Dashboard() {
             teamName={projects.find(p => p.team === activeTeamId)?.name || 'Team'} 
             onClose={() => setShowChat(false)} 
           />
+        </div>
+      )}
+
+      {/* Create Project Modal */}
+      {isCreatingProject && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-background/80 backdrop-blur-2xl animate-fade-in transition-colors duration-300">
+          <div className="bg-card border border-border rounded-[48px] p-8 sm:p-12 w-full max-w-xl shadow-2xl relative overflow-hidden text-foreground">
+             <div className="flex items-center justify-between mb-10">
+                <h2 className="text-3xl font-black tracking-tighter uppercase">New Project</h2>
+                <button onClick={() => setIsCreatingProject(false)} className="p-4 bg-muted hover:bg-muted/80 rounded-2xl text-muted-foreground transition-all">
+                   <Plus size={24} className="rotate-45" />
+                </button>
+             </div>
+             <form onSubmit={handleCreateProject} className="space-y-8">
+                <div className="space-y-3">
+                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600 ml-1">Board Name</label>
+                   <input 
+                     autoFocus
+                     required
+                     type="text"
+                     placeholder="e.g. Q2 Strategic Roadmap"
+                     value={newProjectName}
+                     onChange={(e) => setNewProjectName(e.target.value)}
+                     className="w-full bg-muted border border-border rounded-2xl p-5 text-lg text-foreground focus:outline-none focus:border-blue-500 focus:bg-muted/80 transition-all font-bold"
+                   />
+                </div>
+                <button type="submit" className="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-xs tracking-[0.3em] uppercase hover:bg-blue-500 transition-all shadow-lg">
+                   INITIALIZE WORKSPACE
+                </button>
+             </form>
+          </div>
         </div>
       )}
 
@@ -549,12 +628,20 @@ export default function Dashboard() {
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                        {selectedMeeting.actionItems.map((item, idx) => (
-                          <div key={idx} className="bg-muted border border-border p-6 rounded-3xl flex items-start gap-4 hover:bg-card transition-all shadow-sm">
-                             <div className="w-6 h-6 rounded-full bg-violet-500/10 border border-violet-500/30 flex items-center justify-center flex-shrink-0 mt-1">
-                                <ArrowRight size={12} className="text-violet-600" />
+                          <div 
+                            key={idx} 
+                            onClick={() => handleToggleActionItem(idx)}
+                            className={`p-6 rounded-3xl flex items-start gap-4 transition-all shadow-sm cursor-pointer border ${
+                              item.status === 'completed' ? 'bg-green-500/5 border-green-500/20' : 'bg-muted border-border hover:bg-card'
+                            }`}
+                          >
+                             <div className={`w-6 h-6 rounded-full border flex items-center justify-center flex-shrink-0 mt-1 transition-all ${
+                               item.status === 'completed' ? 'bg-green-500 border-green-500 text-white' : 'bg-violet-500/10 border-violet-500/30 text-violet-600'
+                             }`}>
+                                {item.status === 'completed' ? <ShieldCheck size={12} /> : <ArrowRight size={12} />}
                              </div>
                              <div className="space-y-1">
-                                <p className="text-sm font-bold text-foreground transition-colors">{item.task}</p>
+                                <p className={`text-sm font-bold transition-colors ${item.status === 'completed' ? 'text-green-600 line-through opacity-60' : 'text-foreground'}`}>{item.task}</p>
                                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground truncate">Assignee: {item.suggestedAssignee}</p>
                              </div>
                           </div>

@@ -1,5 +1,6 @@
 const Meeting = require('../models/Meeting');
 const { v4: uuidv4 } = require('uuid');
+const { generateMeetingIntelligence } = require('../services/aiService');
 
 // @desc    Create a new meeting
 // @route   POST /api/meetings
@@ -119,32 +120,58 @@ const analyzeMeeting = async (req, res) => {
       return res.status(400).json({ message: 'No transcript available to analyze' });
     }
 
-    // MOCK AI PROCESSING
-    // In a real app, you would integrate with an AI service like Gemini/OpenAI
+    const intelligence = await generateMeetingIntelligence(meeting.transcript);
     
-    const mockSummary = "The session focused on synchronized real-time communication and system performance metrics. The team reviewed the integration of Socket.io and Recharts for live dashboard updates. Key priorities for the next cycle include enhancing UI responsiveness and implementing automated reporting features.";
+    if (intelligence) {
+      meeting.summary = intelligence.summary || meeting.summary;
+      meeting.actionItems = (intelligence.actionItems || []).map(item => ({
+         task: item.task,
+         suggestedAssignee: item.user || item.suggestedAssignee || 'Unassigned',
+         status: 'pending'
+      }));
+      meeting.highlights = intelligence.highlights || meeting.highlights;
+      meeting.sentiment = intelligence.sentiment || meeting.sentiment;
+      await meeting.save();
+    }
+
+    res.json(meeting);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+const getAnalytics = async (req, res) => {
+  try {
+    const meetings = await Meeting.find({ host: req.user._id });
     
-    const mockActionItems = [
-      { task: "Optimize chart rendering performance", suggestedAssignee: "Frontend Team", status: "pending" },
-      { task: "Implement PDF export functionality", suggestedAssignee: "Backend Team", status: "pending" },
-      { task: "Conduct user testing on chat interface", suggestedAssignee: "QA Team", status: "pending" }
-    ];
+    // Group meetings by day for frequency chart
+    const last7Days = [...Array(7)].map((_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      return d.toISOString().split('T')[0];
+    }).reverse();
 
-    const mockHighlights = [
-      "Successful integration of real-time socket events",
-      "Drafted plan for automated intelligence reports",
-      "Confirmed dashboard layout for mobile devices"
-    ];
+    const frequencyData = last7Days.map(date => {
+      const count = meetings.filter(m => m.createdAt.toISOString().split('T')[0] === date).length;
+      return { name: date.split('-').slice(1).join('/'), value: count };
+    });
 
-    const mockSentiment = 'positive';
+    res.json({ frequencyData });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
 
-    meeting.summary = mockSummary;
-    meeting.actionItems = mockActionItems;
-    meeting.highlights = mockHighlights;
-    meeting.sentiment = mockSentiment;
+const updateActionItems = async (req, res) => {
+  try {
+    const { actionItems } = req.body;
+    const meeting = await Meeting.findById(req.params.id);
+    
+    if (!meeting) return res.status(404).json({ message: 'Meeting not found' });
+    if (meeting.host.toString() !== req.user._id.toString()) return res.status(401).json({ message: 'Not authorized' });
 
+    meeting.actionItems = actionItems;
     await meeting.save();
-
     res.json(meeting);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -158,4 +185,6 @@ module.exports = {
   updateMeeting,
   deleteMeeting,
   analyzeMeeting,
+  getAnalytics,
+  updateActionItems,
 };

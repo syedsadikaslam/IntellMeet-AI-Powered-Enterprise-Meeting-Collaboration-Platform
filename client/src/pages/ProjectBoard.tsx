@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
-import { Plus, MoreVertical, Calendar, User, ArrowRight, Layout, Search, Filter, Settings } from 'lucide-react'
+import { Plus, MoreVertical, Calendar, User, ArrowRight, Layout, Search, Filter, Settings, ShieldCheck } from 'lucide-react'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import api from '../utils/api'
 import { useParams } from 'react-router-dom'
+import { socket, connectSocket } from '../utils/socket'
 
 interface Task {
   _id: string
@@ -33,22 +34,49 @@ export default function ProjectBoard() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    fetchProject()
-  }, [projectId])
+    fetchProject();
+
+    // Socket Setup
+    connectSocket();
+    socket.emit('join-project', projectId);
+
+    socket.on('task-moved-sync', (result: any) => {
+      syncTaskMovement(result);
+    });
+
+    socket.on('task-added-sync', (task: Task) => {
+      setProject(prev => prev ? { ...prev, tasks: [...prev.tasks, task] } : null);
+    });
+
+    return () => {
+      socket.off('task-moved-sync');
+      socket.off('task-added-sync');
+    };
+  }, [projectId]);
 
   const fetchProject = async () => {
+    if (!projectId) return;
     try {
-      // For now, if no projectId is provided, we fetch a default or mock
-      // In a real app, we'd navigate here from a team list
-      const res = await api.get(`/projects`) // This needs an endpoint or we mock
-      if (res.data && res.data.length > 0) {
-        setProject(res.data[0]) 
-      }
+      const res = await api.get(`/projects/${projectId}`);
+      setProject(res.data);
     } catch (err) {
-      console.error('Failed to fetch project', err)
+      console.error('Failed to fetch project', err);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
+  }
+
+  const syncTaskMovement = (result: any) => {
+    const { draggableId, destination } = result;
+    setProject(prev => {
+      if (!prev) return null;
+      const updatedTasks = [...prev.tasks];
+      const taskIndex = updatedTasks.findIndex(t => t._id === draggableId);
+      if (taskIndex !== -1) {
+        updatedTasks[taskIndex].status = destination.droppableId;
+      }
+      return { ...prev, tasks: updatedTasks };
+    });
   }
 
   const onDragEnd = async (result: any) => {
@@ -56,16 +84,14 @@ export default function ProjectBoard() {
     if (!destination) return
     if (destination.droppableId === source.droppableId && destination.index === source.index) return
 
+    // Sync to others
+    socket.emit('task-moved', { projectId, result });
+
     // Optimistic UI update
-    const updatedTasks = Array.from(project?.tasks || [])
-    const taskIndex = updatedTasks.findIndex(t => t._id === draggableId)
-    if (taskIndex !== -1) {
-      updatedTasks[taskIndex].status = destination.droppableId
-      setProject(prev => prev ? { ...prev, tasks: updatedTasks } : null)
-    }
+    syncTaskMovement(result);
 
     try {
-      await api.put(`/projects/${project?._id}/tasks/${draggableId}`, { status: destination.droppableId })
+      await api.put(`/projects/${projectId}/tasks/${draggableId}`, { status: destination.droppableId })
     } catch (err) {
       console.error('Failed to update task status', err)
       fetchProject() // Rollback on error
@@ -87,7 +113,7 @@ export default function ProjectBoard() {
                <h1 className="text-xl font-black tracking-tighter uppercase">{project?.name || 'Workspace Board'}</h1>
                <p className="text-[10px] text-white/30 font-black uppercase tracking-widest flex items-center gap-2">
                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                 Active Sprint
+                 Active Sector
                </p>
             </div>
          </div>
@@ -101,11 +127,11 @@ export default function ProjectBoard() {
                />
                <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-blue-500 transition-colors" />
             </div>
-            <button className="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl text-white/50 hover:text-white transition-all border border-white/5">
-               <Filter size={18} />
-            </button>
-            <button className="p-2.5 bg-white text-black hover:bg-blue-50 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all">
-               New Project
+            <button 
+              onClick={() => window.location.hash = '#/dashboard'}
+              className="px-6 py-2.5 bg-blue-600 text-white hover:bg-blue-500 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20"
+            >
+               Return Dashboard
             </button>
          </div>
       </header>
@@ -127,7 +153,6 @@ export default function ProjectBoard() {
                           <h2 className="text-xs font-black uppercase tracking-[0.2em] text-white/40">{column.title}</h2>
                           <span className="text-[10px] font-mono text-white/10 bg-white/5 px-2 py-0.5 rounded-md">{getTasksByStatus(column.id).length}</span>
                        </div>
-                       <button className="text-white/20 hover:text-white transition-all"><Plus size={16} /></button>
                     </div>
 
                     <div className="space-y-4">
@@ -148,10 +173,10 @@ export default function ProjectBoard() {
                                   }`}>
                                     {task.priority}
                                   </span>
-                                  <button className="text-white/10 group-hover:text-white/40 transition-all"><MoreVertical size={14} /></button>
+                                  {task.status === 'done' && <ShieldCheck size={14} className="text-green-500" />}
                                </div>
                                
-                               <h3 className="text-sm font-bold text-white/90 mb-5 leading-relaxed">{task.title}</h3>
+                               <h3 className={`text-sm font-bold text-white/90 mb-5 leading-relaxed ${task.status === 'done' ? 'line-through opacity-50' : ''}`}>{task.title}</h3>
                                
                                <div className="flex items-center justify-between border-t border-white/5 pt-4">
                                   <div className="flex items-center gap-2">

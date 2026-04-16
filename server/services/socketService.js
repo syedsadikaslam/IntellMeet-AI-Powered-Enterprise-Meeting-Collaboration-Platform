@@ -78,6 +78,12 @@ const initSocket = (io) => {
           type: 'info',
           message: `${userName} has joined the meeting.`
         });
+
+        // NEW: Sync shared notes and live tasks to late joiner
+        const savedNotes = await redis.get(`meeting:${meetingId}:notes`);
+        const savedTasks = await redis.get(`meeting:${meetingId}:liveTasks`);
+        if (savedNotes) socket.emit('note-update', savedNotes);
+        if (savedTasks) socket.emit('tasks-sync', JSON.parse(savedTasks));
       } catch (error) {
         console.error('[SOCKET_SERVICE] Join meeting error:', error.message);
       }
@@ -201,6 +207,10 @@ const initSocket = (io) => {
         if (fullTranscript) {
           const intelligence = await generateMeetingIntelligence(fullTranscript);
           
+          const sharedNotes = await redis.get(`meeting:${meetingId}:notes`) || '';
+          const liveTasksRaw = await redis.get(`meeting:${meetingId}:liveTasks`);
+          const liveTasks = liveTasksRaw ? JSON.parse(liveTasksRaw) : [];
+
           if (intelligence) {
             await Meeting.findOneAndUpdate(
               { meetingCode: meetingId },
@@ -208,6 +218,8 @@ const initSocket = (io) => {
                 transcript: fullTranscript,
                 summary: intelligence.summary,
                 actionItems: intelligence.actionItems,
+                sharedNotes: sharedNotes,
+                liveTasks: liveTasks,
                 endTime: new Date(),
                 isLive: false
               }
@@ -277,6 +289,35 @@ const initSocket = (io) => {
         // Better formatting for AI analysis: name followed by text in new line
         await redis.append(`meeting:${meetingId}:transcript`, `\n[${socket.userName || 'Someone'}]: ${text.trim()}`);
       }
+    });
+
+    // Shared Notes
+    socket.on('update-note', async ({ meetingId, content }) => {
+      await redis.set(`meeting:${meetingId}:notes`, content);
+      socket.to(meetingId).emit('note-update', content);
+    });
+
+    // Live Task Addition
+    socket.on('add-live-task', async ({ meetingId, task }) => {
+      const currentTasksRaw = await redis.get(`meeting:${meetingId}:liveTasks`);
+      const currentTasks = currentTasksRaw ? JSON.parse(currentTasksRaw) : [];
+      const newTask = { ...task, id: Date.now().toString() };
+      currentTasks.push(newTask);
+      await redis.set(`meeting:${meetingId}:liveTasks`, JSON.stringify(currentTasks));
+      io.to(meetingId).emit('live-task-added', newTask);
+    });
+
+    // Kanban Board Sync (Day 25)
+    socket.on('join-project', (projectId) => {
+      socket.join(`project:${projectId}`);
+    });
+
+    socket.on('task-moved', ({ projectId, result }) => {
+      socket.to(`project:${projectId}`).emit('task-moved-sync', result);
+    });
+
+    socket.on('task-added', ({ projectId, task }) => {
+      socket.to(`project:${projectId}`).emit('task-added-sync', task);
     });
 
     socket.on('disconnect', () => {

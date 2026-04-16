@@ -61,6 +61,24 @@ const meetingSchema = new mongoose.Schema(
       default: 'neutral',
     },
     highlights: [String],
+    sharedNotes: {
+      type: String,
+      default: '',
+    },
+    liveTasks: [
+      {
+        title: String,
+        assignee: String,
+        status: {
+          type: String,
+          default: 'pending',
+        },
+      },
+    ],
+    recordingUrl: {
+      type: String,
+      default: '',
+    },
   },
   { timestamps: true }
 );

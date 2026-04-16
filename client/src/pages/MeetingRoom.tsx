@@ -4,6 +4,7 @@ import Peer from 'simple-peer'
 import ChatSidebar from '../components/ChatSidebar'
 import ParticipantSidebar from '../components/ParticipantSidebar'
 import AIChat from '../components/AIChat'
+import MeetingCollaboration from '../components/MeetingCollaboration'
 import { useAuthStore } from '../store/useAuthStore'
 import { useMeetingStore } from '../store/useMeetingStore'
 import { connectSocket, disconnectSocket, socket } from '../utils/socket'
@@ -51,6 +52,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [isParticipantsOpen, setIsParticipantsOpen] = useState(false)
   const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false)
+  const [isCollaborationOpen, setIsCollaborationOpen] = useState(false)
   const [typingUsers, setTypingUsers] = useState<{ userId: string, userName: string }[]>([])
   const [participantStates, setParticipantStates] = useState<Record<string, { isMicOn: boolean, isVideoOn: boolean, micAllowed?: boolean, videoAllowed?: boolean, chatAllowed?: boolean }>>({})
   const [meetingData, setMeetingData] = useState<any>(null)
@@ -711,7 +713,15 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
               {/* Side Tools (Integrated for mobile) */}
               <div className="flex flex-none items-center gap-1 md:gap-3 md:absolute md:right-8">
                 <button 
-                  onClick={() => { setIsChatOpen(!isChatOpen); setIsParticipantsOpen(false); setIsTranscriptOpen(false); setIsAIAssistantOpen(false); }}
+                  onClick={() => { setIsCollaborationOpen(!isCollaborationOpen); setIsChatOpen(false); setIsParticipantsOpen(false); setIsTranscriptOpen(false); setIsAIAssistantOpen(false); }}
+                  className={`p-2.5 md:p-5 rounded-2xl md:rounded-3xl transition-all relative ${isCollaborationOpen ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}
+                  title="Collaboration & Notes"
+                >
+                  <Target className="w-5 h-5 md:w-[22px] md:h-[22px]" />
+                </button>
+
+                <button 
+                  onClick={() => { setIsChatOpen(!isChatOpen); setIsParticipantsOpen(false); setIsTranscriptOpen(false); setIsAIAssistantOpen(false); setIsCollaborationOpen(false); }}
                   className={`p-2.5 md:p-5 rounded-2xl md:rounded-3xl transition-all relative ${isChatOpen ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}
                 >
                   <MessageSquare className="w-5 h-5 md:w-[22px] md:h-[22px]" />
@@ -721,7 +731,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
                 </button>
 
                 <button 
-                  onClick={() => { setIsTranscriptOpen(!isTranscriptOpen); setIsChatOpen(false); setIsParticipantsOpen(false); setIsAIAssistantOpen(false); }}
+                  onClick={() => { setIsTranscriptOpen(!isTranscriptOpen); setIsChatOpen(false); setIsParticipantsOpen(false); setIsAIAssistantOpen(false); setIsCollaborationOpen(false); }}
                   className={`p-2.5 md:p-5 rounded-2xl md:rounded-3xl transition-all relative ${isTranscriptOpen ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}
                   title="Live Transcription"
                 >
@@ -730,7 +740,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
                 </button>
 
                 <button 
-                  onClick={() => { setIsParticipantsOpen(!isParticipantsOpen); setIsChatOpen(false); setIsTranscriptOpen(false); setIsAIAssistantOpen(false); }}
+                  onClick={() => { setIsParticipantsOpen(!isParticipantsOpen); setIsChatOpen(false); setIsTranscriptOpen(false); setIsAIAssistantOpen(false); setIsCollaborationOpen(false); }}
                   className={`p-2.5 md:p-5 rounded-2xl md:rounded-3xl transition-all relative ${isParticipantsOpen ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20' : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}
                 >
                   <Users className="w-5 h-5 md:w-[22px] md:h-[22px]" />
@@ -745,7 +755,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
                 </button>
 
                 <button 
-                  onClick={() => { setIsAIAssistantOpen(!isAIAssistantOpen); setIsChatOpen(false); setIsTranscriptOpen(false); setIsParticipantsOpen(false); }}
+                  onClick={() => { setIsAIAssistantOpen(!isAIAssistantOpen); setIsChatOpen(false); setIsTranscriptOpen(false); setIsParticipantsOpen(false); setIsCollaborationOpen(false); }}
                   className={`p-2.5 md:p-5 rounded-2xl md:rounded-3xl transition-all relative ${isAIAssistantOpen ? 'bg-purple-600 dark:bg-purple-500 text-white shadow-xl shadow-purple-600/20' : 'bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80'}`}
                   title="AI Assistant"
                 >
@@ -852,6 +862,16 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
               onClose={() => setIsParticipantsOpen(false)}
             />
          </aside>
+      )}
+
+      {isCollaborationOpen && (
+        <aside className="fixed md:relative top-0 right-0 z-[60] w-full sm:w-80 h-full bg-card border-l border-border animate-slide-in-right shadow-2xl overflow-hidden transition-colors duration-300">
+           <MeetingCollaboration 
+             meetingId={meetingCode} 
+             userName={user?.name || 'User'} 
+             onClose={() => setIsCollaborationOpen(false)} 
+           />
+        </aside>
       )}
 
       <AIChat 

@@ -1,6 +1,10 @@
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-const data = [
+interface ChartProps {
+  data?: Array<{ name: string, value: number }>;
+}
+
+const defaultData = [
   { name: 'Mon', value: 40 },
   { name: 'Tue', value: 30 },
   { name: 'Wed', value: 65 },
@@ -10,7 +14,7 @@ const data = [
   { name: 'Sun', value: 85 },
 ];
 
-export default function PerformanceChart() {
+export default function PerformanceChart({ data = defaultData }: ChartProps) {
   return (
     <div className="w-full h-48 sm:h-64 mt-4 relative transition-colors duration-300">
       <ResponsiveContainer width="100%" height="100%" debounce={100}>
