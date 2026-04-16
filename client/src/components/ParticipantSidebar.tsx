@@ -110,7 +110,7 @@ export default function ParticipantSidebar({
               <div className="flex items-center gap-2">
                  {/* Admin Controls */}
                   {isAdmin && !isHost && (
-                    <div className="flex items-center gap-1.5 mr-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-1.5 mr-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                        <button 
                          onClick={() => onUpdatePermission(p.userId, { micAllowed: !state.micAllowed })}
                          title={state.micAllowed === false ? "Enable Microphone" : "Disable Microphone"}

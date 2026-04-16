@@ -561,7 +561,18 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
       recognition.onend = () => {
         // Auto-restart if still marked as transcribing
         if (isTranscribing && recognitionRef.current) {
-          recognitionRef.current.start()
+          try {
+            recognitionRef.current.start()
+          } catch (e) {
+            console.error('[SPEECH_RECOGNITION] Restart failed:', e)
+            // If it fails to restart (common on mobile if not triggered by gesture)
+            // we'll try again after a short delay
+            setTimeout(() => {
+               if (isTranscribing && recognitionRef.current) {
+                  try { recognitionRef.current.start() } catch(err) { console.error('Delayed restart failed', err) }
+               }
+            }, 1000)
+          }
         }
       }
 
@@ -575,12 +586,12 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
   }
 
   const stopTranscription = () => {
+    setIsTranscribing(false) // Set this first to prevent auto-restart in onend
     if (recognitionRef.current) {
-      recognitionRef.current.onend = null // Prevent auto-restart
+      recognitionRef.current.onend = null
       recognitionRef.current.stop()
       recognitionRef.current = null
     }
-    setIsTranscribing(false)
   }
 
   return (
@@ -779,7 +790,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
       </div>
 
       {isTranscriptOpen && (
-        <aside className="fixed md:relative top-0 right-0 z-[60] w-full sm:w-80 h-full bg-card border-l border-border p-6 flex flex-col gap-6 animate-slide-in-right overflow-hidden shadow-2xl transition-colors duration-300">
+        <aside className="fixed md:relative top-0 right-0 z-[60] w-full sm:w-80 h-full bg-card border-l border-border p-4 md:p-6 flex flex-col gap-4 md:gap-6 animate-slide-in-right overflow-hidden shadow-2xl transition-colors duration-300">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
               <Layout size={16} /> Live Transcript
