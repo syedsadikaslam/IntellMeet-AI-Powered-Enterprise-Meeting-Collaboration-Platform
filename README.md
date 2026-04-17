@@ -1,6 +1,6 @@
 <div align="center">
 
-![IntellMeet Banner](https://drive.google.com/uc?export=view&id=1RSIpk9ZYfern-BOM8oEWeeyvdiHTBz6C)
+![IntellMeet Banner] 
 
 # 🤖 IntellMeet: AI-Powered Enterprise Meeting Platform
 
@@ -37,7 +37,6 @@
 | **💬 Project-Linked Chat** | Real-time messaging with full historical context and file sharing. |
 | **📊 Productivity Analytics** | Insights into meeting frequency, engagement metrics, and task completion rates. |
 
-![AI Intelligence Representation](https://drive.google.com/uc?export=view&id=1qahyDV_8u-yLeDotBOiOIGGqUCRDJ7pr)
 
 ---
 
