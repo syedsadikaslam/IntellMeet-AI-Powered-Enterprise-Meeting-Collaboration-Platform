@@ -112,48 +112,48 @@ export default function ProjectBoard() {
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans selection:bg-blue-600/20">
-      <header className="h-24 border-b border-border bg-background/60 backdrop-blur-2xl sticky top-0 z-50 px-6 sm:px-12 flex items-center justify-between">
-          <div className="flex items-center gap-4 sm:gap-8">
-             <div className="p-3.5 bg-gradient-to-br from-blue-600 to-violet-600 rounded-[22px] shadow-xl shadow-blue-600/20">
-                <Layout size={22} className="text-white" />
+      <header className="h-20 sm:h-24 border-b border-border bg-background/80 backdrop-blur-2xl sticky top-0 z-50 px-4 sm:px-12 flex items-center justify-between">
+          <div className="flex items-center gap-3 sm:gap-8">
+             <div className="p-2.5 sm:p-3.5 bg-gradient-to-br from-blue-600 to-violet-600 rounded-[18px] sm:rounded-[22px] shadow-xl shadow-blue-600/20">
+                <Layout size={18} className="text-white sm:w-5 sm:h-5" />
              </div>
              <div>
-                <h1 className="text-xl sm:text-2xl font-black tracking-tight uppercase leading-none">{project?.name || 'Workspace Board'}</h1>
-                <p className="text-[9px] text-muted-foreground font-black uppercase tracking-[0.2em] flex items-center gap-2 mt-2">
+                <h1 className="text-lg sm:text-2xl font-black tracking-tight uppercase leading-none truncate max-w-[120px] sm:max-w-none">{project?.name || 'Workspace Board'}</h1>
+                <p className="text-[8px] sm:text-[9px] text-muted-foreground font-black uppercase tracking-[0.2em] flex items-center gap-2 mt-1 sm:mt-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse border border-blue-400/50" />
-                  Active Team Space
+                  Active Space
                 </p>
              </div>
           </div>
 
-          <div className="flex items-center gap-4 sm:gap-6">
+          <div className="flex items-center gap-3 sm:gap-6">
              <div className="relative group hidden lg:block">
                 <input 
                   type="text" 
                   placeholder="Query Subsystems..." 
-                  className="bg-muted border border-border rounded-2xl py-3 pl-11 pr-5 text-xs font-bold focus:outline-none focus:border-blue-500/50 w-72 transition-all shadow-inner"
+                  className="bg-muted border border-border rounded-2xl py-3 pl-11 pr-5 text-xs font-bold focus:outline-none focus:border-blue-500/50 w-64 lg:w-72 transition-all shadow-inner"
                 />
                 <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-blue-500 transition-colors" />
              </div>
              <button 
                onClick={() => window.location.hash = '#/dashboard'}
-               className="px-6 py-3.5 bg-blue-600 text-white hover:bg-blue-500 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 active:scale-95 border border-blue-500/50"
+               className="px-4 sm:px-6 py-2.5 sm:py-3.5 bg-blue-600 text-white hover:bg-blue-500 rounded-xl sm:rounded-2xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 active:scale-95 border border-blue-500/50"
              >
-                Dashboard
+                Return
              </button>
           </div>
       </header>
 
-      <main className="p-6 sm:p-12">
+      <main className="p-4 sm:p-12">
         <DragDropContext onDragEnd={onDragEnd}>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 items-start max-w-[1600px] mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 sm:gap-10 items-start max-w-[1700px] mx-auto">
             {COLUMNS.map(column => (
               <Droppable key={column.id} droppableId={column.id}>
                 {(provided, snapshot) => (
                   <div 
                     {...provided.droppableProps}
                     ref={provided.innerRef}
-                    className={`flex flex-col gap-8 p-6 sm:p-8 rounded-[48px] transition-all min-h-[600px] border border-transparent ${snapshot.isDraggingOver ? 'bg-muted/40 border-border/50 shadow-inner scale-[1.01]' : 'bg-muted/20'}`}
+                    className={`flex flex-col gap-6 sm:gap-8 p-4 sm:p-8 rounded-[32px] sm:rounded-[48px] transition-all min-h-[400px] sm:min-h-[600px] border border-transparent ${snapshot.isDraggingOver ? 'bg-muted/60 border-border/50 shadow-inner scale-[1.01]' : 'bg-muted/10'}`}
                   >
                     <div className="flex items-center justify-between px-2">
                        <div className="flex items-center gap-3">
