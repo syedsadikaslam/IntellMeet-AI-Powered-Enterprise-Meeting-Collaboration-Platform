@@ -628,39 +628,138 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
           </div>
         </div>
 
-        {/* Video Grid */}
-        <div className="flex-1 p-3 md:p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 auto-rows-fr overflow-y-auto scrollbar-hide">
-          {/* Local Feed */}
-          <VideoCard 
-            stream={localStream!} 
-            label={`${user?.name} (You)`} 
-            isMuted 
-            isOff={!isVideoOn} 
-            isHandRaised={raisedHands[user?.id || '']} 
-          />
+        {/* Video Grid / Spotlight Layout */}
+        <div className="flex-1 p-4 md:p-8 overflow-y-auto scrollbar-hide">
+          {participants.length <= 2 ? (
+            /* Standard Grid for 1-2 people */
+            <div className="h-full grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 auto-rows-fr max-w-7xl mx-auto">
+              {/* Local Feed */}
+              <VideoCard 
+                stream={localStream!} 
+                label={`${user?.name} (You)`} 
+                isMuted 
+                isOff={!isVideoOn} 
+                isHandRaised={raisedHands[user?.id || '']} 
+              />
 
-          {/* Remote Feeds */}
-          {peers.map(p => {
-             const participant = participants.find(part => part.socketId === p.peerId);
-             const uId = participant?.userId || '';
-             return (
-               <VideoCard 
-                 key={p.peerId} 
-                 stream={p.stream} 
-                 label={p.userName} 
-                 isOff={!p.stream} 
-                 isHandRaised={raisedHands[uId]} 
-               />
-             )
-          })}
+              {/* Remote Feed(s) */}
+              {peers.map(p => {
+                 const part = participants.find(part => part.socketId === p.peerId);
+                 const uId = part?.userId || '';
+                 return (
+                   <VideoCard 
+                     key={p.peerId} 
+                     stream={p.stream} 
+                     label={p.userName} 
+                     isOff={!p.stream} 
+                     isHandRaised={raisedHands[uId]} 
+                   />
+                 )
+              })}
 
-          {participants.length < 2 && (
-             <div className="relative rounded-3xl bg-muted/50 border-2 border-dashed border-border flex flex-col items-center justify-center gap-4 transition-colors">
-                <div className="w-12 h-12 rounded-full border border-border flex items-center justify-center animate-pulse">
-                   <Users size={20} className="text-muted-foreground transition-colors" />
-                </div>
-                <p className="text-muted-foreground text-[10px] font-black uppercase tracking-[0.3em] transition-colors">Waiting for others</p>
-             </div>
+              {participants.length < 2 && (
+                 <div className="relative rounded-[32px] bg-muted/50 border-2 border-dashed border-border flex flex-col items-center justify-center gap-4 transition-colors">
+                    <div className="w-12 h-12 rounded-full border border-border flex items-center justify-center animate-pulse">
+                       <Users size={20} className="text-muted-foreground" />
+                    </div>
+                    <p className="text-muted-foreground text-[10px] font-black uppercase tracking-[0.3em]">Waiting for others</p>
+                 </div>
+              )}
+            </div>
+          ) : (
+            /* Spotlight Layout for 3+ people */
+            <div className="h-full flex flex-col gap-6 max-w-7xl mx-auto">
+               {/* 1. Stage (Admin Area) */}
+               <div className="flex-1 min-h-[50%] flex items-center justify-center">
+                  {(() => {
+                     const hostId = meetingData?.host?._id || meetingData?.host;
+                     const isLocalHost = user?.id === hostId;
+                     
+                     if (isLocalHost) {
+                        return (
+                          <div className="w-full h-full max-w-4xl max-h-full">
+                            <VideoCard 
+                              stream={localStream!} 
+                              label={`${user?.name} (Host)`} 
+                              isMuted 
+                              isOff={!isVideoOn} 
+                              isHandRaised={raisedHands[user?.id || '']} 
+                            />
+                          </div>
+                        )
+                     } else {
+                        const hostPeer = peers.find(p => {
+                           const part = participants.find(part => part.socketId === p.peerId);
+                           return part?.userId === hostId;
+                        });
+
+                        if (hostPeer) {
+                           return (
+                             <div className="w-full h-full max-w-4xl max-h-full">
+                               <VideoCard 
+                                 stream={hostPeer.stream} 
+                                 label={`${hostPeer.userName} (Host)`} 
+                                 isOff={!hostPeer.stream} 
+                                 isHandRaised={raisedHands[hostId]} 
+                               />
+                             </div>
+                           )
+                        } else {
+                           // Fallback if host not found or joined yet
+                           return (
+                             <div className="w-full h-full max-w-4xl max-h-full aspect-video rounded-3xl bg-muted flex items-center justify-center">
+                                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground opacity-40">Host is preparing the stage...</p>
+                             </div>
+                           )
+                        }
+                     }
+                  })()}
+               </div>
+
+               {/* 2. Gallery (Member Area) */}
+               <div className="flex-none grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 max-h-[40%] overflow-y-auto pr-2 custom-scrollbar">
+                  {/* Render everyone who is NOT the host */}
+                  {(() => {
+                     const hostId = meetingData?.host?._id || meetingData?.host;
+                     const items = [];
+
+                     // Add local if not host
+                     if (user?.id !== hostId) {
+                        items.push(
+                          <div key="local-member" className="aspect-video w-full">
+                            <VideoCard 
+                              stream={localStream!} 
+                              label={`${user?.name} (You)`} 
+                              isMuted 
+                              isOff={!isVideoOn} 
+                              isHandRaised={raisedHands[user?.id || '']} 
+                            />
+                          </div>
+                        );
+                     }
+
+                     // Add peers if not host
+                     peers.forEach(p => {
+                        const part = participants.find(part => part.socketId === p.peerId);
+                        const uId = part?.userId || '';
+                        if (uId !== hostId) {
+                           items.push(
+                             <div key={p.peerId} className="aspect-video w-full">
+                               <VideoCard 
+                                 stream={p.stream} 
+                                 label={p.userName} 
+                                 isOff={!p.stream} 
+                                 isHandRaised={raisedHands[uId]} 
+                               />
+                             </div>
+                           );
+                        }
+                     });
+
+                     return items;
+                  })()}
+               </div>
+            </div>
           )}
         </div>
 
@@ -902,6 +1001,10 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.2); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(59, 130, 246, 0.4); }
       `}} />
     </div>
   )
