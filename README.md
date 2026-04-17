@@ -1,7 +1,5 @@
 <div align="center">
 
-![IntellMeet Banner] 
-
 # 🤖 IntellMeet: AI-Powered Enterprise Meeting Platform
 
 ### *Transforming conversations into actionable insights.*
