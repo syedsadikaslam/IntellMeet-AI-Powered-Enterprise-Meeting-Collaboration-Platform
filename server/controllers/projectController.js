@@ -41,7 +41,7 @@ const createProject = async (req, res) => {
 // @access  Private
 const addTaskToProject = async (req, res) => {
   try {
-    const { title, priority, assignee, meetingOrigin } = req.body;
+    const { title, priority, assignee, description, meetingOrigin } = req.body;
     const project = await Project.findById(req.params.id);
     
     if (!project) return res.status(404).json({ message: 'Project not found' });
@@ -49,6 +49,7 @@ const addTaskToProject = async (req, res) => {
     const newTask = {
       title,
       priority: priority || 'medium',
+      description,
       assignee,
       meetingOrigin,
       status: 'todo'
@@ -56,8 +57,16 @@ const addTaskToProject = async (req, res) => {
     
     project.tasks.push(newTask);
     await project.save();
+
+    // Populate and return
+    const updatedProject = await Project.findById(project._id)
+      .populate({
+        path: 'team',
+        populate: { path: 'members.user', select: 'name avatar email' }
+      })
+      .populate('tasks.assignee', 'name avatar');
     
-    res.status(201).json(project);
+    res.status(201).json(updatedProject);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -68,7 +77,7 @@ const addTaskToProject = async (req, res) => {
 // @access  Private
 const updateTask = async (req, res) => {
   try {
-    const { status, title, priority } = req.body;
+    const { status, title, priority, description, assignee } = req.body;
     const project = await Project.findById(req.params.id);
     
     if (!project) return res.status(404).json({ message: 'Project not found' });
@@ -79,9 +88,19 @@ const updateTask = async (req, res) => {
     if (status) task.status = status;
     if (title) task.title = title;
     if (priority) task.priority = priority;
+    if (description !== undefined) task.description = description;
+    if (assignee !== undefined) task.assignee = assignee;
     
     await project.save();
-    res.json(project);
+
+    const updatedProject = await Project.findById(project._id)
+      .populate({
+        path: 'team',
+        populate: { path: 'members.user', select: 'name avatar email' }
+      })
+      .populate('tasks.assignee', 'name avatar');
+
+    res.json(updatedProject);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
