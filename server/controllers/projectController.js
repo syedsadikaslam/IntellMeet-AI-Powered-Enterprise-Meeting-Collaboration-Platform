@@ -119,7 +119,9 @@ const getProjects = async (req, res) => {
       ]
     });
     const teamIds = teams.map(t => t._id);
-    let projects = await Project.find({ team: { $in: teamIds } }).populate('team', 'name joinCode owner members');
+    let projects = await Project.find({ team: { $in: teamIds } })
+      .populate('team', 'name joinCode owner members')
+      .populate('tasks.assignee', 'name avatar');
 
     let updated = false;
     for (let project of projects) {
@@ -170,7 +172,8 @@ const getProjectById = async (req, res) => {
           path: 'members.user',
           select: 'name avatar email'
         }
-      });
+      })
+      .populate('tasks.assignee', 'name avatar');
     if (!project) return res.status(404).json({ message: 'Project not found' });
     res.json(project);
   } catch (error) {

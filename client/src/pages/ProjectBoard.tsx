@@ -129,7 +129,10 @@ export default function ProjectBoard({ projectId: propProjectId }: { projectId?:
     </div>
   )
 
-  const activeMyTasks = project?.tasks.filter(t => t.assignee?._id === currentUser?.id && t.status !== 'done') || []
+  const activeMyTasks = project?.tasks.filter(t => {
+    const assigneeId = (t.assignee as any)?._id || (typeof t.assignee === 'string' ? t.assignee : null);
+    return assigneeId === currentUser?.id && t.status !== 'done';
+  }) || []
 
   const tasksByAssignee = project?.team?.members.reduce((acc, member) => {
     acc[member.user._id] = project.tasks.filter(t => t.assignee?._id === member.user._id);
