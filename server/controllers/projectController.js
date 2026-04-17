@@ -144,9 +144,9 @@ const getProjects = async (req, res) => {
 const getProjectById = async (req, res) => {
   try {
     const project = await Project.findById(req.params.id)
-      .populate('team', 'name joinCode owner members')
       .populate({
         path: 'team',
+        select: 'name joinCode owner members',
         populate: {
           path: 'members.user',
           select: 'name avatar email'

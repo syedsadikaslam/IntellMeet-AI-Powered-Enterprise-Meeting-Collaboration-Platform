@@ -169,7 +169,7 @@ export default function ProjectBoard() {
 
       {/* Sidebars */}
       {showChat && project?.team && (
-        <div className="fixed inset-y-0 right-0 z-[100] flex animate-in slide-in-from-right duration-500">
+        <div className="fixed inset-y-0 right-0 z-[150] flex animate-in slide-in-from-right duration-500">
            <TeamChat 
              teamId={project.team._id} 
              teamName={project.team.name} 
