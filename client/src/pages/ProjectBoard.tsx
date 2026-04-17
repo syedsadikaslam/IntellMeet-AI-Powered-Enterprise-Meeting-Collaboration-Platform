@@ -167,14 +167,15 @@ export default function ProjectBoard() {
           </div>
       </header>
 
-      {/* Sidebars */}
+      {/* Team Chat Slide-over with Backdrop */}
       {showChat && project?.team && (
-        <div className="fixed inset-y-0 right-0 z-[150] flex animate-in slide-in-from-right duration-500">
-           <TeamChat 
-             teamId={project.team._id} 
-             teamName={project.team.name} 
-             onClose={() => setShowChat(false)} 
-           />
+        <div className="fixed inset-y-0 right-0 z-[120] flex">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowChat(false)} />
+          <TeamChat 
+            teamId={project.team._id} 
+            teamName={project.team.name} 
+            onClose={() => setShowChat(false)} 
+          />
         </div>
       )}
 

@@ -1,3 +1,4 @@
+const Team = require('../models/Team');
 const crypto = require('crypto');
 
 // @desc    Get user teams

@@ -88,7 +88,11 @@ export default function Dashboard() {
       const response = await api.get('/projects')
       setProjects(response.data)
       if (response.data.length > 0) {
-        if (!activeTeamId) setActiveTeamId(response.data[0].team);
+        if (!activeTeamId) {
+          const firstProject = response.data[0];
+          const teamId = typeof firstProject.team === 'object' ? firstProject.team._id : firstProject.team;
+          setActiveTeamId(teamId);
+        }
         setSelectedProjectId(response.data[0]._id);
       }
     } catch (error) {
