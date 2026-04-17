@@ -667,17 +667,17 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
               )}
             </div>
           ) : (
-            /* Spotlight Layout for 3+ people */
-            <div className="h-full flex flex-col gap-6 max-w-7xl mx-auto">
-               {/* 1. Stage (Admin Area) */}
-               <div className="flex-1 min-h-[50%] flex items-center justify-center">
+            /* Google Meet Style Spotlight Layout for 3+ people */
+            <div className="h-full flex flex-col md:flex-row gap-4 md:gap-6 max-w-[1600px] mx-auto overflow-hidden">
+               {/* 1. Main Stage (Admin/Pinned Area) - Left on Desktop */}
+               <div className="flex-1 min-h-0 flex items-center justify-center bg-card/40 rounded-[32px] border border-border/40 p-2 md:p-4">
                   {(() => {
                      const hostId = meetingData?.host?._id || meetingData?.host;
                      const isLocalHost = user?.id === hostId;
                      
                      if (isLocalHost) {
                         return (
-                          <div className="w-full h-full max-w-4xl max-h-full">
+                          <div className="w-full h-full max-w-5xl max-h-full">
                             <VideoCard 
                               stream={localStream!} 
                               label={`${user?.name} (Host)`} 
@@ -695,7 +695,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
 
                         if (hostPeer) {
                            return (
-                             <div className="w-full h-full max-w-4xl max-h-full">
+                             <div className="w-full h-full max-w-5xl max-h-full">
                                <VideoCard 
                                  stream={hostPeer.stream} 
                                  label={`${hostPeer.userName} (Host)`} 
@@ -705,10 +705,9 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
                              </div>
                            )
                         } else {
-                           // Fallback if host not found or joined yet
                            return (
-                             <div className="w-full h-full max-w-4xl max-h-full aspect-video rounded-3xl bg-muted flex items-center justify-center">
-                                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground opacity-40">Host is preparing the stage...</p>
+                             <div className="w-full h-full max-w-5xl max-h-full aspect-video rounded-3xl bg-muted/30 border border-dashed border-border flex items-center justify-center">
+                                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground opacity-40">Connecting to stage...</p>
                              </div>
                            )
                         }
@@ -716,8 +715,8 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
                   })()}
                </div>
 
-               {/* 2. Gallery (Member Area) */}
-               <div className="flex-none grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 max-h-[40%] overflow-y-auto pr-2 custom-scrollbar">
+               {/* 2. Right Sidebar Gallery (Member Area) - Bottom on Mobile */}
+               <div className="flex-none w-full md:w-72 lg:w-80 flex flex-row md:flex-col gap-3 overflow-x-auto md:overflow-y-auto md:overflow-x-hidden p-1 custom-scrollbar scrollbar-hide">
                   {/* Render everyone who is NOT the host */}
                   {(() => {
                      const hostId = meetingData?.host?._id || meetingData?.host;
@@ -726,7 +725,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
                      // Add local if not host
                      if (user?.id !== hostId) {
                         items.push(
-                          <div key="local-member" className="aspect-video w-full">
+                          <div key="local-member" className="flex-none aspect-video w-40 sm:w-48 md:w-full">
                             <VideoCard 
                               stream={localStream!} 
                               label={`${user?.name} (You)`} 
@@ -744,7 +743,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
                         const uId = part?.userId || '';
                         if (uId !== hostId) {
                            items.push(
-                             <div key={p.peerId} className="aspect-video w-full">
+                             <div key={p.peerId} className="flex-none aspect-video w-40 sm:w-48 md:w-full">
                                <VideoCard 
                                  stream={p.stream} 
                                  label={p.userName} 
@@ -758,6 +757,9 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
 
                      return items;
                   })()}
+
+                  {/* Empty state padding and aesthetic gap */}
+                  <div className="hidden md:block h-32 w-full" />
                </div>
             </div>
           )}
