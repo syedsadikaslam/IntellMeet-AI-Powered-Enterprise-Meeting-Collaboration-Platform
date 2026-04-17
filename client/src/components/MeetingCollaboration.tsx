@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Edit3, CheckSquare, Plus, User, Target, X, Save } from 'lucide-react';
+import { Edit3, CheckSquare, Plus, User, Target, X, Save, ShieldCheck } from 'lucide-react';
 import { socket } from '../utils/socket';
 
 interface Task {
