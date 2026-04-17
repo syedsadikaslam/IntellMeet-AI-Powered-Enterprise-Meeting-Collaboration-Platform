@@ -72,6 +72,12 @@ export default function ProjectBoard({ projectId: propProjectId }: { projectId?:
     };
   }, [projectId]);
 
+  useEffect(() => {
+    if (project && !isAdmin && viewMode === 'all') {
+      setViewMode('my')
+    }
+  }, [project, isAdmin])
+
   const fetchProject = async () => {
     if (!projectId) {
       setIsLoading(false);
@@ -123,9 +129,7 @@ export default function ProjectBoard({ projectId: propProjectId }: { projectId?:
     </div>
   )
 
-  const filteredTasks = viewMode === 'my' 
-    ? project?.tasks.filter(t => t.assignee?._id === currentUser?._id) 
-    : project?.tasks
+  const activeMyTasks = project?.tasks.filter(t => t.assignee?._id === currentUser?._id && t.status !== 'done') || []
 
   const tasksByAssignee = project?.team?.members.reduce((acc, member) => {
     acc[member.user._id] = project.tasks.filter(t => t.assignee?._id === member.user._id);
@@ -152,17 +156,6 @@ export default function ProjectBoard({ projectId: propProjectId }: { projectId?:
           </div>
 
           <div className="flex items-center gap-2 sm:gap-6">
-             {isAdmin && (
-               <button 
-                 onClick={() => setShowAssignModal(true)}
-                 className="flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-2.5 sm:py-3.5 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl sm:rounded-2xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest shadow-xl shadow-blue-600/20 hover:scale-105 active:scale-95 transition-all border border-white/10"
-               >
-                 <Plus size={14} className="sm:w-4 sm:h-4" />
-                 <span className="hidden xs:inline">Distribute Work</span>
-                 <span className="xs:hidden">Assign</span>
-               </button>
-             )}
-             
              <button 
                onClick={() => setShowChat(!showChat)}
                className={`p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl transition-all shadow-lg active:scale-95 border ${
@@ -197,12 +190,23 @@ export default function ProjectBoard({ projectId: propProjectId }: { projectId?:
                      >
                         Team Distribution
                      </button>
-                     <button 
-                       onClick={() => setViewMode('my')}
-                       className={`px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'my' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-muted/50 text-muted-foreground hover:bg-muted'}`}
-                     >
-                        My Assignments
-                     </button>
+                     
+                     {isAdmin ? (
+                        <button 
+                          onClick={() => setShowAssignModal(true)}
+                          className="px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-gradient-to-r from-blue-600 to-violet-600 text-white shadow-lg shadow-blue-600/20 hover:scale-105 active:scale-95 transition-all border border-white/10 flex items-center gap-2"
+                        >
+                           <Plus size={12} />
+                           Assign New Task
+                        </button>
+                     ) : (
+                        <button 
+                          onClick={() => setViewMode('my')}
+                          className={`px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'my' ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-muted/50 text-muted-foreground hover:bg-muted'}`}
+                        >
+                           My Assignments
+                        </button>
+                     )}
                   </div>
                </div>
                
@@ -222,8 +226,8 @@ export default function ProjectBoard({ projectId: propProjectId }: { projectId?:
             <div className="space-y-16">
               {viewMode === 'all' ? (
                 <>
-                  {/* Unassigned Work */}
-                  {unassignedTasks.length > 0 && (
+                  {/* Unassigned Work (Visible to Admin) */}
+                  {isAdmin && unassignedTasks.length > 0 && (
                     <section className="space-y-6">
                       <div className="flex items-center gap-4 px-2">
                         <AlertCircle className="text-orange-500" size={20} />
@@ -249,7 +253,7 @@ export default function ProjectBoard({ projectId: propProjectId }: { projectId?:
                             </div>
                             <div>
                                <h3 className="text-xs font-black uppercase tracking-widest">{member.user.name}</h3>
-                               <p className="text-[9px] font-black uppercase text-blue-600/60 leading-none mt-1">{member.role}</p>
+                               <p className="text-[9px] font-black uppercase text-blue-600/60 leading-none mt-1">{member.role} {member.user._id === currentUser?._id && '(You)'}</p>
                             </div>
                           </div>
                           <span className="text-[10px] font-black text-muted-foreground bg-muted/50 px-3 py-1 rounded-full uppercase tracking-widest">{userTasks.length} Tasks</span>
@@ -272,14 +276,15 @@ export default function ProjectBoard({ projectId: propProjectId }: { projectId?:
                 </>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                   {filteredTasks?.length ? filteredTasks.map(task => (
+                   {activeMyTasks.length ? activeMyTasks.map(task => (
                       <TaskCard key={task._id} task={task} onStatusUpdate={updateTaskStatus} isAdmin={isAdmin} />
                    )) : (
                      <div className="col-span-full py-20 bg-muted/5 rounded-[40px] border border-dashed border-border flex flex-col items-center justify-center gap-6">
                         <div className="w-16 h-16 bg-muted/20 rounded-full flex items-center justify-center text-muted-foreground/20">
                            <ShieldCheck size={32} />
                         </div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">Your workspace is clear</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">Your active queue is clear</p>
+                        <p className="text-[8px] font-black uppercase tracking-widest text-blue-600/40">Check Team Distribution for completed work</p>
                      </div>
                    )}
                 </div>
