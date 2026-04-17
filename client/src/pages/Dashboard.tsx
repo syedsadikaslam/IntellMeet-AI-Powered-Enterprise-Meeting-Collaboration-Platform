@@ -308,22 +308,13 @@ export default function Dashboard() {
                         <span className="absolute -top-6 left-2 text-[8px] font-black text-muted-foreground/40 uppercase tracking-widest">Collab Infrastructure</span>
                      </form>
                      
-                     <div className="grid grid-cols-2 gap-4">
+                     <div className="grid grid-cols-1 gap-4">
                        <button 
                          onClick={() => setShowCreateModal(true)}
-                         className="flex items-center justify-center gap-3 bg-blue-600 text-white py-4 rounded-2xl font-black text-[10px] tracking-widest hover:bg-blue-500 transition-all active:scale-95 shadow-lg group"
+                         className="flex items-center justify-center gap-3 bg-blue-600 text-white py-5 rounded-2xl font-black text-[10px] tracking-widest hover:bg-blue-500 transition-all active:scale-95 shadow-lg group"
                        >
                          <Plus size={18} className="group-hover:rotate-90 transition-transform" />
-                         DEPLOY
-                       </button>
-                       <button 
-                         onClick={() => setShowChat(!showChat)}
-                         className={`flex items-center justify-center gap-3 py-4 rounded-2xl font-black text-[10px] tracking-widest transition-all active:scale-95 border ${
-                           showChat ? 'bg-blue-600 text-white border-blue-500' : 'bg-muted text-foreground border-border hover:bg-muted/80'
-                         }`}
-                       >
-                         <MessageSquare size={18} />
-                         TEAM CHAT
+                         DEPLOY NEW SESSION
                        </button>
                      </div>
 
