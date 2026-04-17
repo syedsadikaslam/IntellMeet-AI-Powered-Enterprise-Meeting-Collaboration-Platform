@@ -127,7 +127,11 @@ export default function ProjectBoard({ projectId: propProjectId }: { projectId?:
 
   const submitMemberNote = async (taskId: string) => {
     try {
-      const res = await api.put(`/projects/${projectId}/tasks/${taskId}`, { memberNote: noteContent });
+      // Logic: Submitting a report automatically marks the task as COMPLETED
+      const res = await api.put(`/projects/${projectId}/tasks/${taskId}`, { 
+        memberNote: noteContent,
+        status: 'done' 
+      });
       setProject(res.data);
       setEditingNoteId(null);
       setNoteContent('');
@@ -470,7 +474,7 @@ export default function ProjectBoard({ projectId: propProjectId }: { projectId?:
                    className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-blue-600/20 hover:bg-blue-500 active:scale-95 transition-all flex items-center justify-center gap-3"
                  >
                     <Send size={16} />
-                    Submit Report
+                    Submit & Complete Task
                  </button>
               </div>
            </div>
