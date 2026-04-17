@@ -41,8 +41,9 @@ const COLUMNS = [
   { id: 'done', title: 'Done', color: 'bg-green-500' },
 ]
 
-export default function ProjectBoard() {
-  const { projectId } = useParams()
+export default function ProjectBoard({ projectId: propProjectId }: { projectId?: string }) {
+  const { projectId: urlProjectId } = useParams()
+  const projectId = propProjectId || urlProjectId;
   const [project, setProject] = useState<Project | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [showChat, setShowChat] = useState(false)
