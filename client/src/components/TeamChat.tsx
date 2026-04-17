@@ -3,6 +3,7 @@ import { Send, X, MessageSquare, User, AtSign } from 'lucide-react';
 import api from '../utils/api';
 import { socket, connectSocket } from '../utils/socket';
 import { useAuthStore } from '../store/useAuthStore';
+import { useTheme } from '../providers/ThemeContext';
 
 interface Message {
   _id: string;
@@ -23,10 +24,13 @@ interface TeamChatProps {
 
 export default function TeamChat({ teamId, teamName, onClose }: TeamChatProps) {
   const { user } = useAuthStore();
+  const { theme } = useTheme();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const isDark = theme === 'dark';
 
   useEffect(() => {
     fetchMessages();
@@ -84,18 +88,18 @@ export default function TeamChat({ teamId, teamName, onClose }: TeamChatProps) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-[#0a0f1d] border-l border-border w-full sm:w-80 md:w-96 shadow-2xl animate-in slide-in-from-right duration-300 relative z-[130]">
+    <div className={`flex flex-col h-full border-l border-border w-full sm:w-80 md:w-96 shadow-2xl animate-in slide-in-from-right duration-300 relative z-[130] ${isDark ? 'bg-[#0a0f1d]' : 'bg-white'}`}>
       {/* Header */}
-      <div className="p-6 border-b border-border flex items-center justify-between bg-muted/50 dark:bg-muted/10">
+      <div className={`p-6 border-b border-border flex items-center justify-between ${isDark ? 'bg-muted/10' : 'bg-muted/30'}`}>
         <div className="flex items-center gap-3">
           <div className="p-2 bg-blue-500/10 rounded-xl text-blue-600 dark:text-blue-400">
             <MessageSquare size={18} />
           </div>
           <div>
-            <h3 className="font-black text-sm uppercase tracking-tighter text-slate-900 dark:text-slate-100">{teamName} Chat</h3>
+            <h3 className={`font-black text-sm uppercase tracking-tighter ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>{teamName} Chat</h3>
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-black uppercase tracking-widest">Team Pipeline</span>
+              <span className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Team Pipeline</span>
             </div>
           </div>
         </div>
