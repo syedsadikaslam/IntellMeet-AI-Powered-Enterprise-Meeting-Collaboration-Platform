@@ -241,8 +241,8 @@ export default function ProjectBoard({ projectId: propProjectId }: { projectId?:
                     </section>
                   )}
 
-                  {/* Team Workload */}
-                  {project?.team?.members.map(member => {
+                  {/* Team Workload (Members Only) */}
+                  {project?.team?.members.filter(m => m.role === 'Member').map(member => {
                     const userTasks = tasksByAssignee[member.user._id] || []
                     return (
                       <section key={member.user._id} className="space-y-6">
