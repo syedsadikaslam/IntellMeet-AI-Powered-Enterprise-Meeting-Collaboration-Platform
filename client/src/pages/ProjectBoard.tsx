@@ -51,8 +51,6 @@ export default function ProjectBoard({ projectId: propProjectId }: { projectId?:
   
   const [newTask, setNewTask] = useState({ title: '', description: '', priority: 'medium', assigneeId: '' })
 
-  const isAdmin = project?.team?.owner === currentUser?._id || project?.team?.members.find(m => m.user._id === currentUser?._id)?.role === 'Admin'
-
   useEffect(() => {
     fetchProject();
     connectSocket();
