@@ -261,7 +261,7 @@ export default function Dashboard() {
               </div>
            </div>
            
-           <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4">
                <div className="w-full bg-card border border-border p-6 sm:p-8 rounded-[36px] sm:rounded-[48px] backdrop-blur-xl shadow-xl">
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground font-mono">Operations Console</h3>
@@ -493,8 +493,9 @@ export default function Dashboard() {
                            <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Efficiency Protocol</span>
                         </div>
                         
-                        <h3 className="text-xl font-black mb-2 tracking-tight uppercase text-foreground">Performance Velocity</h3>
-                        <PerformanceChart data={performanceData} />
+                         <div className="h-64 w-full">
+                            <PerformanceChart data={performanceData} />
+                         </div>
                         
                         <div className="grid grid-cols-2 gap-4 mt-8">
                            <div className="bg-muted p-4 rounded-2xl border border-border">
