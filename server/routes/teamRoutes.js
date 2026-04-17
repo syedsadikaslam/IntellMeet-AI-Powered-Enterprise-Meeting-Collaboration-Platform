@@ -4,5 +4,6 @@ const { getMyTeams, createTeam } = require('../controllers/teamController');
 const { protect } = require('../middleware/authMiddleware');
 
 router.route('/').get(protect, getMyTeams).post(protect, createTeam);
+router.route('/join').post(protect, joinTeam);
 
 module.exports = router;

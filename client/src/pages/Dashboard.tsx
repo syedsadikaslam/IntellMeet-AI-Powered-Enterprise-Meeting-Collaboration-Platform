@@ -52,6 +52,7 @@ export default function Dashboard() {
   const [performanceData, setPerformanceData] = useState<any[]>([])
   const [isCreatingProject, setIsCreatingProject] = useState(false)
   const [newProjectName, setNewProjectName] = useState('')
+  const [joinTeamCode, setJoinTeamCode] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
   const socketRef = useRef<Socket | null>(null)
 
@@ -121,6 +122,20 @@ export default function Dashboard() {
     e.preventDefault()
     if (joinCode.trim()) {
       window.location.hash = `#/meeting/${joinCode}`
+    }
+  }
+
+  const handleJoinTeam = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!joinTeamCode.trim()) return;
+    try {
+      await api.post('/teams/join', { code: joinTeamCode });
+      setJoinTeamCode('');
+      fetchProjects();
+      alert('Successfully joined the workspace!');
+    } catch (error: any) {
+      console.error('Failed to join team', error);
+      alert(error.response?.data?.message || 'Failed to join workspace.');
     }
   }
 
@@ -244,19 +259,35 @@ export default function Dashboard() {
                       <Plus size={14} />
                     </button>
                   </div>
-                  <div className="space-y-4">
-                     <form onSubmit={handleJoinByCode} className="relative group/join mt-8">
+                   <div className="space-y-6">
+                     <form onSubmit={handleJoinByCode} className="relative group/join">
                         <input 
                           type="text"
                           placeholder="Enter Room Code..."
                           value={joinCode}
                           onChange={(e) => setJoinCode(e.target.value)}
-                          className="w-full bg-muted border border-border rounded-2xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:border-blue-500/50 focus:bg-muted/80 transition-all font-bold placeholder:text-muted-foreground/30 text-foreground"
+                          className="w-full bg-muted border border-border rounded-2xl py-4 pl-12 pr-4 text-xs focus:outline-none focus:border-blue-500/50 focus:bg-muted/80 transition-all font-bold placeholder:text-muted-foreground/30 text-foreground"
                         />
-                        <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within/join:text-blue-500 transition-colors" />
+                        <Video size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within/join:text-blue-500 transition-colors" />
                         <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-500 transition-all shadow-lg active:scale-95">
                            <ArrowRight size={18} />
                         </button>
+                        <span className="absolute -top-6 left-2 text-[8px] font-black text-muted-foreground/40 uppercase tracking-widest">Meeting Portal</span>
+                     </form>
+
+                     <form onSubmit={handleJoinTeam} className="relative group/join-team">
+                        <input 
+                          type="text"
+                          placeholder="Enter Workspace Code..."
+                          value={joinTeamCode}
+                          onChange={(e) => setJoinTeamCode(e.target.value)}
+                          className="w-full bg-muted border border-border rounded-2xl py-4 pl-12 pr-4 text-xs focus:outline-none focus:border-blue-500/50 focus:bg-muted/80 transition-all font-bold placeholder:text-muted-foreground/30 text-foreground shadow-sm"
+                        />
+                        <Layout size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within/join-team:text-blue-500 transition-colors" />
+                        <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 bg-violet-600 text-white rounded-xl hover:bg-violet-500 transition-all shadow-lg active:scale-95">
+                           <ArrowRight size={18} />
+                        </button>
+                        <span className="absolute -top-6 left-2 text-[8px] font-black text-muted-foreground/40 uppercase tracking-widest">Collab Infrastructure</span>
                      </form>
                      
                      <div className="grid grid-cols-2 gap-4">
@@ -290,7 +321,10 @@ export default function Dashboard() {
                                  <div className="p-2 bg-violet-500/10 text-violet-600 dark:text-violet-400 rounded-lg group-hover:bg-violet-600 group-hover:text-white transition-all">
                                     <Layout size={16} />
                                  </div>
-                                 <span className="text-sm font-bold truncate text-foreground">{p.name}</span>
+                                 <div className="flex flex-col">
+                                    <span className="text-xs font-black truncate text-foreground uppercase tracking-tight">{(p as any).name}</span>
+                                    <span className="text-[8px] font-bold text-muted-foreground/60 uppercase">Code: {(p as any).team?.joinCode || 'N/A'}</span>
+                                 </div>
                                </div>
                                <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all text-foreground" />
                             </a>

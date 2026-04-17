@@ -99,7 +99,7 @@ const getProjects = async (req, res) => {
       ]
     });
     const teamIds = teams.map(t => t._id);
-    const projects = await Project.find({ team: { $in: teamIds } });
+    const projects = await Project.find({ team: { $in: teamIds } }).populate('team', 'name joinCode');
     res.json(projects);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });

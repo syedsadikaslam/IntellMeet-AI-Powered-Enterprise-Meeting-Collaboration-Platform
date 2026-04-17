@@ -27,6 +27,11 @@ const teamSchema = new mongoose.Schema(
         },
       },
     ],
+    joinCode: {
+      type: String,
+      unique: true,
+      required: true,
+    },
     projects: [
       {
         type: mongoose.Schema.Types.ObjectId,
