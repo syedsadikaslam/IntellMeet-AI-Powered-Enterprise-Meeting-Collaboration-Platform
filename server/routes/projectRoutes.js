@@ -7,6 +7,7 @@ const {
   createProject,
   addTaskToProject,
   updateTask,
+  deleteProject,
 } = require('../controllers/projectController');
 const { protect } = require('../middleware/authMiddleware');
 
