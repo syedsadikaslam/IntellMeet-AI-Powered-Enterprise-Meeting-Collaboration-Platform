@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
-import { Plus, Calendar, User, Layout, Search, ShieldCheck } from 'lucide-react'
+import { Plus, Calendar, User, Layout, Search, ShieldCheck, MessageSquare, X } from 'lucide-react'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import api from '../utils/api'
 import { useParams } from 'react-router-dom'
 import { socket, connectSocket } from '../utils/socket'
+import TeamChat from '../components/TeamChat'
 
 interface Task {
   _id: string
@@ -20,6 +20,18 @@ interface Project {
   _id: string
   name: string
   tasks: Task[]
+  team?: {
+    _id: string
+    name: string
+    members: Array<{
+      user: {
+        _id: string
+        name: string
+        avatar?: string
+      }
+      role: string
+    }>
+  }
 }
 
 const COLUMNS = [
@@ -32,6 +44,7 @@ export default function ProjectBoard() {
   const { projectId } = useParams()
   const [project, setProject] = useState<Project | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [showChat, setShowChat] = useState(false)
 
   useEffect(() => {
     fetchProject();
@@ -127,14 +140,23 @@ export default function ProjectBoard() {
           </div>
 
           <div className="flex items-center gap-3 sm:gap-6">
-             <div className="relative group hidden lg:block">
-                <input 
-                  type="text" 
-                  placeholder="Query Subsystems..." 
-                  className="bg-muted border border-border rounded-2xl py-3 pl-11 pr-5 text-xs font-bold focus:outline-none focus:border-blue-500/50 w-64 lg:w-72 transition-all shadow-inner"
-                />
-                <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-blue-500 transition-colors" />
-             </div>
+             {project?.team && (
+               <div className="flex items-center gap-2 bg-blue-500/10 px-3 py-1.5 rounded-full border border-blue-500/20 active:scale-95 transition-all cursor-pointer hover:bg-blue-500/20 shadow-sm" title="Workspace Members">
+                 <User size={12} className="text-blue-600 dark:text-blue-400" />
+                 <span className="text-[10px] font-black uppercase text-blue-600 dark:text-blue-400">{project.team.members.length} Members</span>
+               </div>
+             )}
+             
+             <button 
+               onClick={() => setShowChat(!showChat)}
+               className={`p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl transition-all shadow-lg active:scale-95 border ${
+                 showChat ? 'bg-blue-600 text-white border-blue-500 shadow-blue-600/20' : 'bg-muted text-foreground border-border hover:bg-muted/80 shadow-inner'
+               }`}
+               title="Team Chat"
+             >
+                <MessageSquare size={18} />
+             </button>
+
              <button 
                onClick={() => window.location.hash = '#/dashboard'}
                className="px-4 sm:px-6 py-2.5 sm:py-3.5 bg-blue-600 text-white hover:bg-blue-500 rounded-xl sm:rounded-2xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 active:scale-95 border border-blue-500/50"
@@ -143,6 +165,17 @@ export default function ProjectBoard() {
              </button>
           </div>
       </header>
+
+      {/* Sidebars */}
+      {showChat && project?.team && (
+        <div className="fixed inset-y-0 right-0 z-[100] flex animate-in slide-in-from-right duration-500">
+           <TeamChat 
+             teamId={project.team._id} 
+             teamName={project.team.name} 
+             onClose={() => setShowChat(false)} 
+           />
+        </div>
+      )}
 
       <main className="p-4 sm:p-12">
         <DragDropContext onDragEnd={onDragEnd}>

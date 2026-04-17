@@ -143,7 +143,15 @@ const getProjects = async (req, res) => {
 // @access  Private
 const getProjectById = async (req, res) => {
   try {
-    const project = await Project.findById(req.params.id).populate('team', 'name joinCode owner members');
+    const project = await Project.findById(req.params.id)
+      .populate('team', 'name joinCode owner members')
+      .populate({
+        path: 'team',
+        populate: {
+          path: 'members.user',
+          select: 'name avatar email'
+        }
+      });
     if (!project) return res.status(404).json({ message: 'Project not found' });
     res.json(project);
   } catch (error) {

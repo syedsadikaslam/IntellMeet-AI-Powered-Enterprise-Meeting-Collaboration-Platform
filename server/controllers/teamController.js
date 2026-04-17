@@ -70,11 +70,13 @@ const joinTeam = async (req, res) => {
     if (!code) return res.status(400).json({ message: 'Please provide a join code' });
 
     const team = await Team.findOne({ joinCode: code.toUpperCase() });
-    if (!team) return res.status(404).json({ message: 'Invalid join code' });
+    if (!team) return res.status(404).json({ message: 'Invalid join code. Please check the code and try again.' });
 
     // Check if user is already a member
     const isMember = team.members.find(m => m.user.toString() === req.user._id.toString());
-    if (isMember) return res.status(400).json({ message: 'You are already a member of this team' });
+    if (isMember) {
+       return res.status(400).json({ message: 'You are already a member of this workspace.' });
+    }
 
     team.members.push({ user: req.user._id, role: 'Member' });
     await team.save();

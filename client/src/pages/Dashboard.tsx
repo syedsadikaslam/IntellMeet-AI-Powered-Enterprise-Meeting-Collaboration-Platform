@@ -337,7 +337,15 @@ export default function Dashboard() {
                                  </div>
                                  <div className="flex flex-col">
                                     <span className="text-xs font-black truncate text-foreground uppercase tracking-tight">{(p as any).name}</span>
-                                    <span className="text-[8px] font-bold text-muted-foreground/60 uppercase">Code: {(p as any).team?.joinCode || 'N/A'}</span>
+                                    <div className="flex items-center gap-2">
+                                       <span className="text-[8px] font-bold text-muted-foreground/60 uppercase tracking-tighter">Code: {(p as any).team?.joinCode || 'N/A'}</span>
+                                       {(p as any).team?.members && (
+                                         <span className="flex items-center gap-1 text-[8px] font-black text-blue-500 bg-blue-500/10 px-1.5 py-0.5 rounded-full uppercase tracking-tighter">
+                                            <User size={8} />
+                                            {(p as any).team.members.length}
+                                         </span>
+                                       )}
+                                    </div>
                                  </div>
                                </div>
                                <div className="flex items-center gap-2">
