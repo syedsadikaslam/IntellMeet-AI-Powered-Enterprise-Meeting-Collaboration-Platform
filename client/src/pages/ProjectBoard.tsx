@@ -155,10 +155,11 @@ export default function ProjectBoard({ projectId: propProjectId }: { projectId?:
              {isAdmin && (
                <button 
                  onClick={() => setShowAssignModal(true)}
-                 className="hidden md:flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-blue-600/20 hover:scale-105 active:scale-95 transition-all border border-white/10"
+                 className="flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-2.5 sm:py-3.5 bg-gradient-to-r from-blue-600 to-violet-600 text-white rounded-xl sm:rounded-2xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest shadow-xl shadow-blue-600/20 hover:scale-105 active:scale-95 transition-all border border-white/10"
                >
-                 <Plus size={16} />
-                 Distribute Work
+                 <Plus size={14} className="sm:w-4 sm:h-4" />
+                 <span className="hidden xs:inline">Distribute Work</span>
+                 <span className="xs:hidden">Assign</span>
                </button>
              )}
              
