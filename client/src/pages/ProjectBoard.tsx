@@ -127,41 +127,43 @@ export default function ProjectBoard({ projectId: propProjectId }: { projectId?:
 
   return (
     <div className="h-screen flex flex-col bg-background text-foreground font-sans selection:bg-blue-600/20 overflow-hidden">
-      <header className="h-20 sm:h-24 border-b border-border bg-background/80 backdrop-blur-2xl sticky top-0 z-50 px-4 sm:px-12 flex items-center justify-between flex-shrink-0">
-          <div className="flex items-center gap-3 sm:gap-8">
-             <div className="p-2.5 sm:p-3.5 bg-gradient-to-br from-blue-600 to-violet-600 rounded-[18px] sm:rounded-[22px] shadow-xl shadow-blue-600/20">
-                <Layout size={18} className="text-white sm:w-5 sm:h-5" />
+      <header className="h-20 sm:h-24 border-b border-border bg-background/80 backdrop-blur-2xl sticky top-0 z-50 px-3 sm:px-12 flex items-center justify-between flex-shrink-0">
+          <div className="flex items-center gap-2 sm:gap-8">
+             <div className="p-2 sm:p-3.5 bg-gradient-to-br from-blue-600 to-violet-600 rounded-[15px] sm:rounded-[22px] shadow-xl shadow-blue-600/20">
+                <Layout size={16} className="text-white sm:w-5 sm:h-5" />
              </div>
-             <div>
-                <h1 className="text-lg sm:text-2xl font-black tracking-tight uppercase leading-none truncate max-w-[120px] sm:max-w-none">{project?.name || 'Workspace Board'}</h1>
-                <p className="text-[8px] sm:text-[9px] text-muted-foreground font-black uppercase tracking-[0.2em] flex items-center gap-2 mt-1 sm:mt-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse border border-blue-400/50" />
+             <div className="min-w-0">
+                <h1 className="text-sm sm:text-2xl font-black tracking-tight uppercase leading-none truncate max-w-[100px] xs:max-w-[160px] sm:max-w-none">{project?.name || 'Workspace Board'}</h1>
+                <p className="text-[7px] sm:text-[9px] text-muted-foreground font-black uppercase tracking-[0.2em] flex items-center gap-1.5 mt-1 sm:mt-2">
+                  <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-blue-500 animate-pulse border border-blue-400/50" />
                   Active Space
                 </p>
              </div>
           </div>
 
-          <div className="flex items-center gap-3 sm:gap-6">
+          <div className="flex items-center gap-2 sm:gap-6">
              {project?.team && (
-               <div className="flex items-center gap-2 bg-blue-500/10 px-3 py-1.5 rounded-full border border-blue-500/20 active:scale-95 transition-all cursor-pointer hover:bg-blue-500/20 shadow-sm" title="Workspace Members">
+               <div className="flex items-center gap-1.5 sm:gap-2 bg-blue-500/10 px-2.5 sm:px-3 py-1.5 rounded-full border border-blue-500/20 active:scale-95 transition-all cursor-pointer hover:bg-blue-500/20 shadow-sm" title="Workspace Members">
                  <User size={12} className="text-blue-600 dark:text-blue-400" />
-                 <span className="text-[10px] font-black uppercase text-blue-600 dark:text-blue-400">{project.team.members.length} Members</span>
+                 <span className="text-[10px] font-black uppercase text-blue-600 dark:text-blue-400">
+                   {project.team.members.length} <span className="hidden xs:inline">Members</span>
+                 </span>
                </div>
              )}
              
              <button 
                onClick={() => setShowChat(!showChat)}
-               className={`p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl transition-all shadow-lg active:scale-95 border ${
+               className={`p-2 sm:p-3.5 rounded-xl sm:rounded-2xl transition-all shadow-lg active:scale-95 border ${
                  showChat ? 'bg-blue-600 text-white border-blue-500 shadow-blue-600/20' : 'bg-muted text-foreground border-border hover:bg-muted/80 shadow-inner'
                }`}
                title="Team Chat"
              >
-                <MessageSquare size={18} />
+                <MessageSquare size={16} className="sm:w-[18px] sm:h-[18px]" />
              </button>
 
              <button 
                onClick={() => window.location.hash = '#/dashboard'}
-               className="px-4 sm:px-6 py-2.5 sm:py-3.5 bg-blue-600 text-white hover:bg-blue-500 rounded-xl sm:rounded-2xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 active:scale-95 border border-blue-500/50"
+               className="px-3 sm:px-6 py-2.5 sm:py-3.5 bg-blue-600 text-white hover:bg-blue-500 rounded-xl sm:rounded-2xl font-black text-[9px] sm:text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-blue-600/20 active:scale-95 border border-blue-500/50"
              >
                 Return
              </button>
