@@ -1,6 +1,4 @@
-import { 
-  Calendar, Layout, Plus, Search, Video, ArrowRight, Clock, 
-  ShieldCheck, MessageSquare, Activity, Globe, Zap, FileText, BarChart3, Star, Trash2, User
+  ShieldCheck, MessageSquare, Activity, Globe, Zap, FileText, BarChart3, Star, Trash2, User, Share2
 } from 'lucide-react'
 import React, { useEffect, useState, useRef } from 'react'
 import api from '../utils/api'
@@ -352,15 +350,30 @@ export default function Dashboard() {
                                     </div>
                                  </div>
                                </div>
-                               <div className="flex items-center gap-2">
+                               <div className="flex items-center gap-1 sm:gap-2">
+                                  <button 
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      const code = (p as any).team?.joinCode;
+                                      if (code) {
+                                        navigator.clipboard.writeText(code);
+                                        alert(`Workspace code ${code} copied to clipboard!`);
+                                      }
+                                    }}
+                                    className="p-2 text-muted-foreground/60 hover:text-blue-500 hover:bg-blue-500/10 rounded-lg transition-all"
+                                    title="Copy Join Code"
+                                  >
+                                    <Share2 size={14} />
+                                  </button>
                                   <button 
                                     onClick={(e) => handleDeleteProject(p._id, e)}
-                                    className="p-2 text-muted-foreground/40 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                                    className="p-2 text-muted-foreground/60 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
                                     title="Delete Workspace"
                                   >
                                     <Trash2 size={14} />
                                   </button>
-                                  <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all text-foreground" />
+                                  <ArrowRight size={14} className="text-foreground ml-1" />
                                </div>
                             </a>
                          )) : (
