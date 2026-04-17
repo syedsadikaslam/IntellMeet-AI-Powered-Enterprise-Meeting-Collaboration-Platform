@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Plus, Calendar, User, Layout, Search, ShieldCheck, MessageSquare, X, CheckCircle2, Circle, Clock, MoreVertical, Briefcase, Filter, ChevronRight, AlertCircle } from 'lucide-react'
+import { Plus, Calendar, User, Layout, Search, ShieldCheck, MessageSquare, X, CheckCircle2, Circle, Clock, MoreVertical, Briefcase, Filter, ChevronRight, AlertCircle, FileText, Send, Edit3 } from 'lucide-react'
 import api from '../utils/api'
 import { useParams } from 'react-router-dom'
 import { socket, connectSocket } from '../utils/socket'
@@ -10,6 +10,7 @@ interface Task {
   _id: string
   title: string
   description?: string
+  memberNote?: string
   status: string
   priority: 'low' | 'medium' | 'high'
   assignee?: {
@@ -50,6 +51,10 @@ export default function ProjectBoard({ projectId: propProjectId }: { projectId?:
   const [viewMode, setViewMode] = useState<'all' | 'my'>('all')
   
   const [newTask, setNewTask] = useState({ title: '', description: '', priority: 'medium', assigneeId: '' })
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null)
+  const [noteContent, setNoteContent] = useState('')
+
+  const isAdmin = project?.team?.owner === currentUser?.id || project?.team?.members.find(m => m.user._id === currentUser?.id)?.role === 'Admin'
 
   useEffect(() => {
     fetchProject();
@@ -69,8 +74,6 @@ export default function ProjectBoard({ projectId: propProjectId }: { projectId?:
       socket.off('task-updated-sync');
     };
   }, [projectId]);
-
-  const isAdmin = project?.team?.owner === currentUser?.id || project?.team?.members.find(m => m.user._id === currentUser?.id)?.role === 'Admin'
 
   useEffect(() => {
     if (project && !isAdmin && viewMode === 'all') {
@@ -119,6 +122,18 @@ export default function ProjectBoard({ projectId: propProjectId }: { projectId?:
       socket.emit('task-updated', { projectId, project: res.data });
     } catch (err) {
       console.error('Failed to update status', err);
+    }
+  }
+
+  const submitMemberNote = async (taskId: string) => {
+    try {
+      const res = await api.put(`/projects/${projectId}/tasks/${taskId}`, { memberNote: noteContent });
+      setProject(res.data);
+      setEditingNoteId(null);
+      setNoteContent('');
+      socket.emit('task-updated', { projectId, project: res.data });
+    } catch (err) {
+      console.error('Failed to submit note', err);
     }
   }
 
@@ -238,7 +253,14 @@ export default function ProjectBoard({ projectId: propProjectId }: { projectId?:
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                          {unassignedTasks.map(task => (
-                           <TaskCard key={task._id} task={task} onStatusUpdate={updateTaskStatus} isAdmin={isAdmin} />
+                           <TaskCard 
+                             key={task._id} 
+                             task={task} 
+                             onStatusUpdate={updateTaskStatus} 
+                             isAdmin={isAdmin} 
+                             currentUser={currentUser}
+                             onEditNote={(id, c) => { setEditingNoteId(id); setNoteContent(c || ''); }}
+                           />
                          ))}
                       </div>
                     </section>
@@ -265,7 +287,14 @@ export default function ProjectBoard({ projectId: propProjectId }: { projectId?:
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                            {userTasks.length > 0 ? (
                              userTasks.map(task => (
-                               <TaskCard key={task._id} task={task} onStatusUpdate={updateTaskStatus} isAdmin={isAdmin} />
+                               <TaskCard 
+                                 key={task._id} 
+                                 task={task} 
+                                 onStatusUpdate={updateTaskStatus} 
+                                 isAdmin={isAdmin} 
+                                 currentUser={currentUser}
+                                 onEditNote={(id, c) => { setEditingNoteId(id); setNoteContent(c || ''); }}
+                               />
                              ))
                            ) : (
                              <div className="col-span-full py-8 px-10 bg-muted/5 rounded-[40px] border border-dashed border-border flex flex-col items-center justify-center gap-2">
@@ -280,7 +309,14 @@ export default function ProjectBoard({ projectId: propProjectId }: { projectId?:
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                    {activeMyTasks.length ? activeMyTasks.map(task => (
-                      <TaskCard key={task._id} task={task} onStatusUpdate={updateTaskStatus} isAdmin={isAdmin} />
+                      <TaskCard 
+                        key={task._id} 
+                        task={task} 
+                        onStatusUpdate={updateTaskStatus} 
+                        isAdmin={isAdmin} 
+                        currentUser={currentUser}
+                        onEditNote={(id, c) => { setEditingNoteId(id); setNoteContent(c || ''); }}
+                      />
                    )) : (
                      <div className="col-span-full py-20 bg-muted/5 rounded-[40px] border border-dashed border-border flex flex-col items-center justify-center gap-6">
                         <div className="w-16 h-16 bg-muted/20 rounded-full flex items-center justify-center text-muted-foreground/20">
@@ -400,6 +436,47 @@ export default function ProjectBoard({ projectId: propProjectId }: { projectId?:
         </div>
       )}
 
+      {/* Member Report Modal */}
+      {editingNoteId && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+           <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={() => setEditingNoteId(null)} />
+           <div className="bg-card w-full max-w-lg rounded-[40px] border border-border shadow-2xl relative z-10 p-8 sm:p-10 animate-in zoom-in-95 duration-200">
+              <div className="flex items-center justify-between mb-8">
+                 <div className="flex items-center gap-4">
+                    <div className="p-3 bg-blue-600 rounded-2xl text-white">
+                       <FileText size={20} />
+                    </div>
+                    <h2 className="text-xl font-black uppercase tracking-tight">Work <span className="text-blue-600">Report</span></h2>
+                 </div>
+                 <button onClick={() => setEditingNoteId(null)} className="p-2.5 hover:bg-muted rounded-xl transition-colors">
+                    <X size={20} />
+                 </button>
+              </div>
+
+              <div className="space-y-6">
+                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 leading-relaxed px-2">
+                    Provide a technical summary of your progress or completion for this assignment.
+                 </p>
+                 <textarea 
+                   autoFocus
+                   placeholder="e.g. Completed the authentication logic and verified with mobile tests..."
+                   rows={5}
+                   className="w-full bg-muted/50 border border-border rounded-3xl px-6 py-6 text-sm focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all resize-none font-medium"
+                   value={noteContent}
+                   onChange={e => setNoteContent(e.target.value)}
+                 />
+                 <button 
+                   onClick={() => submitMemberNote(editingNoteId)}
+                   className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-blue-600/20 hover:bg-blue-500 active:scale-95 transition-all flex items-center justify-center gap-3"
+                 >
+                    <Send size={16} />
+                    Submit Report
+                 </button>
+              </div>
+           </div>
+        </div>
+      )}
+
       <style dangerouslySetInnerHTML={{ __html: `
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
@@ -408,9 +485,17 @@ export default function ProjectBoard({ projectId: propProjectId }: { projectId?:
   )
 }
 
-function TaskCard({ task, onStatusUpdate, isAdmin }: { task: Task, onStatusUpdate: (id: string, s: string) => void, isAdmin: boolean }) {
+function TaskCard({ task, onStatusUpdate, isAdmin, currentUser, onEditNote }: { 
+  task: Task, 
+  onStatusUpdate: (id: string, s: string) => void, 
+  isAdmin: boolean,
+  currentUser: any,
+  onEditNote: (id: string, content: string | undefined) => void
+}) {
+  const isAssignee = task.assignee?._id === currentUser?.id
+
   return (
-    <div className={`group bg-card border border-border p-8 rounded-[40px] hover:border-blue-500/40 transition-all shadow-xl hover:shadow-2xl relative overflow-hidden ${task.status === 'done' ? 'opacity-60' : ''}`}>
+    <div className={`group bg-card border border-border p-8 rounded-[40px] hover:border-blue-500/40 transition-all shadow-xl hover:shadow-2xl relative overflow-hidden ${task.status === 'done' ? 'opacity-80' : ''}`}>
        <div className="flex justify-between items-start mb-6">
           <div className="flex items-center gap-2">
              <div className={`w-2 h-2 rounded-full ${task.status === 'done' ? 'bg-green-500' : task.status === 'in-progress' ? 'bg-yellow-500' : 'bg-blue-500'} animate-pulse`} />
@@ -426,7 +511,18 @@ function TaskCard({ task, onStatusUpdate, isAdmin }: { task: Task, onStatusUpdat
        </div>
        
        <h3 className="text-lg font-black tracking-tight leading-tight mb-4">{task.title}</h3>
-       <p className="text-[11px] text-muted-foreground/70 leading-relaxed mb-8 line-clamp-3 font-medium">{task.description || 'No technical walkthrough provided for this objective.'}</p>
+       <p className="text-[11px] text-muted-foreground/70 leading-relaxed mb-6 line-clamp-3 font-medium italic">{task.description || 'No technical walkthrough provided for this objective.'}</p>
+
+       {/* Member Report Display */}
+       {task.memberNote && (
+         <div className="mb-8 p-5 bg-blue-500/5 border border-blue-500/10 rounded-3xl relative">
+            <div className="flex items-center gap-2 mb-2">
+               <FileText size={10} className="text-blue-600" />
+               <span className="text-[8px] font-black uppercase tracking-widest text-blue-600/60">Execution Report</span>
+            </div>
+            <p className="text-[10px] font-semibold text-foreground/80 leading-relaxed italic">"{task.memberNote}"</p>
+         </div>
+       )}
        
        <div className="flex items-center justify-between pt-6 border-t border-border/50">
           <div className="flex -space-x-2">
@@ -439,7 +535,17 @@ function TaskCard({ task, onStatusUpdate, isAdmin }: { task: Task, onStatusUpdat
           </div>
 
           <div className="flex gap-2">
-             {task.status === 'todo' && (
+             {isAssignee && (
+                <button 
+                  onClick={() => onEditNote(task._id, task.memberNote)}
+                  className="p-2.5 bg-violet-600/10 text-violet-600 rounded-xl hover:bg-violet-600 hover:text-white transition-all border border-violet-600/20"
+                  title="Update Report"
+                >
+                   <Edit3 size={16} />
+                </button>
+             )}
+
+             {isAssignee && task.status === 'todo' && (
                <button 
                  onClick={() => onStatusUpdate(task._id, 'in-progress')}
                  className="p-2.5 bg-blue-600/10 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all border border-blue-600/20"
@@ -448,7 +554,7 @@ function TaskCard({ task, onStatusUpdate, isAdmin }: { task: Task, onStatusUpdat
                   <Clock size={16} />
                </button>
              )}
-             {task.status === 'in-progress' && (
+             {isAssignee && task.status === 'in-progress' && (
                <button 
                  onClick={() => onStatusUpdate(task._id, 'done')}
                  className="p-2.5 bg-green-500/10 text-green-500 rounded-xl hover:bg-green-500 hover:text-white transition-all border border-green-500/20"
@@ -457,7 +563,7 @@ function TaskCard({ task, onStatusUpdate, isAdmin }: { task: Task, onStatusUpdat
                   <CheckCircle2 size={16} />
                </button>
              )}
-             {task.status === 'done' && (
+             {isAdmin && task.status === 'done' && (
                <button 
                  onClick={() => onStatusUpdate(task._id, 'todo')}
                  className="p-2.5 bg-muted text-muted-foreground rounded-xl hover:bg-slate-200 transition-all border border-border"

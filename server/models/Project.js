@@ -22,6 +22,9 @@ const taskSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
   },
+  memberNote: {
+    type: String,
+  },
   meetingOrigin: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Meeting',

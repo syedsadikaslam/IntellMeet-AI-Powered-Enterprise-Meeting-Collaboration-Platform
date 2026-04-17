@@ -77,7 +77,7 @@ const addTaskToProject = async (req, res) => {
 // @access  Private
 const updateTask = async (req, res) => {
   try {
-    const { status, title, priority, description, assignee } = req.body;
+    const { status, title, priority, description, assignee, memberNote } = req.body;
     const project = await Project.findById(req.params.id);
     
     if (!project) return res.status(404).json({ message: 'Project not found' });
@@ -90,6 +90,7 @@ const updateTask = async (req, res) => {
     if (priority) task.priority = priority;
     if (description !== undefined) task.description = description;
     if (assignee !== undefined) task.assignee = assignee;
+    if (memberNote !== undefined) task.memberNote = memberNote;
     
     await project.save();
 
