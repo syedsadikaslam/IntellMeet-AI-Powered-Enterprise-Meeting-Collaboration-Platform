@@ -1,6 +1,6 @@
 import { 
   Calendar, Layout, Plus, Search, Video, ArrowRight, Clock, 
-  ShieldCheck, MessageSquare, Activity, Globe, Zap, FileText, BarChart3, Star, Trash2
+  ShieldCheck, MessageSquare, Activity, Globe, Zap, FileText, BarChart3, Star, Trash2, User
 } from 'lucide-react'
 import React, { useEffect, useState, useRef } from 'react'
 import api from '../utils/api'
