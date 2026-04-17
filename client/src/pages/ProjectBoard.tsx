@@ -72,6 +72,8 @@ export default function ProjectBoard({ projectId: propProjectId }: { projectId?:
     };
   }, [projectId]);
 
+  const isAdmin = project?.team?.owner === currentUser?.id || project?.team?.members.find(m => m.user._id === currentUser?.id)?.role === 'Admin'
+
   useEffect(() => {
     if (project && !isAdmin && viewMode === 'all') {
       setViewMode('my')
@@ -129,7 +131,7 @@ export default function ProjectBoard({ projectId: propProjectId }: { projectId?:
     </div>
   )
 
-  const activeMyTasks = project?.tasks.filter(t => t.assignee?._id === currentUser?._id && t.status !== 'done') || []
+  const activeMyTasks = project?.tasks.filter(t => t.assignee?._id === currentUser?.id && t.status !== 'done') || []
 
   const tasksByAssignee = project?.team?.members.reduce((acc, member) => {
     acc[member.user._id] = project.tasks.filter(t => t.assignee?._id === member.user._id);
@@ -253,7 +255,7 @@ export default function ProjectBoard({ projectId: propProjectId }: { projectId?:
                             </div>
                             <div>
                                <h3 className="text-xs font-black uppercase tracking-widest">{member.user.name}</h3>
-                               <p className="text-[9px] font-black uppercase text-blue-600/60 leading-none mt-1">{member.role} {member.user._id === currentUser?._id && '(You)'}</p>
+                               <p className="text-[9px] font-black uppercase text-blue-600/60 leading-none mt-1">{member.role} {member.user._id === currentUser?.id && '(You)'}</p>
                             </div>
                           </div>
                           <span className="text-[10px] font-black text-muted-foreground bg-muted/50 px-3 py-1 rounded-full uppercase tracking-widest">{userTasks.length} Tasks</span>
