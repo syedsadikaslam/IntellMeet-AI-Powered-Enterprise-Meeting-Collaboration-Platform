@@ -231,7 +231,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden font-sans selection:bg-blue-500/30 flex transition-colors duration-300">
-      <main className="flex-1 pt-6 sm:pt-10 pb-20 px-4 sm:px-8 lg:px-12 max-w-7xl mx-auto relative">
+      <main className="flex-1 pt-6 sm:pt-10 pb-20 px-3 sm:px-8 lg:px-12 max-w-7xl mx-auto relative">
         {/* Ambient Glows */}
         <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-blue-600/5 rounded-full blur-[120px] -z-10 pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-violet-600/5 rounded-full blur-[120px] -z-10 pointer-events-none" />
@@ -333,13 +333,13 @@ export default function Dashboard() {
                             <a 
                               key={p._id}
                               href={`#/projects/${p._id}`} 
-                              className="flex items-center justify-between p-4 bg-muted/50 hover:bg-card rounded-2xl transition-all group border border-border"
+                              className="flex items-center justify-between p-3 sm:p-4 bg-muted/50 hover:bg-card rounded-2xl transition-all group border border-border"
                             >
-                               <div className="flex items-center gap-3">
-                                 <div className="p-2 bg-violet-500/10 text-violet-600 dark:text-violet-400 rounded-lg group-hover:bg-violet-600 group-hover:text-white transition-all">
+                               <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                                 <div className="p-2 bg-violet-500/10 text-violet-600 dark:text-violet-400 rounded-lg group-hover:bg-violet-600 group-hover:text-white transition-all flex-shrink-0">
                                     <Layout size={16} />
                                  </div>
-                                 <div className="flex flex-col">
+                                 <div className="flex flex-col min-w-0">
                                     <span className="text-xs font-black truncate text-foreground uppercase tracking-tight">{(p as any).name}</span>
                                     <div className="flex items-center gap-2">
                                        <span className="text-[8px] font-bold text-muted-foreground/60 uppercase tracking-tighter">Code: {(p as any).team?.joinCode || 'N/A'}</span>
@@ -352,7 +352,7 @@ export default function Dashboard() {
                                     </div>
                                  </div>
                                </div>
-                               <div className="flex items-center gap-1 sm:gap-2">
+                               <div className="flex items-center gap-0.5 sm:gap-2 flex-shrink-0 ml-2">
                                   <button 
                                     onClick={(e) => {
                                       e.preventDefault();
@@ -363,19 +363,19 @@ export default function Dashboard() {
                                         alert(`Workspace code ${code} copied to clipboard!`);
                                       }
                                     }}
-                                    className="p-2 text-muted-foreground/60 hover:text-blue-500 hover:bg-blue-500/10 rounded-lg transition-all"
+                                    className="p-1.5 sm:p-2 text-muted-foreground/60 hover:text-blue-500 hover:bg-blue-500/10 rounded-lg transition-all"
                                     title="Copy Join Code"
                                   >
-                                    <Share2 size={14} />
+                                    <Share2 size={13} className="sm:w-3.5 sm:h-3.5" />
                                   </button>
                                   <button 
                                     onClick={(e) => handleDeleteProject(p._id, e)}
-                                    className="p-2 text-muted-foreground/60 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                                    className="p-1.5 sm:p-2 text-muted-foreground/60 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
                                     title="Delete Workspace"
                                   >
-                                    <Trash2 size={14} />
+                                    <Trash2 size={13} className="sm:w-3.5 sm:h-3.5" />
                                   </button>
-                                  <ArrowRight size={14} className="text-foreground ml-1" />
+                                  <ArrowRight size={14} className="text-foreground ml-0.5 sm:ml-1 flex-shrink-0" />
                                </div>
                             </a>
                          )) : (
