@@ -12,7 +12,7 @@ const { protect } = require('../middleware/authMiddleware');
 
 router.route('/').get(protect, getProjects).post(protect, createProject);
 router.route('/team/:teamId').get(protect, getProjectsByTeam);
-router.route('/:id').get(protect, getProjectById);
+router.route('/:id').get(protect, getProjectById).delete(protect, deleteProject);
 router.route('/:id/tasks').post(protect, addTaskToProject);
 router.route('/:id/tasks/:taskId').put(protect, updateTask);
 

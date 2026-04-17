@@ -1,6 +1,6 @@
 import { 
   Calendar, Layout, Plus, Search, Video, ArrowRight, Clock, 
-  ShieldCheck, MessageSquare, Activity, Globe, Zap, FileText, BarChart3, Star
+  ShieldCheck, MessageSquare, Activity, Globe, Zap, FileText, BarChart3, Star, Trash2
 } from 'lucide-react'
 import React, { useEffect, useState, useRef } from 'react'
 import api from '../utils/api'
@@ -157,6 +157,20 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Failed to create project', error);
       alert('Error creating project workspace.');
+    }
+  }
+
+  const handleDeleteProject = async (projectId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!window.confirm('Are you sure you want to delete this workspace permanently?')) return;
+    
+    try {
+      await api.delete(`/projects/${projectId}`);
+      fetchProjects();
+    } catch (error: any) {
+      console.error('Failed to delete project', error);
+      alert(error.response?.data?.message || 'Failed to delete workspace.');
     }
   }
 
@@ -326,7 +340,16 @@ export default function Dashboard() {
                                     <span className="text-[8px] font-bold text-muted-foreground/60 uppercase">Code: {(p as any).team?.joinCode || 'N/A'}</span>
                                  </div>
                                </div>
-                               <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all text-foreground" />
+                               <div className="flex items-center gap-2">
+                                  <button 
+                                    onClick={(e) => handleDeleteProject(p._id, e)}
+                                    className="p-2 text-muted-foreground/40 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                                    title="Delete Workspace"
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                  <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all text-foreground" />
+                               </div>
                             </a>
                          )) : (
                             <div className="p-4 text-center border border-dashed border-border rounded-2xl">
