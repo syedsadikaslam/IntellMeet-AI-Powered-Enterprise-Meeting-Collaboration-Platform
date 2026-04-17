@@ -5,12 +5,33 @@ const crypto = require('crypto');
 // @access  Private
 const getMyTeams = async (req, res) => {
   try {
-    const teams = await Team.find({
+    let teams = await Team.find({
       $or: [
         { owner: req.user._id },
         { 'members.user': req.user._id }
       ]
     }).populate('owner', 'name email avatar').populate('projects');
+
+    // Migration for legacy teams without joinCode
+    let updated = false;
+    for (let team of teams) {
+      if (!team.joinCode) {
+        team.joinCode = crypto.randomBytes(4).toString('hex').toUpperCase();
+        await team.save();
+        updated = true;
+      }
+    }
+    
+    if (updated) {
+       // Re-fetch to get clean objects
+       teams = await Team.find({
+        $or: [
+          { owner: req.user._id },
+          { 'members.user': req.user._id }
+        ]
+      }).populate('owner', 'name email avatar').populate('projects');
+    }
+
     res.json(teams);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
