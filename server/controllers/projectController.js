@@ -100,12 +100,28 @@ const getProjects = async (req, res) => {
       ]
     });
     const teamIds = teams.map(t => t._id);
-    let projects = await Project.find({ team: { $in: teamIds } }).populate('team', 'name joinCode');
+    let projects = await Project.find({ team: { $in: teamIds } }).populate('team', 'name joinCode owner members');
 
-    // Migration for missing joinCodes in populated teams
     let updated = false;
     for (let project of projects) {
-       if (project.team && !project.team.joinCode) {
+       // Issue Fix: If the team reference is missing (Legacy corruption)
+       if (!project.team) {
+          console.warn(`Project ${project._id} has a missing team reference. Fixing...`);
+          // Create a placeholder team to recover this workspace
+          const placeholderCode = crypto.randomBytes(4).toString('hex').toUpperCase();
+          const placeholderTeam = await Team.create({
+             name: `${project.name} Workspace`,
+             owner: req.user._id,
+             joinCode: placeholderCode,
+             members: [{ user: req.user._id, role: 'Admin' }],
+             projects: [project._id]
+          });
+          project.team = placeholderTeam._id;
+          await project.save();
+          updated = true;
+       } 
+       // Issue Fix: If team exists but no joinCode
+       else if (!project.team.joinCode) {
           const newCode = crypto.randomBytes(4).toString('hex').toUpperCase();
           await Team.findByIdAndUpdate(project.team._id, { joinCode: newCode });
           updated = true;
@@ -113,7 +129,7 @@ const getProjects = async (req, res) => {
     }
 
     if (updated) {
-       projects = await Project.find({ team: { $in: teamIds } }).populate('team', 'name joinCode');
+       projects = await Project.find({ team: { $in: teamIds } }).populate('team', 'name joinCode owner members');
     }
 
     res.json(projects);
@@ -127,7 +143,7 @@ const getProjects = async (req, res) => {
 // @access  Private
 const getProjectById = async (req, res) => {
   try {
-    const project = await Project.findById(req.params.id);
+    const project = await Project.findById(req.params.id).populate('team', 'name joinCode owner members');
     if (!project) return res.status(404).json({ message: 'Project not found' });
     res.json(project);
   } catch (error) {
@@ -141,14 +157,27 @@ const getProjectById = async (req, res) => {
 const deleteProject = async (req, res) => {
   try {
     const project = await Project.findById(req.params.id);
-    if (!project) return res.status(404).json({ message: 'Project not found' });
+    if (!project) {
+       // If project is already gone, just return success to clean up UI
+       return res.json({ message: 'Project already removed' });
+    }
 
-    // Authorization: Check if user owns the team associated with this project
+    // Authorization: Check if user owns the team OR is an Admin in the team
     const team = await Team.findById(project.team);
-    if (!team) return res.status(404).json({ message: 'Associated team not found' });
+    
+    // If associated team is missing (Legacy corruption), allow deletion just for cleanup
+    if (!team) {
+       console.warn(`Force deleting project ${req.params.id} because the associated team record is missing.`);
+       await Project.findByIdAndDelete(req.params.id);
+       return res.json({ message: 'Workspace cleaned up successfully (orphan removal)' });
+    }
 
-    if (team.owner.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: 'Not authorized to delete this workspace' });
+    // Allow deletion if owner OR Admin
+    const isOwner = team.owner.toString() === req.user._id.toString();
+    const isAdmin = team.members.some(m => m.user.toString() === req.user._id.toString() && m.role === 'Admin');
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ message: 'Not authorized: Only Workspace Admin can delete this.' });
     }
 
     // Delete Team and Project
