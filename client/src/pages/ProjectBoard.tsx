@@ -132,10 +132,15 @@ export default function ProjectBoard({ projectId: propProjectId }: { projectId?:
         memberNote: noteContent,
         status: 'done' 
       });
-      setProject(res.data);
-      setEditingNoteId(null);
-      setNoteContent('');
-      socket.emit('task-updated', { projectId, project: res.data });
+      
+      if (res.data) {
+        setProject(res.data);
+        setEditingNoteId(null);
+        setNoteContent('');
+        socket.emit('task-updated', { projectId, project: res.data });
+        // Forces a full refresh to ensure counts are accurate
+        fetchProject();
+      }
     } catch (err) {
       console.error('Failed to submit note', err);
     }

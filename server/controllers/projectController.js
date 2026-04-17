@@ -92,6 +92,10 @@ const updateTask = async (req, res) => {
     if (assignee !== undefined) task.assignee = assignee;
     if (memberNote !== undefined) task.memberNote = memberNote;
     
+    // Explicitly mark status as modified if present
+    if (status) task.markModified('status');
+    if (memberNote !== undefined) task.markModified('memberNote');
+    
     await project.save();
 
     const updatedProject = await Project.findById(project._id)
