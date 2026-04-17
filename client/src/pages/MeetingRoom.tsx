@@ -869,6 +869,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
            <MeetingCollaboration 
              meetingId={meetingCode} 
              userName={user?.name || 'User'} 
+             isAdmin={user?.id === (meetingData?.host?._id || meetingData?.host)}
              onClose={() => setIsCollaborationOpen(false)} 
            />
         </aside>

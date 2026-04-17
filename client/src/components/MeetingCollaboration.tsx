@@ -12,10 +12,11 @@ interface Task {
 interface MeetingCollaborationProps {
   meetingId: string;
   userName: string;
+  isAdmin: boolean;
   onClose: () => void;
 }
 
-export default function MeetingCollaboration({ meetingId, userName, onClose }: MeetingCollaborationProps) {
+export default function MeetingCollaboration({ meetingId, userName, isAdmin, onClose }: MeetingCollaborationProps) {
   const [activeTab, setActiveTab] = useState<'notes' | 'tasks'>('notes');
   const [notes, setNotes] = useState('');
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -49,6 +50,7 @@ export default function MeetingCollaboration({ meetingId, userName, onClose }: M
   }, [meetingId]);
 
   const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (!isAdmin) return;
     const content = e.target.value;
     setNotes(content);
     setIsSaving(true);
@@ -63,7 +65,7 @@ export default function MeetingCollaboration({ meetingId, userName, onClose }: M
 
   const handleAddTask = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTaskTitle.trim()) return;
+    if (!isAdmin || !newTaskTitle.trim()) return;
 
     const task = {
       title: newTaskTitle,
@@ -116,46 +118,63 @@ export default function MeetingCollaboration({ meetingId, userName, onClose }: M
         {activeTab === 'notes' ? (
           <div className="h-full flex flex-col space-y-3">
             <div className="flex items-center justify-between px-1">
-               <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Collaborative Notepad</span>
-               {isSaving && (
+               <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{isAdmin ? 'Collaborative Notepad' : 'Meeting Notes (Read-Only)'}</span>
+               {isAdmin && isSaving && (
                  <span className="flex items-center gap-1.5 text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">
                     <Save size={10} className="animate-bounce" /> Syncing...
                  </span>
+               )}
+               {!isAdmin && (
+                 <div className="flex items-center gap-1.5 px-2 py-0.5 bg-muted rounded-full border border-border">
+                    <Target size={8} className="text-muted-foreground" />
+                    <span className="text-[8px] font-black text-muted-foreground uppercase opacity-60">Host Only</span>
+                 </div>
                )}
             </div>
             <textarea 
               value={notes}
               onChange={handleNotesChange}
-              placeholder="Start drafting shared notes here..."
-              className="flex-1 w-full bg-muted/50 border border-border rounded-2xl p-4 text-sm font-medium leading-relaxed text-foreground focus:outline-none focus:border-blue-500/50 shadow-inner transition-all resize-none placeholder:text-muted-foreground/40"
+              readOnly={!isAdmin}
+              placeholder={isAdmin ? "Start drafting shared notes here..." : "The host hasn't drafted any notes yet."}
+              className={`flex-1 w-full bg-muted/50 border border-border rounded-2xl p-4 text-sm font-medium leading-relaxed text-foreground focus:outline-none focus:border-blue-500/50 shadow-inner transition-all resize-none placeholder:text-muted-foreground/40 ${!isAdmin ? 'cursor-not-allowed opacity-80' : ''}`}
             />
           </div>
         ) : (
           <div className="space-y-4">
-            <form onSubmit={handleAddTask} className="space-y-3 p-4 bg-muted/30 border border-border rounded-2xl">
-              <input 
-                type="text"
-                placeholder="Task description..."
-                value={newTaskTitle}
-                onChange={(e) => setNewTaskTitle(e.target.value)}
-                className="w-full bg-background border border-border rounded-xl py-2.5 px-4 text-xs font-bold text-foreground focus:outline-none focus:border-blue-500/50 transition-all shadow-sm"
-              />
-              <div className="flex gap-2">
+            {isAdmin ? (
+              <form onSubmit={handleAddTask} className="space-y-3 p-4 bg-muted/30 border border-border rounded-2xl">
                 <input 
                   type="text"
-                  placeholder="Assignee Name"
-                  value={newTaskAssignee}
-                  onChange={(e) => setNewTaskAssignee(e.target.value)}
-                  className="flex-1 bg-background border border-border rounded-xl py-2.5 px-4 text-xs font-bold text-foreground focus:outline-none focus:border-blue-500/50 transition-all shadow-sm"
+                  placeholder="Task description..."
+                  value={newTaskTitle}
+                  onChange={(e) => setNewTaskTitle(e.target.value)}
+                  className="w-full bg-background border border-border rounded-xl py-2.5 px-4 text-xs font-bold text-foreground focus:outline-none focus:border-blue-500/50 transition-all shadow-sm"
                 />
-                <button type="submit" className="px-4 bg-blue-600 text-white rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/20 active:scale-95">
-                  <Plus size={18} />
-                </button>
+                <div className="flex gap-2">
+                  <input 
+                    type="text"
+                    placeholder="Assignee Name"
+                    value={newTaskAssignee}
+                    onChange={(e) => setNewTaskAssignee(e.target.value)}
+                    className="flex-1 bg-background border border-border rounded-xl py-2.5 px-4 text-xs font-bold text-foreground focus:outline-none focus:border-blue-500/50 transition-all shadow-sm"
+                  />
+                  <button type="submit" className="px-4 bg-blue-600 text-white rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/20 active:scale-95">
+                    <Plus size={18} />
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="p-4 bg-blue-600/5 border border-blue-500/10 rounded-2xl flex items-center justify-between">
+                 <div className="flex items-center gap-3">
+                    <ShieldCheck size={16} className="text-blue-600" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-blue-600">Action Items Console</span>
+                 </div>
+                 <span className="text-[8px] font-black uppercase text-muted-foreground/60 border border-border px-2 py-0.5 rounded-full bg-background">Reserved for Host</span>
               </div>
-            </form>
+            )}
 
             <div className="space-y-3">
-              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 px-1">Current Action Items</span>
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 px-1">{isAdmin ? 'Current Action Items' : 'Shared Objectives'}</span>
               <div className="space-y-2">
                 {tasks.length === 0 ? (
                   <div className="py-12 flex flex-col items-center justify-center text-center space-y-4 opacity-20">
