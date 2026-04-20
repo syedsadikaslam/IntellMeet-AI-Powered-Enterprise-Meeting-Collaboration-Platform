@@ -1,4 +1,4 @@
-import { Mic, MicOff, Search, User as UserIcon, Video, VideoOff, X, Shield, Trash2, MicOff as MicOffIcon, MessageSquare, ShieldAlert } from 'lucide-react'
+import { Mic, MicOff, Search, User as UserIcon, Video, VideoOff, X, Shield, Trash2, Link } from 'lucide-react'
 import { useState } from 'react'
 
 interface Participant {
@@ -13,7 +13,6 @@ interface ParticipantStates {
     isVideoOn: boolean
     micAllowed?: boolean
     videoAllowed?: boolean
-    chatAllowed?: boolean
   }
 }
 
@@ -24,7 +23,8 @@ interface ParticipantSidebarProps {
   hostId: string
   onMuteParticipant: (userId: string) => void
   onRemoveParticipant: (userId: string) => void
-  onUpdatePermission: (userId: string, permissions: { micAllowed?: boolean, videoAllowed?: boolean, chatAllowed?: boolean }) => void
+  onUpdatePermission: (userId: string, permissions: { micAllowed?: boolean, videoAllowed?: boolean }) => void
+  onInviteLink: () => void
   onClose: () => void
 }
 
@@ -36,9 +36,18 @@ export default function ParticipantSidebar({
   onMuteParticipant,
   onRemoveParticipant,
   onUpdatePermission,
+  onInviteLink,
   onClose 
 }: ParticipantSidebarProps) {
   const [searchTerm, setSearchTerm] = useState('')
+  // Local optimistic state for permissions so admin sees instant feedback
+  const [localPermOverrides, setLocalPermOverrides] = useState<Record<string, { micAllowed?: boolean, videoAllowed?: boolean }>>({});
+
+  const handlePermission = (userId: string, key: 'micAllowed' | 'videoAllowed', currentValue: boolean) => {
+    const newVal = !currentValue;
+    setLocalPermOverrides(prev => ({ ...prev, [userId]: { ...prev[userId], [key]: newVal } }));
+    onUpdatePermission(userId, { [key]: newVal });
+  }
 
   const filteredParticipants = participants.filter(p => 
     p.userName.toLowerCase().includes(searchTerm.toLowerCase())
@@ -79,10 +88,17 @@ export default function ParticipantSidebar({
       {/* List */}
       <div className="flex-1 overflow-y-auto px-2 space-y-1 scrollbar-hide">
         {filteredParticipants.map((p) => {
-          const state = participantStates[p.userId] || { isMicOn: true, isVideoOn: true }
+          const baseState = participantStates[p.userId] || { isMicOn: true, isVideoOn: true }
+          // Merge with local optimistic overrides so admin sees instant visual feedback
+          const override = localPermOverrides[p.userId] || {}
+          const state = { ...baseState, ...override }
           const isLocal = p.userId === localUserId
           const isHost = p.userId === hostId
           const isAdmin = localUserId === hostId
+
+          // Derived: mic is restricted if micAllowed was explicitly set to false
+          const micRestricted = state.micAllowed === false
+          const videoRestricted = state.videoAllowed === false
 
           return (
             <div 
@@ -91,8 +107,14 @@ export default function ParticipantSidebar({
             >
               <div className="flex items-center gap-3 min-w-0">
                 <div className="relative">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all ${isHost ? 'bg-blue-600/20 border-blue-500/30' : 'bg-muted border-border'}`}>
-                    {isHost ? <Shield size={18} className="text-blue-600 dark:text-blue-400" /> : <UserIcon size={20} className="text-muted-foreground" />}
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all ${
+                    isHost ? 'bg-blue-600/20 border-blue-500/30' :
+                    (micRestricted || videoRestricted) ? 'bg-red-500/10 border-red-500/20' :
+                    'bg-muted border-border'
+                  }`}>
+                    {isHost
+                      ? <Shield size={18} className="text-blue-600 dark:text-blue-400" />
+                      : <UserIcon size={20} className={micRestricted || videoRestricted ? 'text-red-500' : 'text-muted-foreground'} />}
                   </div>
                   <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-card" />
                 </div>
@@ -101,37 +123,45 @@ export default function ParticipantSidebar({
                     {p.userName} 
                     {isLocal && <span className="text-[10px] text-blue-600 dark:text-blue-400 font-black uppercase">(You)</span>}
                   </p>
-                  <p className={`text-[10px] font-bold uppercase tracking-widest leading-none transition-colors ${isHost ? 'text-blue-600 dark:text-blue-400' : 'text-muted-foreground'}`}>
-                    {isHost ? 'Host / Admin' : 'Participant'}
+                  <p className={`text-[10px] font-bold uppercase tracking-widest leading-none transition-colors ${
+                    isHost ? 'text-blue-600 dark:text-blue-400' :
+                    (micRestricted || videoRestricted) ? 'text-red-500' :
+                    'text-muted-foreground'
+                  }`}>
+                    {isHost ? 'Host / Admin' : (micRestricted || videoRestricted) ? 'Restricted' : 'Participant'}
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                 {/* Admin Controls */}
-                  {isAdmin && !isHost && (
-                    <div className="flex items-center gap-1.5 mr-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+              <div className="flex items-center gap-1.5">
+                 {/* Admin Controls — only for non-host participants */}
+                  {isAdmin && !isLocal && !isHost && (
+                    <div className="flex items-center gap-1 mr-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                       {/* Toggle Mic Permission */}
                        <button 
-                         onClick={() => onUpdatePermission(p.userId, { micAllowed: !state.micAllowed })}
-                         title={state.micAllowed === false ? "Enable Microphone" : "Disable Microphone"}
-                         className={`p-1.5 rounded-lg transition-all ${state.micAllowed === false ? 'bg-red-500/20 text-red-600' : 'bg-muted text-muted-foreground hover:text-foreground'}`}
+                         onClick={() => handlePermission(p.userId, 'micAllowed', state.micAllowed !== false)}
+                         title={micRestricted ? 'Unmute Microphone' : 'Mute Microphone'}
+                         className={`p-1.5 rounded-lg transition-all border ${
+                           micRestricted
+                             ? 'bg-red-500/20 text-red-600 border-red-500/30'
+                             : 'bg-muted text-muted-foreground hover:text-orange-500 hover:bg-orange-500/10 hover:border-orange-500/30 border-transparent'
+                         }`}
                        >
-                          {state.micAllowed === false ? <MicOff size={14} /> : <Mic size={14} />}
+                          {micRestricted ? <MicOff size={14} /> : <Mic size={14} />}
                        </button>
+                       {/* Toggle Camera Permission */}
                        <button 
-                         onClick={() => onUpdatePermission(p.userId, { videoAllowed: !state.videoAllowed })}
-                         title={state.videoAllowed === false ? "Enable Camera" : "Disable Camera"}
-                         className={`p-1.5 rounded-lg transition-all ${state.videoAllowed === false ? 'bg-red-500/20 text-red-600' : 'bg-muted text-muted-foreground hover:text-foreground'}`}
+                         onClick={() => handlePermission(p.userId, 'videoAllowed', state.videoAllowed !== false)}
+                         title={videoRestricted ? 'Unblock Camera' : 'Disable Camera'}
+                         className={`p-1.5 rounded-lg transition-all border ${
+                           videoRestricted
+                             ? 'bg-red-500/20 text-red-600 border-red-500/30'
+                             : 'bg-muted text-muted-foreground hover:text-orange-500 hover:bg-orange-500/10 hover:border-orange-500/30 border-transparent'
+                         }`}
                        >
-                          {state.videoAllowed === false ? <VideoOff size={14} /> : <Video size={14} />}
+                          {videoRestricted ? <VideoOff size={14} /> : <Video size={14} />}
                        </button>
-                       <button 
-                         onClick={() => onUpdatePermission(p.userId, { chatAllowed: !state.chatAllowed })}
-                         title={state.chatAllowed === false ? "Enable Chat" : "Disable Chat"}
-                         className={`p-1.5 rounded-lg transition-all ${state.chatAllowed === false ? 'bg-red-500/20 text-red-600' : 'bg-muted text-muted-foreground hover:text-foreground'}`}
-                       >
-                          <MessageSquare size={14} />
-                       </button>
+                       {/* Remove Participant */}
                        <button 
                          onClick={() => onRemoveParticipant(p.userId)}
                          title="Remove Participant"
@@ -142,11 +172,24 @@ export default function ParticipantSidebar({
                     </div>
                   )}
 
-                 <div className={`p-1.5 rounded-lg border transition-all ${state.isMicOn ? 'bg-muted border-border text-muted-foreground' : 'bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400'}`}>
-                    {state.isMicOn ? <Mic size={14} /> : <MicOff size={14} />}
+                 {/* Live mic/video status indicators */}
+                 <div className={`p-1.5 rounded-lg border transition-all ${
+                   micRestricted
+                     ? 'bg-red-500/15 border-red-500/30 text-red-600 dark:text-red-400'
+                     : state.isMicOn
+                       ? 'bg-muted border-border text-muted-foreground'
+                       : 'bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400'
+                 }`}>
+                    {(micRestricted || !state.isMicOn) ? <MicOff size={14} /> : <Mic size={14} />}
                  </div>
-                 <div className={`p-1.5 rounded-lg border transition-all ${state.isVideoOn ? 'bg-muted border-border text-muted-foreground' : 'bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400'}`}>
-                    {state.isVideoOn ? <Video size={14} /> : <VideoOff size={14} />}
+                 <div className={`p-1.5 rounded-lg border transition-all ${
+                   videoRestricted
+                     ? 'bg-red-500/15 border-red-500/30 text-red-600 dark:text-red-400'
+                     : state.isVideoOn
+                       ? 'bg-muted border-border text-muted-foreground'
+                       : 'bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400'
+                 }`}>
+                    {(videoRestricted || !state.isVideoOn) ? <VideoOff size={14} /> : <Video size={14} />}
                  </div>
               </div>
             </div>
@@ -154,10 +197,14 @@ export default function ParticipantSidebar({
         })}
       </div>
 
-      {/* Footer Info */}
+      {/* Footer — Invite Link */}
       <div className="p-4 bg-muted/30 border-t border-border mt-auto">
-         <button className="w-full py-3 bg-muted border border-border rounded-xl text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-all active:scale-95 shadow-sm">
-            Invite Link
+         <button
+           onClick={onInviteLink}
+           className="w-full py-3 flex items-center justify-center gap-2 bg-blue-600/10 border border-blue-500/30 rounded-xl text-xs font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white transition-all active:scale-95 shadow-sm"
+         >
+           <Link size={14} />
+           Invite Link
          </button>
       </div>
     </div>

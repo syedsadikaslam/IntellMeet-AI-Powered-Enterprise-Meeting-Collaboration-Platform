@@ -370,10 +370,26 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
   }
 
   const handleUpdateParticipantPermission = (targetUserId: string, pms: any) => {
+    // Optimistic local update for admin UI — keeps video grid indicators in sync
+    setParticipantStates(prev => ({
+      ...prev,
+      [targetUserId]: { ...prev[targetUserId], ...pms }
+    }))
     socket.emit('update-permissions', { 
       meetingId: meetingCode, 
       targetUserId, 
       permissions: pms 
+    })
+  }
+
+  const handleCopyInviteLink = () => {
+    const inviteText = `Join my IntellMeet session!\nMeeting Code: ${meetingCode}\nLink: ${window.location.href.split('#')[0]}#/meeting/${meetingCode}`
+    navigator.clipboard.writeText(inviteText).then(() => {
+      const nId = Date.now()
+      setNotifications(prev => [...prev, { message: '✓ Invite link copied to clipboard!', id: nId }])
+      setTimeout(() => setNotifications(prev => prev.filter(x => x.id !== nId)), 3000)
+    }).catch(() => {
+      alert(`Meeting Code: ${meetingCode}`)
     })
   }
 
@@ -957,7 +973,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
 
       {isParticipantsOpen && (
          <aside className="fixed md:relative top-0 right-0 z-[60] w-full sm:w-80 h-full bg-card border-l border-border animate-slide-in-right shadow-2xl overflow-hidden transition-colors duration-300">
-            <ParticipantSidebar 
+         <ParticipantSidebar 
               participants={participants}
               participantStates={participantStates}
               localUserId={user?.id || ''}
@@ -965,6 +981,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
               onMuteParticipant={handleMuteParticipant}
               onRemoveParticipant={handleRemoveParticipant}
               onUpdatePermission={handleUpdateParticipantPermission}
+              onInviteLink={handleCopyInviteLink}
               onClose={() => setIsParticipantsOpen(false)}
             />
          </aside>
