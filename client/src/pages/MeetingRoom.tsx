@@ -58,6 +58,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
   const [meetingData, setMeetingData] = useState<any>(null)
   const [permissions, setPermissions] = useState({ micAllowed: true, videoAllowed: true, chatAllowed: true })
   const [pinnedId, setPinnedId] = useState<string | null>(null)
+  const [isFullscreen, setIsFullscreen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   
   // Screen Sharing State
@@ -650,24 +651,25 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
             const allFeeds = [
               {
                 id: user?.id || 'local',
-                socketId: socket.id,
-                userName: `${user?.name} (You)`,
+                socketId: socket.id || 'local-socket',
+                userName: user?.name ? `${user.name} (You)` : 'You',
                 stream: localStream,
                 isLocal: true,
                 isVideoOn: isVideoOn,
-                isHandRaised: raisedHands[user?.id || '']
+                isHandRaised: !!raisedHands[user?.id || '']
               },
               ...peers.map(p => {
                 const part = participants.find(part => part.socketId === p.peerId);
                 const uId = part?.userId || '';
                 return {
-                  id: uId || p.peerId,
+                  id: p.peerId, // Use peerId (socketId) as the unique key to be absolutely safe
+                  userId: uId,
                   socketId: p.peerId,
-                  userName: p.userName,
+                  userName: p.userName || 'Participant',
                   stream: p.stream,
                   isLocal: false,
                   isVideoOn: !!p.stream,
-                  isHandRaised: raisedHands[uId]
+                  isHandRaised: !!raisedHands[uId]
                 }
               })
             ];
@@ -1052,7 +1054,7 @@ function VideoCard({ stream, label, isMuted = false, isOff = false, isHandRaised
   }, [stream, isOff])
 
   // Truncate long names for compact thumbnail view
-  const displayLabel = compact && label.length > 12 ? label.slice(0, 10) + '…' : label
+  const displayLabel = label ? (compact && label.length > 12 ? label.slice(0, 10) + '…' : label) : 'User'
 
   return (
     <div 
