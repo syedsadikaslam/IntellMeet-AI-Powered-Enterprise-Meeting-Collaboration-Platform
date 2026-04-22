@@ -144,15 +144,26 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
     })
 
     socket.on('user-joined', ({ userId, userName, socketId }) => {
-      console.log('User joined event received:', { userName, socketId })
-      setParticipants(prev => {
-        if (prev.find(p => p.socketId === socketId)) return prev
-        return [...prev, { userId, userName, socketId }]
-      })
+      console.log('User joined event received:', { userName, socketId, userId })
       
-      // Someone joined, they will initiate (if they are newcomer) or we will (if we are)
-      // Actually, in our logic, the newcomer initiates to everyone in 'all-participants'
-      // And existing members wait for the 'user-joined' to prepare for the incoming signal.
+      // Cleanup ghost sessions for the same userId (e.g. from refresh)
+      setParticipants(prev => {
+        const existing = prev.find(p => p.userId === userId && p.socketId !== socketId);
+        if (existing) {
+          console.log('Cleaning up old session for rejoining user:', userId);
+          const oldSid = existing.socketId;
+          if (peersRef.current[oldSid]) {
+            peersRef.current[oldSid].destroy();
+            delete peersRef.current[oldSid];
+          }
+          setPeers(prevPeers => prevPeers.filter(p => p.peerId !== oldSid));
+          return [...prev.filter(p => p.socketId !== oldSid), { userId, userName, socketId }];
+        }
+        
+        if (prev.find(p => p.socketId === socketId)) return prev;
+        return [...prev, { userId, userName, socketId }];
+      });
+      
       if (!peersRef.current[socketId]) {
         console.log('Adding non-initiator peer for incoming join:', userName)
         const peer = addPeer(socketId, localStream)
@@ -174,34 +185,43 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
     socket.on('user-left', ({ userId, socketId }) => {
       console.log('User left event received:', { userId, socketId })
       
-      // Attempt to find the socketId if only userId was provided
-      let sId = socketId;
-      if (!sId && userId) {
-        sId = participantsRef.current.find(p => p.userId === userId)?.socketId;
-      }
+      // Remove from participants first to have a clean state for comparison
+      setParticipants(prev => {
+        const remaining = prev.filter(p => p.userId !== userId && p.socketId !== socketId);
+        
+        // Use the remaining participants to clean up peers
+        setPeers(prevPeers => {
+          return prevPeers.filter(peer => {
+            const isRemoved = (peer.peerId === socketId) || 
+                             (userId && prev.find(p => p.socketId === peer.peerId)?.userId === userId);
+            
+            if (isRemoved && peersRef.current[peer.peerId]) {
+              console.log('Aggressively destroying peer:', peer.peerId);
+              peersRef.current[peer.peerId].destroy();
+              delete peersRef.current[peer.peerId];
+              return false;
+            }
+            return true;
+          });
+        });
+        
+        return remaining;
+      });
 
-      if (sId) {
-        console.log('Cleaning up peer for socketId:', sId)
-        if (peersRef.current[sId]) {
-          peersRef.current[sId].destroy()
-          delete peersRef.current[sId]
-        }
-        setPeers(prev => prev.filter(p => p.peerId !== sId))
-      }
-
-      setParticipants(prev => prev.filter(p => p.userId !== userId && p.socketId !== sId))
       setTypingUsers(prev => prev.filter(u => u.userId !== userId))
     })
 
     socket.on('permission-update', (newPermissions) => {
-      setPermissions(newPermissions)
-      
-      // Enforce immediately
-      if (!newPermissions.micAllowed && isMicOn) toggleMicStore()
-      if (!newPermissions.videoAllowed && isVideoOn) toggleVideoStore()
+      setPermissions(prev => {
+        const next = { ...prev, ...newPermissions };
+        // Only enforce if the permission is explicitly 'false'
+        if (newPermissions.micAllowed === false && isMicOn) toggleMicStore();
+        if (newPermissions.videoAllowed === false && isVideoOn) toggleVideoStore();
+        return next;
+      })
       
       const nId = Date.now()
-      setNotifications(prev => [...prev, { message: 'Permissions updated by host', id: nId }])
+      setNotifications(prev => [...prev, { message: 'Meeting permissions updated', id: nId }])
       setTimeout(() => setNotifications(prev => prev.filter(x => x.id !== nId)), 3000)
     })
 
