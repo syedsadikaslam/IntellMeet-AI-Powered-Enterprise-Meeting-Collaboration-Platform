@@ -676,38 +676,35 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
 
             const currentPinned = allFeeds.find(f => f.id === pinnedId || (f.socketId && f.socketId === pinnedId));
 
-            if (currentPinned) {
               /* Spotlight View */
               return (
-                <div className="h-full flex flex-col md:flex-row gap-4 p-4">
-                  {/* Main Stage */}
-                  <div className="flex-[3] md:flex-1 flex items-center justify-center bg-card/10 rounded-[32px] border border-border/20 overflow-hidden p-1 md:p-6 relative group">
-                    <div className="w-full h-full flex items-center justify-center">
-                      <div className="w-full h-full md:aspect-[4/3] max-h-full relative shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
-                        <VideoCard 
-                          stream={currentPinned.stream!} 
-                          label={currentPinned.userName} 
-                          isMuted={currentPinned.isLocal} 
-                          isOff={!currentPinned.isVideoOn} 
-                          isHandRaised={currentPinned.isHandRaised} 
-                          onClick={() => setPinnedId(null)}
-                          isPinned={true}
-                        />
-                        {/* Explicit Unpin Button */}
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); setPinnedId(null); }}
-                          className="absolute top-4 right-4 md:top-6 md:right-6 z-40 bg-black/40 hover:bg-black/60 backdrop-blur-md text-white px-3 md:px-4 py-1.5 md:py-2 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest border border-white/10 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0"
-                        >
-                           Exit Spotlight
-                        </button>
-                      </div>
+                <div className="h-full w-full flex flex-col md:flex-row gap-0 md:gap-4 p-0 md:p-4 overflow-hidden">
+                  {/* Main Stage - Full Screen Style */}
+                  <div className="flex-[4] md:flex-[5] flex items-center justify-center bg-background relative group overflow-hidden">
+                    <div className="w-full h-full relative">
+                      <VideoCard 
+                        stream={currentPinned.stream!} 
+                        label={currentPinned.userName} 
+                        isMuted={currentPinned.isLocal} 
+                        isOff={!currentPinned.isVideoOn} 
+                        isHandRaised={currentPinned.isHandRaised} 
+                        onClick={() => setPinnedId(null)}
+                        isPinned={true}
+                      />
+                      {/* Explicit Unpin Button */}
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setPinnedId(null); }}
+                        className="absolute top-6 right-6 z-40 bg-black/50 hover:bg-black/70 backdrop-blur-xl text-white px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-white/20 opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-2xl"
+                      >
+                         Exit Spotlight
+                      </button>
                     </div>
                   </div>
 
-                  {/* Side Gallery */}
-                  <div className="flex-none w-full md:w-64 lg:w-72 flex md:flex-col gap-3 overflow-x-auto md:overflow-y-auto p-1 scrollbar-hide">
+                  {/* Side Gallery - Slimmer & Tighter */}
+                  <div className="flex-1 min-w-0 w-full md:w-64 lg:w-72 flex md:flex-col gap-2 overflow-x-auto md:overflow-y-auto p-2 md:p-1 scrollbar-hide">
                     {allFeeds.filter(f => f.id !== currentPinned.id).map(f => (
-                      <div key={f.id} className="flex-none w-32 md:w-full aspect-video">
+                      <div key={f.id} className="flex-none w-36 md:w-full aspect-video rounded-xl md:rounded-2xl overflow-hidden shadow-lg border border-border/40">
                         <VideoCard 
                           stream={f.stream!} 
                           label={f.userName} 
@@ -726,7 +723,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
 
             /* Grid View */
             return (
-              <div className="h-full w-full overflow-hidden flex flex-col">
+              <div className="h-full w-full overflow-hidden flex flex-col bg-background/10">
                 {/* Mobile: 2x2 Paginated Grid (Sliding) */}
                 <div className="md:hidden h-full w-full flex overflow-x-auto snap-x snap-mandatory scrollbar-hide">
                   {(() => {
@@ -752,26 +749,30 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
                             onClick={() => setPinnedId(f.id)}
                           />
                         ))}
-                        {/* Empty placeholders to maintain grid layout if chunk < 4 and not exactly 2 people */}
+                        {/* Empty placeholders */}
                         {allFeeds.length !== 2 && chunk.length < 4 && Array.from({ length: 4 - chunk.length }).map((_, i) => (
-                          <div key={`empty-${i}`} className="bg-muted/10 rounded-2xl border border-dashed border-border/20" />
+                          <div key={`empty-${i}`} className="bg-muted/5 rounded-2xl border border-dashed border-border/10" />
                         ))}
                       </div>
                     ));
                   })()}
                 </div>
 
-                {/* Desktop: Responsive Grid */}
-                <div className="hidden md:flex h-full w-full p-6 items-center justify-center overflow-y-auto custom-scrollbar">
-                  <div className={`grid gap-4 w-full h-full max-w-7xl mx-auto ${
-                    allFeeds.length === 1 ? 'grid-cols-1' :
-                    allFeeds.length <= 2 ? 'grid-cols-2' :
-                    allFeeds.length <= 4 ? 'grid-cols-2' :
-                    allFeeds.length <= 6 ? 'grid-cols-3' :
-                    'grid-cols-4'
-                  } auto-rows-fr`}>
+                {/* Desktop: Professional Auto Grid */}
+                <div className="hidden md:flex h-full w-full p-8 items-center justify-center overflow-y-auto custom-scrollbar">
+                  <div 
+                    className="grid gap-6 w-full max-w-[1600px] mx-auto auto-rows-fr"
+                    style={{
+                      gridTemplateColumns: `repeat(auto-fit, minmax(${
+                        allFeeds.length === 1 ? '100%' : 
+                        allFeeds.length === 2 ? '45%' : 
+                        allFeeds.length <= 4 ? '45%' : 
+                        '30%'
+                      }, 1fr))`,
+                    }}
+                  >
                     {allFeeds.map(f => (
-                      <div key={f.id} className="aspect-video">
+                      <div key={f.id} className="aspect-video w-full">
                         <VideoCard 
                           stream={f.stream!} 
                           label={f.userName} 
