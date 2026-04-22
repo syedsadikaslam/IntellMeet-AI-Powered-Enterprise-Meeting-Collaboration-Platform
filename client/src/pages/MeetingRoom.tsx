@@ -57,7 +57,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
   const [participantStates, setParticipantStates] = useState<Record<string, { isMicOn: boolean, isVideoOn: boolean, micAllowed?: boolean, videoAllowed?: boolean, chatAllowed?: boolean }>>({})
   const [meetingData, setMeetingData] = useState<any>(null)
   const [permissions, setPermissions] = useState({ micAllowed: true, videoAllowed: true, chatAllowed: true })
-  const [isFullscreen, setIsFullscreen] = useState(false)
+  const [pinnedId, setPinnedId] = useState<string | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   
   // Screen Sharing State
@@ -645,166 +645,148 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
         </div>
 
         {/* Video Grid / Spotlight Layout */}
-        <div className={`flex-1 min-h-0 ${participants.length <= 2 ? 'p-4 md:p-8 overflow-y-auto scrollbar-hide' : 'p-3 md:p-6 overflow-hidden flex flex-col'}`}>
-          {participants.length <= 2 ? (
-            /* Standard Grid for 1-2 people */
-            <div className="h-full grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 auto-rows-fr max-w-7xl mx-auto">
-              {/* Local Feed */}
-              <VideoCard 
-                stream={localStream!} 
-                label={`${user?.name} (You)`} 
-                isMuted 
-                isOff={!isVideoOn} 
-                isHandRaised={raisedHands[user?.id || '']} 
-              />
+        <div className="flex-1 min-h-0 relative bg-background/20">
+          {(() => {
+            const allFeeds = [
+              {
+                id: user?.id || 'local',
+                socketId: socket.id,
+                userName: `${user?.name} (You)`,
+                stream: localStream,
+                isLocal: true,
+                isVideoOn: isVideoOn,
+                isHandRaised: raisedHands[user?.id || '']
+              },
+              ...peers.map(p => {
+                const part = participants.find(part => part.socketId === p.peerId);
+                const uId = part?.userId || '';
+                return {
+                  id: uId || p.peerId,
+                  socketId: p.peerId,
+                  userName: p.userName,
+                  stream: p.stream,
+                  isLocal: false,
+                  isVideoOn: !!p.stream,
+                  isHandRaised: raisedHands[uId]
+                }
+              })
+            ];
 
-              {/* Remote Feed(s) */}
-              {peers.map(p => {
-                 const part = participants.find(part => part.socketId === p.peerId);
-                 const uId = part?.userId || '';
-                 return (
-                   <VideoCard 
-                     key={p.peerId} 
-                     stream={p.stream} 
-                     label={p.userName} 
-                     isOff={!p.stream} 
-                     isHandRaised={raisedHands[uId]} 
-                   />
-                 )
-              })}
+            const currentPinned = allFeeds.find(f => f.id === pinnedId || (f.socketId && f.socketId === pinnedId));
 
-              {participants.length < 2 && (
-                 <div className="relative rounded-[32px] bg-muted/50 border-2 border-dashed border-border flex flex-col items-center justify-center gap-4 transition-colors">
-                    <div className="w-12 h-12 rounded-full border border-border flex items-center justify-center animate-pulse">
-                       <Users size={20} className="text-muted-foreground" />
+            if (currentPinned) {
+              /* Spotlight View */
+              return (
+                <div className="h-full flex flex-col md:flex-row gap-4 p-4">
+                  {/* Main Stage */}
+                  <div className="flex-1 flex items-center justify-center bg-card/10 rounded-[32px] border border-border/20 overflow-hidden p-2 md:p-8 relative group">
+                    <div className="w-full h-full max-w-[1600px] flex items-center justify-center">
+                      <div className="w-full aspect-video max-h-full relative shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+                        <VideoCard 
+                          stream={currentPinned.stream!} 
+                          label={currentPinned.userName} 
+                          isMuted={currentPinned.isLocal} 
+                          isOff={!currentPinned.isVideoOn} 
+                          isHandRaised={currentPinned.isHandRaised} 
+                          onClick={() => setPinnedId(null)}
+                          isPinned={true}
+                        />
+                        {/* Explicit Unpin Button */}
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); setPinnedId(null); }}
+                          className="absolute top-6 right-6 z-40 bg-black/40 hover:bg-black/60 backdrop-blur-md text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border border-white/10 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0"
+                        >
+                           Exit Spotlight
+                        </button>
+                      </div>
                     </div>
-                    <p className="text-muted-foreground text-[10px] font-black uppercase tracking-[0.3em]">Waiting for others</p>
-                 </div>
-              )}
-            </div>
-          ) : (
-            /* Google Meet Style Spotlight Layout for 3+ people */
-            <div className="flex-1 min-h-0 flex flex-col gap-3 md:flex-row md:gap-6 max-w-[1600px] w-full mx-auto">
-               {/* 1. Main Stage (Admin/Pinned Area) — takes majority space */}
-               <div className="flex-1 min-h-0 min-w-0 flex items-center justify-center bg-card/40 rounded-[24px] md:rounded-[32px] border border-border/40 overflow-hidden p-2 md:p-4">
+                  </div>
+
+                  {/* Side Gallery */}
+                  <div className="flex-none w-full md:w-64 lg:w-72 flex md:flex-col gap-3 overflow-x-auto md:overflow-y-auto p-1 scrollbar-hide">
+                    {allFeeds.filter(f => f.id !== currentPinned.id).map(f => (
+                      <div key={f.id} className="flex-none w-32 md:w-full aspect-video">
+                        <VideoCard 
+                          stream={f.stream!} 
+                          label={f.userName} 
+                          isMuted={f.isLocal} 
+                          isOff={!f.isVideoOn} 
+                          isHandRaised={f.isHandRaised} 
+                          compact 
+                          onClick={() => setPinnedId(f.id)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            }
+
+            /* Grid View */
+            return (
+              <div className="h-full w-full overflow-hidden flex flex-col">
+                {/* Mobile: 2x2 Paginated Grid (Sliding) */}
+                <div className="md:hidden h-full w-full flex overflow-x-auto snap-x snap-mandatory scrollbar-hide">
                   {(() => {
-                     const hostId = meetingData?.host?._id || meetingData?.host;
-                     const isLocalHost = user?.id === hostId;
-                     
-                     if (isLocalHost) {
-                        return (
-                          <div className="w-full h-full">
-                            <VideoCard 
-                              stream={localStream!} 
-                              label={`${user?.name} (Host)`} 
-                              isMuted 
-                              isOff={!isVideoOn} 
-                              isHandRaised={raisedHands[user?.id || '']} 
-                            />
-                          </div>
-                        )
-                     } else {
-                        const hostPeer = peers.find(p => {
-                           const part = participants.find(part => part.socketId === p.peerId);
-                           return part?.userId === hostId;
-                        });
-
-                        if (hostPeer) {
-                           return (
-                             <div className="w-full h-full">
-                               <VideoCard 
-                                 stream={hostPeer.stream} 
-                                 label={`${hostPeer.userName} (Host)`} 
-                                 isOff={!hostPeer.stream} 
-                                 isHandRaised={raisedHands[hostId]} 
-                               />
-                             </div>
-                           )
-                        } else {
-                           return (
-                             <div className="w-full h-full aspect-video rounded-3xl bg-muted/30 border border-dashed border-border flex items-center justify-center">
-                                <p className="text-xs font-black uppercase tracking-widest text-muted-foreground opacity-40">Connecting to stage...</p>
-                             </div>
-                           )
-                        }
-                     }
+                    const chunks = [];
+                    for (let i = 0; i < allFeeds.length; i += 4) {
+                      chunks.push(allFeeds.slice(i, i + 4));
+                    }
+                    return chunks.map((chunk, idx) => (
+                      <div key={idx} className="flex-none w-full h-full p-4 snap-center grid grid-cols-2 grid-rows-2 gap-3">
+                        {chunk.map(f => (
+                          <VideoCard 
+                            key={f.id} 
+                            stream={f.stream!} 
+                            label={f.userName} 
+                            isMuted={f.isLocal} 
+                            isOff={!f.isVideoOn} 
+                            isHandRaised={f.isHandRaised} 
+                            onClick={() => setPinnedId(f.id)}
+                          />
+                        ))}
+                        {/* Empty placeholders to maintain 2x2 layout if chunk < 4 */}
+                        {chunk.length < 4 && Array.from({ length: 4 - chunk.length }).map((_, i) => (
+                          <div key={`empty-${i}`} className="bg-muted/10 rounded-2xl border border-dashed border-border/20" />
+                        ))}
+                      </div>
+                    ));
                   })()}
-               </div>
+                </div>
 
-               {/* 2. Thumbnail Gallery — horizontal row on mobile (bottom), vertical sidebar on desktop (right) */}
-               <div
-                 className="
-                   flex-none
-                   w-full md:w-60 lg:w-72
-                   flex flex-row md:flex-col
-                   gap-2 md:gap-3
-                   overflow-x-auto overflow-y-hidden
-                   md:overflow-x-hidden md:overflow-y-auto
-                   p-1 pb-0
-                   custom-scrollbar
-                 "
-                 style={{ height: undefined }}
-               >
-                  {(() => {
-                     const hostId = meetingData?.host?._id || meetingData?.host;
-                     const items: React.ReactNode[] = [];
+                {/* Desktop: Responsive Grid */}
+                <div className="hidden md:flex h-full w-full p-6 items-center justify-center overflow-y-auto custom-scrollbar">
+                  <div className={`grid gap-4 w-full h-full max-w-7xl mx-auto ${
+                    allFeeds.length === 1 ? 'grid-cols-1' :
+                    allFeeds.length <= 2 ? 'grid-cols-2' :
+                    allFeeds.length <= 4 ? 'grid-cols-2' :
+                    allFeeds.length <= 6 ? 'grid-cols-3' :
+                    'grid-cols-4'
+                  } auto-rows-fr`}>
+                    {allFeeds.map(f => (
+                      <div key={f.id} className="aspect-video">
+                        <VideoCard 
+                          stream={f.stream!} 
+                          label={f.userName} 
+                          isMuted={f.isLocal} 
+                          isOff={!f.isVideoOn} 
+                          isHandRaised={f.isHandRaised} 
+                          onClick={() => setPinnedId(f.id)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
-                     // Add local if not host
-                     if (user?.id !== hostId) {
-                        items.push(
-                          <div
-                            key="local-member"
-                            className="
-                              flex-none
-                              w-28 h-20
-                              sm:w-36 sm:h-24
-                              md:w-full md:h-auto md:aspect-video
-                            "
-                          >
-                            <VideoCard 
-                              stream={localStream!} 
-                              label={`${user?.name} (You)`} 
-                              isMuted 
-                              isOff={!isVideoOn} 
-                              isHandRaised={raisedHands[user?.id || '']} 
-                              compact
-                            />
-                          </div>
-                        );
-                     }
-
-                     // Add peers if not host
-                     peers.forEach(p => {
-                        const part = participants.find(part => part.socketId === p.peerId);
-                        const uId = part?.userId || '';
-                        if (uId !== hostId) {
-                           items.push(
-                             <div
-                               key={p.peerId}
-                               className="
-                                 flex-none
-                                 w-28 h-20
-                                 sm:w-36 sm:h-24
-                                 md:w-full md:h-auto md:aspect-video
-                               "
-                             >
-                               <VideoCard 
-                                 stream={p.stream} 
-                                 label={p.userName} 
-                                 isOff={!p.stream} 
-                                 isHandRaised={raisedHands[uId]} 
-                                 compact
-                               />
-                             </div>
-                           );
-                        }
-                     });
-
-                     return items;
-                  })()}
-               </div>
-            </div>
-          )}
+                {/* Pagination Dots for Mobile */}
+                <div className="md:hidden absolute bottom-4 left-0 right-0 flex justify-center gap-1.5 pointer-events-none">
+                  {Array.from({ length: Math.ceil(allFeeds.length / 4) }).map((_, i) => (
+                    <div key={i} className="w-1.5 h-1.5 rounded-full bg-blue-600/40" />
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Bottom Bar */}
@@ -1060,7 +1042,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
   )
 }
 
-function VideoCard({ stream, label, isMuted = false, isOff = false, isHandRaised = false, compact = false }: { stream?: MediaStream, label: string, isMuted?: boolean, isOff?: boolean, isHandRaised?: boolean, compact?: boolean }) {
+function VideoCard({ stream, label, isMuted = false, isOff = false, isHandRaised = false, compact = false, onClick, isPinned = false }: { stream?: MediaStream, label: string, isMuted?: boolean, isOff?: boolean, isHandRaised?: boolean, compact?: boolean, onClick?: () => void, isPinned?: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
@@ -1073,7 +1055,10 @@ function VideoCard({ stream, label, isMuted = false, isOff = false, isHandRaised
   const displayLabel = compact && label.length > 12 ? label.slice(0, 10) + '…' : label
 
   return (
-    <div className={`relative group w-full h-full rounded-2xl ${ compact ? '' : 'md:rounded-[32px]'} bg-muted/50 border transition-all duration-500 overflow-hidden shadow-2xl ${isHandRaised ? 'border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.2)] scale-[1.02]' : 'border-border hover:border-blue-500/30'}`}>
+    <div 
+      onClick={onClick}
+      className={`relative group w-full h-full rounded-2xl ${ compact ? '' : 'md:rounded-[32px]'} bg-muted/50 border transition-all duration-500 overflow-hidden shadow-2xl cursor-pointer ${isHandRaised ? 'border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.2)] scale-[1.01]' : 'border-border hover:border-blue-500/40 hover:bg-muted/80'} ${isPinned ? 'ring-4 ring-blue-600/20' : ''}`}
+    >
       {(!stream || isOff) ? (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-card z-10">
            <div className={`${ compact ? 'w-10 h-10' : 'w-20 h-20' } rounded-full flex items-center justify-center border transition-all ${ isHandRaised ? 'border-yellow-400/30 bg-yellow-400/5 shadow-[0_0_15px_rgba(250,204,21,0.1)]' : 'bg-muted border-border'}`}>
@@ -1096,6 +1081,12 @@ function VideoCard({ stream, label, isMuted = false, isOff = false, isHandRaised
             <Hand size={12} fill="currentColor" />
             Hand Raised
          </div>
+      )}
+
+      {isPinned && !compact && (
+        <div className="absolute top-4 right-4 z-30 bg-blue-600 text-white p-2 rounded-full shadow-lg">
+           <Minimize size={14} />
+        </div>
       )}
 
       <div className={`absolute ${ compact ? 'bottom-1 left-1' : 'bottom-2 md:bottom-4 left-2 md:left-4'} z-20`}>
