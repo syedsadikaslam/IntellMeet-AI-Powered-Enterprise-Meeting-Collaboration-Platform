@@ -185,27 +185,22 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
     socket.on('user-left', ({ userId, socketId }) => {
       console.log('User left event received:', { userId, socketId })
       
-      // Remove from participants first to have a clean state for comparison
+      // Cleanup all sessions for this user/socket
       setParticipants(prev => {
-        const remaining = prev.filter(p => p.userId !== userId && p.socketId !== socketId);
+        const affectedParticipants = prev.filter(p => (userId && p.userId === userId) || (socketId && p.socketId === socketId));
         
-        // Use the remaining participants to clean up peers
-        setPeers(prevPeers => {
-          return prevPeers.filter(peer => {
-            const isRemoved = (peer.peerId === socketId) || 
-                             (userId && prev.find(p => p.socketId === peer.peerId)?.userId === userId);
-            
-            if (isRemoved && peersRef.current[peer.peerId]) {
-              console.log('Aggressively destroying peer:', peer.peerId);
-              peersRef.current[peer.peerId].destroy();
-              delete peersRef.current[peer.peerId];
-              return false;
-            }
-            return true;
-          });
+        affectedParticipants.forEach(p => {
+          if (peersRef.current[p.socketId]) {
+            console.log('Destroying peer on leave:', p.socketId);
+            peersRef.current[p.socketId].destroy();
+            delete peersRef.current[p.socketId];
+          }
         });
+
+        const affectedSocketIds = affectedParticipants.map(p => p.socketId);
+        setPeers(prevPeers => prevPeers.filter(p => !affectedSocketIds.includes(p.peerId)));
         
-        return remaining;
+        return prev.filter(p => !affectedParticipants.includes(p));
       });
 
       setTypingUsers(prev => prev.filter(u => u.userId !== userId))
@@ -682,9 +677,10 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
                 stream: localStream,
                 isLocal: true,
                 isVideoOn: isVideoOn,
+                isMicOn: isMicOn,
                 isHandRaised: !!raisedHands[user?.id || '']
               },
-              ...peers.map(p => {
+              ...peers.filter(p => participants.some(part => part.socketId === p.peerId)).map(p => {
                 const part = participants.find(part => part.socketId === p.peerId);
                 const uId = part?.userId || '';
                 const state = participantStates[uId] || {};
