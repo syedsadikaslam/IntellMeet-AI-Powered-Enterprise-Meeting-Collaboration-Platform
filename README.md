@@ -31,7 +31,8 @@
 | **🎥 High-Perf Video** | WebRTC-powered low-latency video and audio rooms supporting 50+ participants. |
 | **🧠 AI Meeting Intelligence** | Real-time transcription using OpenAI Whisper and intelligent summarization via GPT-4. |
 | **📋 Smart Action Items** | Automatic extraction of tasks from meeting dialogue with assignee detection. |
-| **🏢 Team Workspaces** | Dedicated environments for departments or projects with nested Kanban boards. |
+| **🏢 Team Dashboard** | Centralized management of meetings, teams, and project-linked collaboration tools. |
+| **👤 Enterprise Profiles** | Simplified, professional profile management optimized for corporate environments. |
 | **💬 Project-Linked Chat** | Real-time messaging with full historical context and file sharing. |
 | **📊 Productivity Analytics** | Insights into meeting frequency, engagement metrics, and task completion rates. |
 
@@ -58,13 +59,11 @@
 
 ## 🏗 Architecture & System Design
 
-The platform follows a distributed, service-oriented architecture built for high availability, real-time collaboration, and AI-driven intelligence. Below are the four key design diagrams that describe the system at different levels of abstraction.
+The platform follows a distributed, service-oriented architecture built for high availability, real-time collaboration, and AI-driven intelligence. Below are the design diagrams that describe the system at different levels of abstraction.
 
 ---
 
 ### 1️⃣ System Context Diagram
-
-Shows the high-level interactions between actors (Meeting Host, Participants, Team Members) and the IntellMeet system, along with all external integrations.
 
 ```mermaid
 graph LR
@@ -105,8 +104,6 @@ graph LR
 ---
 
 ### 2️⃣ Low-Level Design (LLD) — Component Architecture
-
-Details the internal component structure of both the Client (React) and Server (Node.js/Express) layers, and how they connect to the infrastructure.
 
 ```mermaid
 graph TB
@@ -162,197 +159,16 @@ graph TB
 
 ---
 
-### 3️⃣ Data Flow Diagram (DFD) — Level 1
-
-Describes the flow of data through the six core processes of the IntellMeet platform, from external actors to data stores and the AI engine.
-
-```mermaid
-graph TB
-    HOST(["👤 Host"])
-    PARTICIPANT(["👥 Participant"])
-    TEAM_MEMBER(["🖥️ Team Member"])
-    GEMINI_AI(["🤖 Gemini AI"])
-
-    subgraph DS ["Data Stores"]
-        D1[("D1: Users · MongoDB")]
-        D2[("D2: Meetings · MongoDB")]
-        D3[("D3: Teams · MongoDB")]
-        D4[("D4: Projects · MongoDB")]
-        D5[("D5: Messages · MongoDB")]
-        D6[("D6: Cache · Redis")]
-    end
-
-    subgraph PROCESSES ["Core Processes"]
-        P1["1.0 Authentication\n& User Management"]
-        P2["2.0 Meeting Lifecycle\nManagement"]
-        P3["3.0 Real-Time\nCommunication"]
-        P4["4.0 AI Intelligence\nEngine"]
-        P5["5.0 Workspace &\nTeam Management"]
-        P6["6.0 Project &\nKanban Management"]
-    end
-
-    HOST -->|"register / login"| P1
-    P1 -->|"JWT tokens"| HOST
-    P1 --> D1
-
-    HOST -->|"create / end meeting"| P2
-    P2 --> D2
-    P2 -->|"trigger AI analysis"| P4
-    P2 --> D6
-
-    HOST -->|"audio · chat · notes · tasks"| P3
-    HOST -->|"ask AI question"| P4
-    HOST -->|"broadcast · transcript"| P3
-
-    PARTICIPANT -->|"register / login"| P1
-    PARTICIPANT -->|"join by meetingCode"| P2
-    PARTICIPANT -->|"notes · tasks · audio · raise hand"| P3
-    P4 -->|"summary + actions"| GEMINI_AI
-    GEMINI_AI -->|"AI answer"| P4
-    P4 --> D2
-
-    TEAM_MEMBER -->|"create / join team · chat"| P5
-    P5 --> D3
-    P5 --> D5
-    P3 -->|"team chat broadcast"| TEAM_MEMBER
-
-    TEAM_MEMBER -->|"create project · move task"| P6
-    P6 -->|"kanban sync"| TEAM_MEMBER
-    P6 --> D4
-```
-
----
-
-### 4️⃣ Entity-Relationship (ER) Diagram
-
-Defines the MongoDB data model: all collections, their fields, data types, constraints, and relationships.
-
-```mermaid
-erDiagram
-    USER {
-        ObjectId _id PK
-        String name
-        String email UK
-        String password "bcrypt hashed"
-        String role "Admin or Member"
-        String avatar "URL"
-        Array refreshTokens
-        Date createdAt
-        Date updatedAt
-    }
-
-    MEETING {
-        ObjectId _id PK
-        String title
-        ObjectId host FK
-        String description
-        Array participants "ObjectId refs"
-        Date startTime
-        Date endTime
-        Boolean isLive "default false"
-        String meetingCode UK
-        String transcript
-        String summary "AI generated"
-        Array actionItems "embedded subdoc"
-        String sentiment "positive/neutral/negative/mixed"
-        Array highlights
-        String sharedNotes
-        Array liveTasks "embedded subdoc"
-        String recordingUrl
-        Date createdAt
-        Date updatedAt
-    }
-
-    ACTION_ITEM {
-        String task
-        String suggestedAssignee
-        String status "pending or completed"
-    }
-
-    LIVE_TASK {
-        String title
-        String assignee
-        String status
-    }
-
-    TEAM {
-        ObjectId _id PK
-        String name
-        String description
-        ObjectId owner FK
-        Array members "embedded subdoc"
-        String joinCode UK
-        Array projects "ObjectId refs"
-        Date createdAt
-        Date updatedAt
-    }
-
-    TEAM_MEMBER {
-        ObjectId user FK
-        String role "Admin or Member"
-    }
-
-    PROJECT {
-        ObjectId _id PK
-        String name
-        String description
-        ObjectId team FK
-        Array tasks "embedded"
-        Array boardColumns "ToDo InProgress Done"
-        Date createdAt
-        Date updatedAt
-    }
-
-    TASK {
-        ObjectId _id PK
-        String title
-        String status "todo/in-progress/done"
-        String priority "low/medium/high"
-        String description
-        ObjectId assignee FK
-        String mentorNote
-        ObjectId meetingOrigin FK
-        Date createdAt
-        Date updatedAt
-    }
-
-    MESSAGE {
-        ObjectId _id PK
-        ObjectId sender FK
-        ObjectId team FK
-        String content
-        String type "text or system"
-        Date createdAt
-        Date updatedAt
-    }
-
-    USER ||--o{ MEETING : "hosts"
-    USER }o--o{ MEETING : "participates in"
-    MEETING ||--o{ ACTION_ITEM : "contains embedded"
-    MEETING ||--o{ LIVE_TASK : "contains embedded"
-    USER ||--o{ TEAM : "owns"
-    TEAM ||--o{ TEAM_MEMBER : "has embedded"
-    USER ||--o{ TEAM_MEMBER : "is"
-    TEAM ||--o{ PROJECT : "has many"
-    PROJECT ||--o{ TASK : "contains embedded"
-    TASK }o--o| USER : "assigned to"
-    TASK }o--o| MEETING : "origin of"
-    USER ||--o{ MESSAGE : "sends"
-    TEAM ||--o{ MESSAGE : "channel for"
-```
-
----
-
 ## 📁 Project Structure
 
 ```text
 IntellMeet/
 ├── client/                 # React 19 Frontend
-│   ├── src/components/     # Modular UI Components
-│   ├── src/pages/          # Routing & Views
+│   ├── src/components/     # Modular UI Components (Navbar, Sidebars)
+│   ├── src/pages/          # Routing & Views (Dashboard, Profile, Meeting)
 │   ├── src/store/          # Zustand State Models
 │   └── src/utils/          # API & Socket Config
-├── server/                 # Node.js Backend
+├── server/                 # Node.js Backend (Production Hardened)
 │   ├── controllers/        # Business Logic
 │   ├── models/             # Mongoose Schemas
 │   ├── routes/             # API Endpoints
@@ -367,11 +183,6 @@ IntellMeet/
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- Node.js (v18+)
-- Docker (optional for local deployment)
-- API Keys for OpenAI & Cloudinary
-
 ### 1. Installation
 ```bash
 git clone https://github.com/syedsadikaslam/IntellMeet-AI-Powered-Enterprise-Meeting-Collaboration-Platform.git
@@ -379,9 +190,9 @@ cd IntellMeet-AI-Powered-Enterprise-Meeting-Collaboration-Platform
 ```
 
 ### 2. Environment Setup
-Create a `.env` file in the `server` directory based on the reference below.
+Create a `.env` file in the `server` directory.
 
-### 3. Launching Locally
+### 3. Launching (Development)
 ```bash
 # Terminal 1: Backend
 cd server
@@ -394,6 +205,19 @@ npm install
 npm run dev
 ```
 
+### 4. Launching (Production)
+```bash
+# Build the frontend
+cd client
+npm install
+npm run build
+
+# Start the server (Backend will serve the frontend automatically)
+cd ../server
+npm install
+npm start
+```
+
 ---
 
 ## 🔐 Environment Variables
@@ -403,60 +227,22 @@ npm run dev
 | :--- | :--- |
 | `MONGO_URI` | MongoDB connection string |
 | `JWT_SECRET` | Primary signing key for tokens |
-| `REDIS_URL` | Redis instance URL |
-| `OPEN_AI_KEY` | OpenAI API access |
-| `CLOUDINARY_URL` | Media storage credentials |
-
----
-
-## 📡 API Reference
-
-### **Authentication**
-- `POST /api/auth/register` - Create a new account
-- `POST /api/auth/login` - Authenticate and return tokens
-- `POST /api/auth/refresh` - Rotate access tokens
-
-### **Meetings**
-- `POST /api/meetings` - Initialize a new meeting room
-- `GET /api/meetings/:id` - Fetch meeting metadata and summary
-- `POST /api/meetings/join` - Validate and join via code
-
-### **Workspaces & Tasks**
-- `GET /api/teams` - List all joined workspaces
-- `POST /api/projects/:id/tasks` - Create task from AI action items
+| `REDIS_HOST` | Redis instance host |
+| `FRONTEND_URL` | Production domain (for CORS) |
+| `NODE_ENV` | Set to `production` for live deployment |
 
 ---
 
 ## 🛡 Security & Performance
 
-- **Production Hardened**: Helmet.js for security headers and Gzip for payload compression.
-- **Monitoring**: Integrated Sentry for error tracking and Prometheus for performance metrics.
+- **Production Hardened**: Integrated `helmet.js` for security, `compression` for Gzip payloads, and `morgan` for request logging.
+- **Static Asset Serving**: Automatically serves the React `dist` folder in production, enabling single-instance deployment.
 - **Rate Limiting**: Brute-force protection on all authentication routes.
 - **Data Integrity**: Full Zod schema validation on frontend and Mongoose validation on backend.
-
----
-
-## 📅 Roadmap
-
-- [x] **Phase 1**: Real-time video/chat foundation.
-- [x] **Phase 2**: AI Summary Engine integration.
-- [x] **Phase 3**: Docker & Kubernetes orchestration.
-- [x] **Phase 4**: Advanced Analytics & Engagement reports.
-- [x] **Phase 5**: Mobile PWA & Offline Support.
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! Please refer to our [Contributing Guidelines](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
 
 ---
 
 <div align="center">
   <p>Built with ❤️ by <b>Sadik</b></p>
   <p><i>A Zidio Development Strategic Project · 2026</i></p>
-  <p>
-    <a href="https://github.com/syedsadikaslam/IntellMeet-AI-Powered-Enterprise-Meeting-Collaboration-Platform/issues">Report Bug</a> · 
-    <a href="https://github.com/syedsadikaslam/IntellMeet-AI-Powered-Enterprise-Meeting-Collaboration-Platform/issues">Request Feature</a>
-  </p>
 </div>

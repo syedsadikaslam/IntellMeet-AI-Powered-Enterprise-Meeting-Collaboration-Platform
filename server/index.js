@@ -6,6 +6,7 @@ const helmet = require('helmet');
 const compression = require('compression');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 
 // Validate critical environment variables
 const requiredEnvVars = ['MONGO_URI', 'JWT_SECRET'];
@@ -33,15 +34,21 @@ const initSocket = require('./services/socketService');
 const app = express();
 const server = http.createServer(app);
 
+// Configure CORS Origins
 const allowedOrigins = [
   'https://intellmeets.vercel.app',
   'http://localhost:5173', 
   'http://localhost:3000'
 ];
 
+// Dynamically add frontend URL from env
 if (process.env.FRONTEND_URL) {
   process.env.FRONTEND_URL.split(',').forEach(url => {
-    if (!allowedOrigins.includes(url)) allowedOrigins.push(url);
+    // Clean URL: remove trailing slash and hash/fragments for CORS compatibility
+    const cleanUrl = url.split('#')[0].replace(/\/$/, "");
+    if (!allowedOrigins.includes(cleanUrl)) {
+      allowedOrigins.push(cleanUrl);
+    }
   });
 }
 
@@ -50,7 +57,6 @@ const io = new Server(server, {
     origin: allowedOrigins,
     methods: ["GET", "POST"],
     credentials: true,
-    allowedHeaders: ["my-custom-header"],
   },
   transports: ['websocket', 'polling']
 });
@@ -72,25 +78,23 @@ if (process.env.SENTRY_DSN) {
     tracesSampleRate: 1.0,
   });
 
-  // The request handler must be the first middleware on the app
   app.use(Sentry.Handlers.requestHandler());
-  // TracingHandler creates a trace for every incoming request
   app.use(Sentry.Handlers.tracingHandler());
 }
 
 // Security and Utility Middleware
-app.use(helmet());
-app.use(compression()); // Gzip compression
-app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev')); // Request logging
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable CSP if serving frontend separately or adjust accordingly
+}));
+app.use(compression());
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
-    // Check if the origin is in our allowed list (handling trailing slashes)
-    const formattedOrigin = origin.endsWith('/') ? origin.slice(0, -1) : origin;
+    const formattedOrigin = origin.split('#')[0].replace(/\/$/, "");
     const isAllowed = allowedOrigins.some(ao => {
-      const formattedAO = ao.endsWith('/') ? ao.slice(0, -1) : ao;
+      const formattedAO = ao.split('#')[0].replace(/\/$/, "");
       return formattedAO === formattedOrigin;
     });
 
@@ -104,7 +108,7 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Auth rate limiting specifically to prevent brute force attacks
+// Auth rate limiting
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, 
   max: 100,
@@ -123,40 +127,58 @@ app.use('/api/projects', projectRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/messages', messageRoutes);
 
-app.get('/health', (req, res) => {
+// Health Check
+app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'UP',
-    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV,
     mongodb: mongoose.connection.readyState === 1 ? 'CONNECTED' : 'DISCONNECTED'
   });
 });
 
-app.get('/', (req, res) => {
-  res.send('IntellMeet API is running...');
-});
+// --- PRODUCTION SETUP ---
+// Serve frontend static files if we are in production and have a dist folder
+if (process.env.NODE_ENV === 'production') {
+  const distPath = path.join(__dirname, '../client/dist');
+  app.use(express.static(distPath));
+  
+  // All other routes should serve the frontend index.html
+  app.get('*', (req, res, next) => {
+    // Only serve index.html if the request is not for an API route
+    if (req.path.startsWith('/api')) {
+      return next();
+    }
+    res.sendFile(path.resolve(distPath, 'index.html'));
+  });
+} else {
+  app.get('/', (req, res) => {
+    res.send('IntellMeet API is running in Development Mode...');
+  });
+}
 
-// The error handler must be before any other error middleware and after all controllers
+// Error Handlers
 if (process.env.SENTRY_DSN) {
   app.use(Sentry.Handlers.errorHandler());
 }
 
-// Global Error Handler
 app.use((err, req, res, next) => {
   console.error('SERVER_ERROR:', err.stack);
-  res.status(500).json({
-    message: 'Something went wrong!',
+  res.status(err.status || 500).json({
+    message: err.message || 'Something went wrong!',
     error: process.env.NODE_ENV === 'production' ? {} : err.message
   });
 });
 
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/intellmeet';
+const MONGO_URI = process.env.MONGO_URI;
 
 mongoose
   .connect(MONGO_URI)
   .then(() => {
     console.log('MongoDB connection established');
-    server.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT}`));
+    server.listen(PORT, '0.0.0.0', () => {
+      console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+    });
   })
   .catch((err) => {
     console.error(`MongoDB connection failed: ${err.message}`);

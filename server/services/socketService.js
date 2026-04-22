@@ -28,7 +28,7 @@ const initSocket = (io) => {
       console.log(`User ${socket.id} joined team room: ${teamId}`);
     });
 
-    socket.on('join-meeting', async ({ meetingId, userId, userName }) => {
+    socket.on('join-meeting', async ({ meetingId, userId, userName, avatar }) => {
       try {
         socket.join(meetingId);
         activeMeetingRooms.add(meetingId);
@@ -45,14 +45,14 @@ const initSocket = (io) => {
         }
 
         // Store participant in Redis for fast access
-        const participant = JSON.stringify({ userId, userName, socketId: socket.id });
+        const participant = JSON.stringify({ userId, userName, socketId: socket.id, avatar });
         await redis.sadd(`meeting:${meetingId}:participants`, participant);
 
         // Track userName on socket for transcription
         socket.userName = userName;
 
         // Notify others in the meeting
-        socket.to(meetingId).emit('user-joined', { userId, userName, socketId: socket.id });
+        socket.to(meetingId).emit('user-joined', { userId, userName, socketId: socket.id, avatar });
 
         // Send the current list of participants to the new user
         const participants = await redis.smembers(`meeting:${meetingId}:participants`);

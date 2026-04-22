@@ -14,6 +14,7 @@ interface Participant {
   userId: string
   userName: string
   socketId: string
+  avatar?: string
 }
 
 interface PeerConnection {
@@ -111,7 +112,8 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
       socket.emit('join-meeting', {
         meetingId: meetingCode,
         userId: user?.id,
-        userName: user?.name
+        userName: user?.name,
+        avatar: user?.avatar
       })
     }
 
@@ -143,8 +145,8 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
       setPeers(newPeers)
     })
 
-    socket.on('user-joined', ({ userId, userName, socketId }) => {
-      console.log('User joined event received:', { userName, socketId, userId })
+    socket.on('user-joined', ({ userId, userName, socketId, avatar }) => {
+      console.log('User joined event received:', { userName, socketId, userId, avatar })
       
       // Cleanup ghost sessions for the same userId (e.g. from refresh)
       setParticipants(prev => {
@@ -157,11 +159,11 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
             delete peersRef.current[oldSid];
           }
           setPeers(prevPeers => prevPeers.filter(p => p.peerId !== oldSid));
-          return [...prev.filter(p => p.socketId !== oldSid), { userId, userName, socketId }];
+          return [...prev.filter(p => p.socketId !== oldSid), { userId, userName, socketId, avatar }];
         }
         
         if (prev.find(p => p.socketId === socketId)) return prev;
-        return [...prev, { userId, userName, socketId }];
+        return [...prev, { userId, userName, socketId, avatar }];
       });
       
       if (!peersRef.current[socketId]) {

@@ -5,6 +5,7 @@ interface Participant {
   userId: string
   userName: string
   socketId: string
+  avatar?: string
 }
 
 interface ParticipantStates {
@@ -107,14 +108,18 @@ export default function ParticipantSidebar({
             >
               <div className="flex items-center gap-3 min-w-0">
                 <div className="relative">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all ${
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all overflow-hidden ${
                     isHost ? 'bg-blue-600/20 border-blue-500/30' :
                     (micRestricted || videoRestricted) ? 'bg-red-500/10 border-red-500/20' :
                     'bg-muted border-border'
                   }`}>
-                    {isHost
-                      ? <Shield size={18} className="text-blue-600 dark:text-blue-400" />
-                      : <UserIcon size={20} className={micRestricted || videoRestricted ? 'text-red-500' : 'text-muted-foreground'} />}
+                    {p.avatar ? (
+                       <img src={p.avatar} alt={p.userName} className="w-full h-full object-cover" />
+                    ) : isHost ? (
+                       <Shield size={18} className="text-blue-600 dark:text-blue-400" />
+                    ) : (
+                       <UserIcon size={20} className={micRestricted || videoRestricted ? 'text-red-500' : 'text-muted-foreground'} />
+                    )}
                   </div>
                   <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-card" />
                 </div>
