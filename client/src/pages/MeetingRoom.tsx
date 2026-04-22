@@ -676,6 +676,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
 
             const currentPinned = allFeeds.find(f => f.id === pinnedId || (f.socketId && f.socketId === pinnedId));
 
+            if (currentPinned) {
               /* Spotlight View */
               return (
                 <div className="h-full w-full flex flex-col md:flex-row gap-0 md:gap-4 p-0 md:p-4 overflow-hidden">
