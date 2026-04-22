@@ -681,9 +681,9 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
               return (
                 <div className="h-full flex flex-col md:flex-row gap-4 p-4">
                   {/* Main Stage */}
-                  <div className="flex-1 flex items-center justify-center bg-card/10 rounded-[32px] border border-border/20 overflow-hidden p-2 md:p-8 relative group">
-                    <div className="w-full h-full max-w-[1600px] flex items-center justify-center">
-                      <div className="w-full aspect-video max-h-full relative shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+                  <div className="flex-[3] md:flex-1 flex items-center justify-center bg-card/10 rounded-[32px] border border-border/20 overflow-hidden p-1 md:p-6 relative group">
+                    <div className="w-full h-full flex items-center justify-center">
+                      <div className="w-full h-full md:aspect-[4/3] max-h-full relative shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
                         <VideoCard 
                           stream={currentPinned.stream!} 
                           label={currentPinned.userName} 
@@ -696,7 +696,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
                         {/* Explicit Unpin Button */}
                         <button 
                           onClick={(e) => { e.stopPropagation(); setPinnedId(null); }}
-                          className="absolute top-6 right-6 z-40 bg-black/40 hover:bg-black/60 backdrop-blur-md text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border border-white/10 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0"
+                          className="absolute top-4 right-4 md:top-6 md:right-6 z-40 bg-black/40 hover:bg-black/60 backdrop-blur-md text-white px-3 md:px-4 py-1.5 md:py-2 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest border border-white/10 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0"
                         >
                            Exit Spotlight
                         </button>
@@ -735,7 +735,12 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
                       chunks.push(allFeeds.slice(i, i + 4));
                     }
                     return chunks.map((chunk, idx) => (
-                      <div key={idx} className="flex-none w-full h-full p-4 snap-center grid grid-cols-2 grid-rows-2 gap-3">
+                      <div 
+                        key={idx} 
+                        className={`flex-none w-full h-full p-4 snap-center grid gap-3 ${
+                          allFeeds.length === 2 ? 'grid-cols-1 grid-rows-2' : 'grid-cols-2 grid-rows-2'
+                        }`}
+                      >
                         {chunk.map(f => (
                           <VideoCard 
                             key={f.id} 
@@ -747,8 +752,8 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
                             onClick={() => setPinnedId(f.id)}
                           />
                         ))}
-                        {/* Empty placeholders to maintain 2x2 layout if chunk < 4 */}
-                        {chunk.length < 4 && Array.from({ length: 4 - chunk.length }).map((_, i) => (
+                        {/* Empty placeholders to maintain grid layout if chunk < 4 and not exactly 2 people */}
+                        {allFeeds.length !== 2 && chunk.length < 4 && Array.from({ length: 4 - chunk.length }).map((_, i) => (
                           <div key={`empty-${i}`} className="bg-muted/10 rounded-2xl border border-dashed border-border/20" />
                         ))}
                       </div>
