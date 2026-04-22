@@ -108,12 +108,12 @@ export default function MeetingLobby({ meetingCode }: { meetingCode: string }) {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-6 sm:p-12 font-sans selection:bg-blue-500/30 transition-colors duration-300">
-      <div className="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+    <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4 md:p-12 font-sans selection:bg-blue-500/30 transition-colors duration-300">
+      <div className="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-12 items-center">
         
         {/* Left Side: Preview */}
-        <div className="space-y-6">
-          <div className="relative aspect-video rounded-[40px] bg-muted/30 border border-border shadow-2xl group transition-all duration-500 hover:border-blue-500/30 overflow-hidden">
+        <div className="space-y-4 md:space-y-6">
+          <div className="relative aspect-video rounded-3xl md:rounded-[40px] bg-muted/30 border border-border shadow-2xl group transition-all duration-500 hover:border-blue-500/30 overflow-hidden">
              {(!isVideoOn || hardwareWarning) && (
                <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/60 backdrop-blur-sm z-10 transition-all px-8 text-center">
                   <div className="p-6 bg-muted rounded-full border border-border mb-4 animate-scale-in">
@@ -173,7 +173,7 @@ export default function MeetingLobby({ meetingCode }: { meetingCode: string }) {
         </div>
 
         {/* Right Side: Join Form */}
-        <div className="bg-card border border-border rounded-[48px] p-10 lg:p-14 shadow-2xl relative overflow-hidden transition-colors">
+        <div className="bg-card border border-border rounded-[32px] md:rounded-[48px] p-6 md:p-10 lg:p-14 shadow-2xl relative overflow-hidden transition-colors">
           <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-600/5 rounded-full blur-[100px] pointer-events-none" />
           
           {error ? (
@@ -191,31 +191,31 @@ export default function MeetingLobby({ meetingCode }: { meetingCode: string }) {
             </div>
           ) : (
             <div className="relative z-10">
-              <h2 className="text-sm font-black uppercase tracking-[0.3em] text-blue-600 dark:text-blue-400 mb-4">Joining Meeting</h2>
-              <h1 className="text-4xl lg:text-5xl font-black mb-6 tracking-tight leading-[1.1] text-foreground">
+              <h2 className="text-[10px] md:text-sm font-black uppercase tracking-[0.3em] text-blue-600 dark:text-blue-400 mb-2 md:mb-4">Joining Meeting</h2>
+              <h1 className="text-2xl md:text-4xl lg:text-5xl font-black mb-4 md:mb-6 tracking-tight leading-[1.1] text-foreground">
                 {meeting?.title || 'Sync Session'}
               </h1>
-              <div className="flex items-center gap-3 mb-10 pb-10 border-b border-border">
-                <div className="w-10 h-10 rounded-xl bg-muted border border-border flex items-center justify-center">
-                  <UserIcon size={18} className="text-muted-foreground" />
+              <div className="flex items-center gap-3 mb-6 pb-6 md:mb-10 md:pb-10 border-b border-border">
+                <div className="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-muted border border-border flex items-center justify-center">
+                  <UserIcon size={16} className="text-muted-foreground" />
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">Hosted by</p>
-                  <p className="text-foreground font-bold">{meeting?.host.name || 'Admin User'}</p>
+                  <p className="text-muted-foreground text-[8px] md:text-[10px] font-bold uppercase tracking-widest">Hosted by</p>
+                  <p className="text-sm md:text-base text-foreground font-bold">{meeting?.host.name || 'Admin User'}</p>
                 </div>
               </div>
 
-              <div className="space-y-6">
-                <div className="bg-muted/50 border border-border rounded-3xl p-6 transition-all hover:bg-muted/80">
-                  <p className="text-[13px] leading-relaxed text-muted-foreground">
+              <div className="space-y-4 md:space-y-6">
+                <div className="bg-muted/50 border border-border rounded-2xl md:rounded-3xl p-4 md:p-6 transition-all hover:bg-muted/80">
+                  <p className="text-[11px] md:text-[13px] leading-relaxed text-muted-foreground">
                     Your camera and microphone are ready. Make sure you are in a quiet environment for the best experience.
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                   <button 
                     onClick={handleJoin}
-                    className="group relative bg-foreground text-background font-black text-sm py-5 rounded-[22px] shadow-xl overflow-hidden active:scale-95 transition-all"
+                    className="group relative bg-foreground text-background font-black text-xs md:text-sm py-4 md:py-5 rounded-xl md:rounded-[22px] shadow-xl overflow-hidden active:scale-95 transition-all"
                   >
                     <span className="relative z-10 flex items-center justify-center gap-2">
                        Join Meeting
@@ -224,7 +224,7 @@ export default function MeetingLobby({ meetingCode }: { meetingCode: string }) {
                   </button>
                   <a 
                     href="#/dashboard"
-                    className="flex items-center justify-center py-5 border border-border rounded-[22px] text-sm font-bold text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
+                    className="flex items-center justify-center py-4 md:py-5 border border-border rounded-xl md:rounded-[22px] text-xs md:text-sm font-bold text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
                   >
                     Cancel
                   </a>
