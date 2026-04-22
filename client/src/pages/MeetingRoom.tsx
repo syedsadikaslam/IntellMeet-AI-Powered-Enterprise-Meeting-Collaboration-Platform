@@ -645,7 +645,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
         </div>
 
         {/* Video Grid / Spotlight Layout */}
-        <div className="flex-1 p-4 md:p-8 overflow-y-auto scrollbar-hide">
+        <div className={`flex-1 min-h-0 ${participants.length <= 2 ? 'p-4 md:p-8 overflow-y-auto scrollbar-hide' : 'p-3 md:p-6 overflow-hidden flex flex-col'}`}>
           {participants.length <= 2 ? (
             /* Standard Grid for 1-2 people */
             <div className="h-full grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 auto-rows-fr max-w-7xl mx-auto">
@@ -684,16 +684,16 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
             </div>
           ) : (
             /* Google Meet Style Spotlight Layout for 3+ people */
-            <div className="h-full flex flex-col md:flex-row gap-4 md:gap-6 max-w-[1600px] mx-auto overflow-hidden">
-               {/* 1. Main Stage (Admin/Pinned Area) - Left on Desktop */}
-               <div className="flex-1 min-h-0 flex items-center justify-center bg-card/40 rounded-[32px] border border-border/40 p-2 md:p-4">
+            <div className="flex-1 min-h-0 flex flex-col gap-3 md:flex-row md:gap-6 max-w-[1600px] w-full mx-auto">
+               {/* 1. Main Stage (Admin/Pinned Area) — takes majority space */}
+               <div className="flex-1 min-h-0 min-w-0 flex items-center justify-center bg-card/40 rounded-[24px] md:rounded-[32px] border border-border/40 overflow-hidden p-2 md:p-4">
                   {(() => {
                      const hostId = meetingData?.host?._id || meetingData?.host;
                      const isLocalHost = user?.id === hostId;
                      
                      if (isLocalHost) {
                         return (
-                          <div className="w-full h-full max-w-5xl max-h-full">
+                          <div className="w-full h-full">
                             <VideoCard 
                               stream={localStream!} 
                               label={`${user?.name} (Host)`} 
@@ -711,7 +711,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
 
                         if (hostPeer) {
                            return (
-                             <div className="w-full h-full max-w-5xl max-h-full">
+                             <div className="w-full h-full">
                                <VideoCard 
                                  stream={hostPeer.stream} 
                                  label={`${hostPeer.userName} (Host)`} 
@@ -722,7 +722,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
                            )
                         } else {
                            return (
-                             <div className="w-full h-full max-w-5xl max-h-full aspect-video rounded-3xl bg-muted/30 border border-dashed border-border flex items-center justify-center">
+                             <div className="w-full h-full aspect-video rounded-3xl bg-muted/30 border border-dashed border-border flex items-center justify-center">
                                 <p className="text-xs font-black uppercase tracking-widest text-muted-foreground opacity-40">Connecting to stage...</p>
                              </div>
                            )
@@ -731,23 +731,43 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
                   })()}
                </div>
 
-               {/* 2. Right Sidebar Gallery (Member Area) - Bottom on Mobile */}
-               <div className="flex-none w-full md:w-72 lg:w-80 flex flex-row md:flex-col gap-3 overflow-x-auto md:overflow-y-auto md:overflow-x-hidden p-1 custom-scrollbar scrollbar-hide">
-                  {/* Render everyone who is NOT the host */}
+               {/* 2. Thumbnail Gallery — horizontal row on mobile (bottom), vertical sidebar on desktop (right) */}
+               <div
+                 className="
+                   flex-none
+                   w-full md:w-60 lg:w-72
+                   flex flex-row md:flex-col
+                   gap-2 md:gap-3
+                   overflow-x-auto overflow-y-hidden
+                   md:overflow-x-hidden md:overflow-y-auto
+                   p-1 pb-0
+                   custom-scrollbar
+                 "
+                 style={{ height: undefined }}
+               >
                   {(() => {
                      const hostId = meetingData?.host?._id || meetingData?.host;
-                     const items = [];
+                     const items: React.ReactNode[] = [];
 
                      // Add local if not host
                      if (user?.id !== hostId) {
                         items.push(
-                          <div key="local-member" className="flex-none aspect-video w-40 sm:w-48 md:w-full">
+                          <div
+                            key="local-member"
+                            className="
+                              flex-none
+                              w-28 h-20
+                              sm:w-36 sm:h-24
+                              md:w-full md:h-auto md:aspect-video
+                            "
+                          >
                             <VideoCard 
                               stream={localStream!} 
                               label={`${user?.name} (You)`} 
                               isMuted 
                               isOff={!isVideoOn} 
                               isHandRaised={raisedHands[user?.id || '']} 
+                              compact
                             />
                           </div>
                         );
@@ -759,12 +779,21 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
                         const uId = part?.userId || '';
                         if (uId !== hostId) {
                            items.push(
-                             <div key={p.peerId} className="flex-none aspect-video w-40 sm:w-48 md:w-full">
+                             <div
+                               key={p.peerId}
+                               className="
+                                 flex-none
+                                 w-28 h-20
+                                 sm:w-36 sm:h-24
+                                 md:w-full md:h-auto md:aspect-video
+                               "
+                             >
                                <VideoCard 
                                  stream={p.stream} 
                                  label={p.userName} 
                                  isOff={!p.stream} 
                                  isHandRaised={raisedHands[uId]} 
+                                 compact
                                />
                              </div>
                            );
@@ -773,9 +802,6 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
 
                      return items;
                   })()}
-
-                  {/* Empty state padding and aesthetic gap */}
-                  <div className="hidden md:block h-32 w-full" />
                </div>
             </div>
           )}
@@ -1034,7 +1060,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
   )
 }
 
-function VideoCard({ stream, label, isMuted = false, isOff = false, isHandRaised = false }: { stream?: MediaStream, label: string, isMuted?: boolean, isOff?: boolean, isHandRaised?: boolean }) {
+function VideoCard({ stream, label, isMuted = false, isOff = false, isHandRaised = false, compact = false }: { stream?: MediaStream, label: string, isMuted?: boolean, isOff?: boolean, isHandRaised?: boolean, compact?: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
@@ -1043,14 +1069,17 @@ function VideoCard({ stream, label, isMuted = false, isOff = false, isHandRaised
     }
   }, [stream, isOff])
 
+  // Truncate long names for compact thumbnail view
+  const displayLabel = compact && label.length > 12 ? label.slice(0, 10) + '…' : label
+
   return (
-    <div className={`relative group rounded-2xl md:rounded-[32px] bg-muted/50 border transition-all duration-500 overflow-hidden shadow-2xl ${isHandRaised ? 'border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.2)] scale-[1.02]' : 'border-border hover:border-blue-500/30'}`}>
+    <div className={`relative group w-full h-full rounded-2xl ${ compact ? '' : 'md:rounded-[32px]'} bg-muted/50 border transition-all duration-500 overflow-hidden shadow-2xl ${isHandRaised ? 'border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.2)] scale-[1.02]' : 'border-border hover:border-blue-500/30'}`}>
       {(!stream || isOff) ? (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-card z-10">
-           <div className={`w-20 h-20 rounded-full flex items-center justify-center border transition-all ${isHandRaised ? 'border-yellow-400/30 bg-yellow-400/5 shadow-[0_0_15px_rgba(250,204,21,0.1)]' : 'bg-muted border-border'}`}>
-              <p className={`text-2xl font-black transition-colors ${isHandRaised ? 'text-yellow-400' : 'text-muted-foreground'}`}>{label.charAt(0)}</p>
+           <div className={`${ compact ? 'w-10 h-10' : 'w-20 h-20' } rounded-full flex items-center justify-center border transition-all ${ isHandRaised ? 'border-yellow-400/30 bg-yellow-400/5 shadow-[0_0_15px_rgba(250,204,21,0.1)]' : 'bg-muted border-border'}`}>
+              <p className={`${ compact ? 'text-base' : 'text-2xl'} font-black transition-colors ${isHandRaised ? 'text-yellow-400' : 'text-muted-foreground'}`}>{label.charAt(0).toUpperCase()}</p>
            </div>
-           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mt-4">Camera Offline</p>
+           {!compact && <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mt-4">Camera Offline</p>}
         </div>
       ) : (
         <video 
@@ -1062,16 +1091,16 @@ function VideoCard({ stream, label, isMuted = false, isOff = false, isHandRaised
         />
       )}
       
-      {isHandRaised && (
+      {isHandRaised && !compact && (
          <div className="absolute top-4 left-4 z-30 bg-yellow-400 text-black px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2 animate-bounce shadow-lg">
             <Hand size={12} fill="currentColor" />
             Hand Raised
          </div>
       )}
 
-      <div className="absolute bottom-2 md:bottom-4 left-2 md:left-4 z-20">
-        <span className={`px-3 md:px-4 py-1.5 md:py-2 backdrop-blur-md rounded-xl md:rounded-2xl text-[10px] md:text-[11px] font-black uppercase tracking-widest border transition-all ${isHandRaised ? 'bg-yellow-400/20 border-yellow-400/50 text-yellow-500' : 'bg-background/40 dark:bg-black/40 border-border text-foreground dark:text-white'}`}>
-          {label}
+      <div className={`absolute ${ compact ? 'bottom-1 left-1' : 'bottom-2 md:bottom-4 left-2 md:left-4'} z-20`}>
+        <span className={`backdrop-blur-md rounded-lg border transition-all ${ compact ? 'px-1.5 py-0.5 text-[8px] tracking-wide' : 'px-3 md:px-4 py-1.5 md:py-2 rounded-xl md:rounded-2xl text-[10px] md:text-[11px] tracking-widest'} font-black uppercase ${isHandRaised ? 'bg-yellow-400/20 border-yellow-400/50 text-yellow-500' : 'bg-background/60 dark:bg-black/60 border-white/10 text-foreground dark:text-white'}`}>
+          {displayLabel}
         </span>
       </div>
     </div>
