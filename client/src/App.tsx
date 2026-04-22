@@ -13,6 +13,7 @@ import MeetingRoom from './pages/MeetingRoom'
 import MeetingLobby from './pages/MeetingLobby'
 import Dashboard from './pages/Dashboard'
 import ProjectBoard from './pages/ProjectBoard'
+import ProfilePage from './pages/ProfilePage'
 import ProtectedRoute from './components/ProtectedRoute'
 import PlansPage from './pages/PlansPage'
 import ProductPage from './pages/ProductPage'
@@ -33,28 +34,23 @@ const routes: Record<string, any> = {
   '#/help-center': HelpCenterPage,
   '#/talk-to-sales': TalkToSalesPage,
   '#/email-us': EmailUsPage,
+  '#/profile': ProfilePage,
 }
 
 function resolveRoute(hash: string) {
   // Handle static routes
   if (routes[hash]) {
-    const Component = routes[hash]
-    // Wrap Dashboard in ProtectedRoute
-    if (hash === '#/dashboard') {
-      return { 
-        Component: () => <ProtectedRoute><Dashboard /></ProtectedRoute>, 
-        params: {} as any 
-      }
-    }
-    return { Component: routes[hash], params: {} as any }
+    const isProtected = hash === '#/dashboard' || hash === '#/profile'
+    return { Component: routes[hash], params: {} as any, isProtected }
   }
 
   // Handle dynamic meeting route: #/meeting/CODE/room
   if (hash.startsWith('#/meeting/') && hash.endsWith('/room')) {
     const code = hash.split('#/meeting/')[1].split('/room')[0]
     return { 
-      Component: () => <ProtectedRoute><MeetingRoom meetingCode={code} /></ProtectedRoute>, 
-      params: { code } 
+      Component: MeetingRoom, 
+      params: { code },
+      isProtected: true
     }
   }
 
@@ -62,8 +58,9 @@ function resolveRoute(hash: string) {
   if (hash.startsWith('#/meeting/')) {
     const code = hash.split('#/meeting/')[1]
     return { 
-      Component: () => <ProtectedRoute><MeetingLobby meetingCode={code} /></ProtectedRoute>, 
-      params: { code } 
+      Component: MeetingLobby, 
+      params: { code },
+      isProtected: true
     }
   }
 
@@ -71,12 +68,13 @@ function resolveRoute(hash: string) {
   if (hash.startsWith('#/projects/')) {
     const id = hash.split('#/projects/')[1]
     return { 
-      Component: () => <ProtectedRoute><ProjectBoard projectId={id} /></ProtectedRoute>, 
-      params: { id } 
+      Component: ProjectBoard, 
+      params: { id },
+      isProtected: true
     }
   }
 
-  return { Component: Hero, params: {} }
+  return { Component: Hero, params: {}, isProtected: false }
 }
 
 function App() {
@@ -99,7 +97,7 @@ function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [routeInfo])
 
-  const { Component, params } = routeInfo
+  const { Component, params, isProtected } = routeInfo
   const currentHash = window.location.hash
   const isInMeetingRoom = currentHash.startsWith('#/meeting/') && currentHash.endsWith('/room')
   const isProjectBoard = currentHash.startsWith('#/projects/')
@@ -110,7 +108,15 @@ function App() {
       <main className={`min-h-screen text-foreground transition-colors duration-300 ${isInMeetingRoom ? 'dark bg-black' : ''}`}>
         {/* Strictly hide global Navbar and Footer in MeetingRoom and ProjectBoard to restore immersion */}
         {!hideGlobalUI && <Navbar currentRoute={currentHash} />}
-        <Component meetingCode={params.code} />
+        
+        {isProtected ? (
+          <ProtectedRoute>
+            <Component meetingCode={params.code} projectId={params.id} />
+          </ProtectedRoute>
+        ) : (
+          <Component />
+        )}
+
         {!hideGlobalUI && <Footer />}
         <SpeedInsights />
       </main>
