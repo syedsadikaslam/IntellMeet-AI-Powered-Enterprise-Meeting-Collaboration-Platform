@@ -174,16 +174,22 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
     socket.on('user-left', ({ userId, socketId }) => {
       console.log('User left event received:', { userId, socketId })
       
-      // Cleanup peer using latest data from Ref
-      const sId = socketId || participantsRef.current.find(p => p.userId === userId)?.socketId
-      if (sId && peersRef.current[sId]) {
-        console.log('Destroying peer for socketId:', sId)
-        peersRef.current[sId].destroy()
-        delete peersRef.current[sId]
+      // Attempt to find the socketId if only userId was provided
+      let sId = socketId;
+      if (!sId && userId) {
+        sId = participantsRef.current.find(p => p.userId === userId)?.socketId;
       }
 
-      setPeers(prev => prev.filter(p => p.peerId !== sId))
-      setParticipants(prev => prev.filter(p => p.userId !== userId))
+      if (sId) {
+        console.log('Cleaning up peer for socketId:', sId)
+        if (peersRef.current[sId]) {
+          peersRef.current[sId].destroy()
+          delete peersRef.current[sId]
+        }
+        setPeers(prev => prev.filter(p => p.peerId !== sId))
+      }
+
+      setParticipants(prev => prev.filter(p => p.userId !== userId && p.socketId !== sId))
       setTypingUsers(prev => prev.filter(u => u.userId !== userId))
     })
 
@@ -661,6 +667,8 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
               ...peers.map(p => {
                 const part = participants.find(part => part.socketId === p.peerId);
                 const uId = part?.userId || '';
+                const state = participantStates[uId] || {};
+                
                 return {
                   id: p.peerId, // Use peerId (socketId) as the unique key to be absolutely safe
                   userId: uId,
@@ -668,7 +676,9 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
                   userName: p.userName || 'Participant',
                   stream: p.stream,
                   isLocal: false,
-                  isVideoOn: !!p.stream,
+                  // Video is ON if stream exists AND state hasn't explicitly turned it off
+                  isVideoOn: state.isVideoOn !== false && !!p.stream,
+                  isMicOn: state.isMicOn !== false,
                   isHandRaised: !!raisedHands[uId]
                 }
               })
@@ -691,6 +701,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
                         isHandRaised={currentPinned.isHandRaised} 
                         onClick={() => setPinnedId(null)}
                         isPinned={true}
+                        isMicOff={!currentPinned.isMicOn}
                       />
                       {/* Explicit Unpin Button */}
                       <button 
@@ -714,6 +725,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
                           isHandRaised={f.isHandRaised} 
                           compact 
                           onClick={() => setPinnedId(f.id)}
+                          isMicOff={!f.isMicOn}
                         />
                       </div>
                     ))}
@@ -781,6 +793,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
                           isOff={!f.isVideoOn} 
                           isHandRaised={f.isHandRaised} 
                           onClick={() => setPinnedId(f.id)}
+                          isMicOff={!f.isMicOn}
                         />
                       </div>
                     ))}
@@ -1051,7 +1064,7 @@ export default function MeetingRoom({ meetingCode }: { meetingCode: string }) {
   )
 }
 
-function VideoCard({ stream, label, isMuted = false, isOff = false, isHandRaised = false, compact = false, onClick, isPinned = false }: { stream?: MediaStream, label: string, isMuted?: boolean, isOff?: boolean, isHandRaised?: boolean, compact?: boolean, onClick?: () => void, isPinned?: boolean }) {
+function VideoCard({ stream, label, isMuted = false, isOff = false, isHandRaised = false, compact = false, onClick, isPinned = false, isMicOff = false }: { stream?: MediaStream, label: string, isMuted?: boolean, isOff?: boolean, isHandRaised?: boolean, compact?: boolean, onClick?: () => void, isPinned?: boolean, isMicOff?: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
@@ -1098,10 +1111,15 @@ function VideoCard({ stream, label, isMuted = false, isOff = false, isHandRaised
         </div>
       )}
 
-      <div className={`absolute ${ compact ? 'bottom-1 left-1' : 'bottom-2 md:bottom-4 left-2 md:left-4'} z-20`}>
+      <div className={`absolute ${ compact ? 'bottom-1 left-1' : 'bottom-2 md:bottom-4 left-2 md:left-4'} z-20 flex items-center gap-2`}>
         <span className={`backdrop-blur-md rounded-lg border transition-all ${ compact ? 'px-1.5 py-0.5 text-[8px] tracking-wide' : 'px-3 md:px-4 py-1.5 md:py-2 rounded-xl md:rounded-2xl text-[10px] md:text-[11px] tracking-widest'} font-black uppercase ${isHandRaised ? 'bg-yellow-400/20 border-yellow-400/50 text-yellow-500' : 'bg-background/60 dark:bg-black/60 border-white/10 text-foreground dark:text-white'}`}>
           {displayLabel}
         </span>
+        {isMicOff && (
+          <div className={`${compact ? 'p-1' : 'p-1.5 md:p-2'} bg-red-600/80 backdrop-blur-md rounded-lg md:rounded-xl text-white shadow-lg`}>
+            <MicOff size={compact ? 10 : 14} />
+          </div>
+        )}
       </div>
     </div>
   )
