@@ -68,7 +68,11 @@ export default function ProfilePage() {
         data.append('avatar', avatarFile)
       }
 
-      const response = await api.put('/auth/profile', data)
+      const response = await api.put('/auth/profile', data, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
 
       setUser({
         ...user!,

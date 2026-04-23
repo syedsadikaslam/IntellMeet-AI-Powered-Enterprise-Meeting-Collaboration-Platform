@@ -136,36 +136,88 @@ const cloudinary = require('../utils/cloudinaryConfig');
 // @access  Private
 const updateUserProfile = async (req, res) => {
   try {
+    console.log(`[PROFILE_UPDATE] Request for user ID: ${req.user._id}`);
+    console.log('[PROFILE_UPDATE] File metadata:', req.file ? {
+      fieldname: req.file.fieldname,
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size
+    } : 'No file attached');
+
     const user = await User.findById(req.user._id);
 
-    if (user) {
-      user.name = req.body.name || user.name;
-      user.email = req.body.email || user.email;
-      
-      if (req.file) {
-        // Upload image to Cloudinary
-        const result = await cloudinary.uploader.upload(req.file.path);
-        user.avatar = result.secure_url;
-      }
-
-      if (req.body.password) {
-        user.password = req.body.password;
-      }
-
-      const updatedUser = await user.save();
-
-      res.json({
-        _id: updatedUser._id,
-        name: updatedUser.name,
-        email: updatedUser.email,
-        role: updatedUser.role,
-        avatar: updatedUser.avatar,
-      });
-    } else {
-      res.status(404).json({ message: 'User not found' });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
     }
+
+    // Update fields
+    if (req.body.name) user.name = req.body.name;
+    if (req.body.email) user.email = req.body.email;
+    if (req.body.bio !== undefined) user.bio = req.body.bio;
+    if (req.body.jobTitle !== undefined) user.jobTitle = req.body.jobTitle;
+    if (req.body.location !== undefined) user.location = req.body.location;
+    if (req.body.phoneNumber !== undefined) user.phoneNumber = req.body.phoneNumber;
+    
+    if (req.file) {
+      console.log('[CLOUDINARY] Starting upload stream...');
+      
+      try {
+        const result = await new Promise((resolve, reject) => {
+          const uploadStream = cloudinary.uploader.upload_stream(
+            { 
+              folder: 'avatars',
+              resource_type: 'auto' 
+            },
+            (error, result) => {
+              if (error) {
+                console.error('[CLOUDINARY] Upload error:', error);
+                reject(error);
+              } else {
+                console.log('[CLOUDINARY] Upload success:', result.secure_url);
+                resolve(result);
+              }
+            }
+          );
+          
+          // Write buffer to stream
+          uploadStream.end(req.file.buffer);
+        });
+
+        user.avatar = result.secure_url;
+      } catch (uploadError) {
+        console.error('[PROFILE_UPDATE] Cloudinary error:', uploadError);
+        return res.status(500).json({ 
+          message: 'Failed to upload image to cloud storage', 
+          error: uploadError.message 
+        });
+      }
+    }
+
+    if (req.body.password) {
+      user.password = req.body.password;
+    }
+
+    const updatedUser = await user.save();
+    console.log('[PROFILE_UPDATE] User saved successfully');
+
+    res.json({
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      role: updatedUser.role,
+      avatar: updatedUser.avatar,
+      bio: updatedUser.bio,
+      jobTitle: updatedUser.jobTitle,
+      location: updatedUser.location,
+      phoneNumber: updatedUser.phoneNumber,
+    });
+
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error('[PROFILE_UPDATE] Global error:', error);
+    res.status(500).json({ 
+      message: 'An internal server error occurred while updating profile', 
+      error: error.message 
+    });
   }
 };
 
