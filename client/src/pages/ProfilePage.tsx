@@ -142,7 +142,7 @@ export default function ProfilePage() {
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Profile</h1>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold text-red-500 hover:bg-red-50 transition-colors"
+            className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold text-red-500 hover:bg-red-50 transition-colors"
           >
             <LogOut size={16} />
             <span className="hidden sm:inline">Sign out</span>
