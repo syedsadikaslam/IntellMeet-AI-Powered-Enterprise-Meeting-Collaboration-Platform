@@ -159,40 +159,37 @@ const updateUserProfile = async (req, res) => {
     if (req.body.phoneNumber !== undefined) user.phoneNumber = req.body.phoneNumber;
     
     if (req.file) {
-      console.log('[CLOUDINARY] Starting upload stream...');
+      console.log('[CLOUDINARY] Processing file for upload...');
       
       try {
-        if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY) {
-          throw new Error('Cloudinary configuration is missing on the server. Please check environment variables.');
+        // Validate keys
+        if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+          console.error('[CLOUDINARY] MISSING CONFIG:', {
+            name: !!process.env.CLOUDINARY_CLOUD_NAME,
+            key: !!process.env.CLOUDINARY_API_KEY,
+            secret: !!process.env.CLOUDINARY_API_SECRET
+          });
+          throw new Error('Cloudinary configuration is incomplete on the server.');
         }
 
-        const result = await new Promise((resolve, reject) => {
-          const uploadStream = cloudinary.uploader.upload_stream(
-            { 
-              folder: 'avatars',
-              resource_type: 'auto' 
-            },
-            (error, result) => {
-              if (error) {
-                console.error('[CLOUDINARY] Upload error:', error);
-                reject(error);
-              } else {
-                console.log('[CLOUDINARY] Upload success:', result.secure_url);
-                resolve(result);
-              }
-            }
-          );
-          
-          // Write buffer to stream
-          uploadStream.end(req.file.buffer);
+        // Convert buffer to Data URI for easier upload
+        const fileContent = req.file.buffer.toString('base64');
+        const fileUri = `data:${req.file.mimetype};base64,${fileContent}`;
+
+        console.log('[CLOUDINARY] Uploading to cloud...');
+        const uploadResponse = await cloudinary.uploader.upload(fileUri, {
+          folder: 'avatars',
+          resource_type: 'auto'
         });
 
-        user.avatar = result.secure_url;
+        console.log('[CLOUDINARY] Success:', uploadResponse.secure_url);
+        user.avatar = uploadResponse.secure_url;
       } catch (uploadError) {
-        console.error('[PROFILE_UPDATE] Cloudinary error:', uploadError);
+        console.error('[PROFILE_UPDATE] Upload Error:', uploadError);
         return res.status(500).json({ 
           message: 'Failed to upload image to cloud storage', 
-          error: uploadError.message 
+          error: uploadError.message,
+          hint: 'Please ensure CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET are set in environment variables.'
         });
       }
     }
