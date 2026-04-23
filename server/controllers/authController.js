@@ -162,6 +162,10 @@ const updateUserProfile = async (req, res) => {
       console.log('[CLOUDINARY] Starting upload stream...');
       
       try {
+        if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY) {
+          throw new Error('Cloudinary configuration is missing on the server. Please check environment variables.');
+        }
+
         const result = await new Promise((resolve, reject) => {
           const uploadStream = cloudinary.uploader.upload_stream(
             { 
