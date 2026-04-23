@@ -141,7 +141,8 @@ const updateUserProfile = async (req, res) => {
       fieldname: req.file.fieldname,
       originalname: req.file.originalname,
       mimetype: req.file.mimetype,
-      size: req.file.size
+      size: req.file.size,
+      available_keys: Object.keys(req.file)
     } : 'No file attached');
 
     const user = await User.findById(req.user._id);
@@ -172,8 +173,30 @@ const updateUserProfile = async (req, res) => {
           throw new Error('Cloudinary configuration is incomplete on the server.');
         }
 
-        // Convert buffer to Data URI for easier upload
-        const fileContent = req.file.buffer.toString('base64');
+        // Convert file to buffer (handle different multer versions)
+        let buffer;
+        if (req.file.buffer) {
+          buffer = req.file.buffer;
+        } else if (req.file.stream) {
+          // If it's a stream, we need to collect it into a buffer
+          console.log('[CLOUDINARY] Collecting stream into buffer...');
+          const chunks = [];
+          for await (const chunk of req.file.stream) {
+            chunks.push(chunk);
+          }
+          buffer = Buffer.concat(chunks);
+        } else if (req.file.path) {
+          // If it's on disk
+          const fs = require('fs');
+          buffer = fs.readFileSync(req.file.path);
+        }
+
+        if (!buffer) {
+          console.error('[CLOUDINARY] Could not find file data in req.file. Keys:', Object.keys(req.file));
+          throw new Error('File data is missing or empty.');
+        }
+
+        const fileContent = buffer.toString('base64');
         const fileUri = `data:${req.file.mimetype};base64,${fileContent}`;
 
         console.log('[CLOUDINARY] Uploading to cloud...');
