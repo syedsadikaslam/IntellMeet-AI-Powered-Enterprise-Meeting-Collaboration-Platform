@@ -204,10 +204,13 @@ export default function Navbar({ currentRoute }: NavbarProps) {
            <a
               href="#/"
               onClick={closeAll}
-              className={`flex items-center gap-3 h-12 rounded-xl px-4 text-sm font-bold transition-all ${currentRoute === '#/' ? 'bg-blue-50 text-blue-600 dark:bg-blue-600/10' : 'text-muted-foreground hover:bg-muted'}`}
+              className={`flex items-center justify-between h-12 rounded-xl px-4 text-sm font-bold transition-all ${currentRoute === '#/' ? 'bg-blue-50 text-blue-600 dark:bg-blue-600/10' : 'text-muted-foreground hover:bg-muted'}`}
            >
-              <Home size={18} />
-              <span>Home</span>
+              <div className="flex items-center gap-3">
+                 <Home size={18} />
+                 <span>Home</span>
+              </div>
+              <ChevronRight size={14} className="opacity-40" />
            </a>
 
            {navItems.map((item) => (
@@ -230,10 +233,13 @@ export default function Navbar({ currentRoute }: NavbarProps) {
                <a
                   href="#/dashboard"
                   onClick={closeAll}
-                  className={`flex items-center gap-3 h-12 rounded-xl px-4 text-sm font-bold transition-all ${currentRoute === '#/dashboard' ? 'bg-blue-50 text-blue-600 dark:bg-blue-600/10' : 'text-muted-foreground hover:bg-muted'}`}
+                  className={`flex items-center justify-between h-12 rounded-xl px-4 text-sm font-bold transition-all ${currentRoute === '#/dashboard' ? 'bg-blue-50 text-blue-600 dark:bg-blue-600/10' : 'text-muted-foreground hover:bg-muted'}`}
                >
-                  <Layout size={18} />
-                  <span>Dashboard</span>
+                  <div className="flex items-center gap-3">
+                     <Layout size={18} />
+                     <span>Dashboard</span>
+                  </div>
+                  <ChevronRight size={14} className="opacity-40" />
                </a>
                <a
                   href="#/profile"
