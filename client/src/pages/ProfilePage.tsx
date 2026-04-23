@@ -135,14 +135,14 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-20 font-sans transition-colors duration-300">
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 pt-4 sm:pt-10">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 pt-0 sm:pt-10">
         
         {/* Header Section */}
-        <div className="flex items-center justify-between mb-8 sm:mb-12">
+        <div className="hidden sm:flex items-center justify-between mb-8 sm:mb-12">
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Profile</h1>
           <button
             onClick={handleLogout}
-            className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold text-red-500 hover:bg-red-50 transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold text-red-500 hover:bg-red-50 transition-colors"
           >
             <LogOut size={16} />
             <span className="hidden sm:inline">Sign out</span>
