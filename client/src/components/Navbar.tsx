@@ -193,7 +193,6 @@ export default function Navbar({ currentRoute }: NavbarProps) {
         <div className="flex items-center justify-between p-5 border-b border-border">
            <div className="flex items-center gap-2">
              <img src="/logo.png" className="h-8 w-8 object-contain" alt="Logo" />
-             <span className="font-bold text-lg tracking-tight">tellMeet</span>
            </div>
            <button onClick={() => setIsOpen(false)} className="p-2 bg-muted rounded-lg text-muted-foreground">
              <X size={20} />
