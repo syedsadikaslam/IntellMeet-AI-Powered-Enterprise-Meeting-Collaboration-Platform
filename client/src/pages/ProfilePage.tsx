@@ -19,6 +19,7 @@ export default function ProfilePage() {
 
   const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.avatar || null)
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [isAvatarLoading, setIsAvatarLoading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -32,15 +33,44 @@ export default function ProfilePage() {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      setAvatarFile(file)
+      // 1. Show local preview immediately
       const reader = new FileReader()
       reader.onloadend = () => {
         setAvatarPreview(reader.result as string)
       }
       reader.readAsDataURL(file)
+
+      // 2. Auto-upload to server
+      setIsAvatarLoading(true)
+      setMessage(null)
+      
+      try {
+        const data = new FormData()
+        data.append('avatar', file)
+        data.append('name', formData.name) // Keep current name to satisfy backend validation if any
+        data.append('email', formData.email)
+
+        const response = await api.put('/auth/profile', data, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
+
+        setUser({
+          ...user!,
+          avatar: response.data.avatar
+        })
+        
+        setMessage({ type: 'success', text: 'Profile photo updated' })
+      } catch (error: any) {
+        setMessage({ 
+          type: 'error', 
+          text: error.response?.data?.message || 'Photo upload failed' 
+        })
+      } finally {
+        setIsAvatarLoading(false)
+      }
     }
   }
 
@@ -135,12 +165,18 @@ export default function ProfilePage() {
           {/* Avatar Section - Centered on Mobile */}
           <div className="flex flex-col items-center gap-4">
             <div className="relative">
-              <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden ring-4 ring-muted shadow-lg">
+              <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden ring-4 ring-muted shadow-lg relative group">
                 {avatarPreview ? (
-                  <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
+                  <img src={avatarPreview} alt="Avatar" className={`w-full h-full object-cover transition-opacity ${isAvatarLoading ? 'opacity-40' : 'opacity-100'}`} />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-muted text-muted-foreground">
                     <User size={40} />
+                  </div>
+                )}
+                
+                {isAvatarLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Loader2 size={32} className="text-blue-600 animate-spin" />
                   </div>
                 )}
               </div>
